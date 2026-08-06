@@ -8,7 +8,7 @@ Status legend: todo | ported | building | committed
 - [x] src/sundials/sundials_math.c — committed
 - [x] src/sundials/sundials_errors.c — committed
 - [x] src/sundials/sundials_context.c — committed
-- [ ] src/sundials/sundials_nvector.c — todo
+- [x] src/sundials/sundials_nvector.c — committed
 - [ ] src/sundials/sundials_matrix.c — todo
 - [ ] src/sundials/sundials_direct.c — todo
 - [ ] src/sundials/sundials_band.c — todo
@@ -32,7 +32,7 @@ Status legend: todo | ported | building | committed
 - [ ] src/sundials/sundials_domeigestimator.c — todo (deferred to Phase 7 start)
 - [ ] src/sundials/sundatanode/sundatanode_inmem.c — todo (deferred to Phase 7 start)
 - [x] src/sundials/stl/sunstl_vector.h — committed (pulled forward: hashmap needs it)
-- [ ] src/nvector/serial/nvector_serial.c — todo
+- [x] src/nvector/serial/nvector_serial.c — committed
 - [ ] src/sunmatrix/band/sunmatrix_band.c — todo
 - [ ] src/sunmatrix/dense/sunmatrix_dense.c — todo
 - [ ] src/sunmatrix/sparse/sunmatrix_sparse.c — todo
