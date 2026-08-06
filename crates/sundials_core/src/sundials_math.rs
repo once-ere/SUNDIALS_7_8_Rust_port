@@ -122,7 +122,8 @@ pub fn SUNRCompareTol(a: sunrealtype, b: sunrealtype, tol: sunrealtype) -> sunbo
 /// float, ignoring leading whitespace and trailing junk; 0.0 if nothing
 /// parses.
 pub fn SUNStrToReal(str_: &str) -> sunrealtype {
-    let s = str_.trim_start();
+    /* strtod skips C-locale (ASCII) whitespace only */
+    let s = str_.trim_start_matches([' ', '\t', '\n', '\x0b', '\x0c', '\r']);
     let b = s.as_bytes();
     let mut i = 0usize;
     if i < b.len() && (b[i] == b'+' || b[i] == b'-') {

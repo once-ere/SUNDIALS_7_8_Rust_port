@@ -428,9 +428,10 @@ pub fn atoi(s: &str) -> i32 {
     atol(s) as i32
 }
 
-/// C `atol(s)` (see [`atoi`]).
+/// C `atol(s)` (see [`atoi`]). Leading-whitespace skip matches C-locale
+/// `isspace` (ASCII only), not Unicode.
 pub fn atol(s: &str) -> i64 {
-    let t = s.trim_start();
+    let t = s.trim_start_matches([' ', '\t', '\n', '\x0b', '\x0c', '\r']);
     let b = t.as_bytes();
     let mut i = 0usize;
     let mut neg = false;

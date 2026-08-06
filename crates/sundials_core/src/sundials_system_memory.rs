@@ -124,7 +124,8 @@ pub fn SUNMemoryHelper_Dealloc_Sys(
                 {
                     let mut content = content_mut(helper);
                     content.num_deallocations += 1;
-                    content.bytes_allocated -= m.bytes;
+                    /* C size_t arithmetic wraps on underflow */
+            content.bytes_allocated = content.bytes_allocated.wrapping_sub(m.bytes);
                 }
                 /* free(mem->ptr); mem->ptr = NULL; */
                 m.data = Vec::new();

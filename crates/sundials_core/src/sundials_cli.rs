@@ -155,7 +155,7 @@ pub fn sunCheckAndSetIntRealArgs(
             *argidx += 1;
             let iarg: i32 = crate::sundials_utils::atoi(&argv[*argidx as usize]);
             *argidx += 1;
-            let rarg: sunrealtype = SUNStrToReal(argv[*argidx as usize].trim());
+            let rarg: sunrealtype = SUNStrToReal(&argv[*argidx as usize]);
             let retval = (testpairs[j as usize].set)(mem, iarg, rarg);
             if retval != SUN_SUCCESS {
                 *failedarg = j;
@@ -194,9 +194,9 @@ pub fn sunCheckAndSetIntRealRealArgs(
             *argidx += 1;
             let iarg: i32 = crate::sundials_utils::atoi(&argv[*argidx as usize]);
             *argidx += 1;
-            let rarg1: sunrealtype = SUNStrToReal(argv[*argidx as usize].trim());
+            let rarg1: sunrealtype = SUNStrToReal(&argv[*argidx as usize]);
             *argidx += 1;
-            let rarg2: sunrealtype = SUNStrToReal(argv[*argidx as usize].trim());
+            let rarg2: sunrealtype = SUNStrToReal(&argv[*argidx as usize]);
             let retval = (testpairs[j as usize].set)(mem, iarg, rarg1, rarg2);
             if retval != SUN_SUCCESS {
                 *failedarg = j;
@@ -270,7 +270,7 @@ pub fn sunCheckAndSetRealArgs(
         *arg_used = SUNFALSE;
         if argv[*argidx as usize][offset..] == *testpairs[j as usize].key {
             *argidx += 1;
-            let rarg: sunrealtype = SUNStrToReal(argv[*argidx as usize].trim());
+            let rarg: sunrealtype = SUNStrToReal(&argv[*argidx as usize]);
             let retval = (testpairs[j as usize].set)(mem, rarg);
             if retval != SUN_SUCCESS {
                 *failedarg = j;
@@ -307,9 +307,9 @@ pub fn sunCheckAndSetTwoRealArgs(
         *arg_used = SUNFALSE;
         if argv[*argidx as usize][offset..] == *testpairs[j as usize].key {
             *argidx += 1;
-            let rarg1: sunrealtype = SUNStrToReal(argv[*argidx as usize].trim());
+            let rarg1: sunrealtype = SUNStrToReal(&argv[*argidx as usize]);
             *argidx += 1;
-            let rarg2: sunrealtype = SUNStrToReal(argv[*argidx as usize].trim());
+            let rarg2: sunrealtype = SUNStrToReal(&argv[*argidx as usize]);
             let retval = (testpairs[j as usize].set)(mem, rarg1, rarg2);
             if retval != SUN_SUCCESS {
                 *failedarg = j;

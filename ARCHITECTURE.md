@@ -114,3 +114,27 @@ in the same argument position with the same name.
   clones); `N_Vector**` → `&[Vec<N_Vector>]`. Row-wise Hessenberg
   `sunrealtype**` → `&mut [Vec<f64>]`; column-pointer arrays
   (`SUNDlsMat cols`) → `dls_cols()` chunks_mut views.
+
+## Accepted deviation classes (adversarially verified, Phase 1)
+
+These divergences from the release-C reference build are deliberate,
+verified unobservable on any path a valid serial example takes, and must
+be applied CONSISTENTLY in later phases:
+
+1. **Kept failure-path checks.** Where release C compiles out
+   `SUNAssert`/`SUNCheckCall` (silently proceeding on misuse), ported
+   modules may keep the check as a plain `if` returning the error code
+   (fn-pointer-presence checks, `file_name` guards, propagated sub-call
+   errors in Set*/Initialize forwarding). Only observable on invalid
+   usage or malformed CLI input.
+2. **Ownership snapshots.** `SUNMemoryHelper_Wrap`/`_Alias` take/clone
+   owned `Vec<u8>` buffers instead of aliasing raw pointers; no
+   write-through. Any future consumer ported from C that mutates a
+   wrapped buffer afterward must mutate through the SUNMemory handle.
+3. **C-locale ASCII whitespace.** `atoi`/`atol`/`SUNStrToReal` skip only
+   ASCII whitespace (matching C-locale `isspace`/`strtod`), implemented
+   via `trim_start_matches` — never Unicode `trim`.
+4. **Unsigned wrap.** C `size_t` counter arithmetic that can underflow
+   maps to `wrapping_sub` (never a panicking `-=`).
+5. **C UB → deterministic panic.** NULL deref / out-of-bounds /
+   double-free in C map to Rust panics at the same site.
