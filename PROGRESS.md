@@ -6,8 +6,8 @@ Status legend: todo | ported | building | committed
 ## Phase 1 — sundials_core
 
 - [x] src/sundials/sundials_math.c — committed
-- [ ] src/sundials/sundials_errors.c — todo
-- [ ] src/sundials/sundials_context.c — todo
+- [x] src/sundials/sundials_errors.c — committed
+- [x] src/sundials/sundials_context.c — committed
 - [ ] src/sundials/sundials_nvector.c — todo
 - [ ] src/sundials/sundials_matrix.c — todo
 - [ ] src/sundials/sundials_direct.c — todo
@@ -18,11 +18,11 @@ Status legend: todo | ported | building | committed
 - [ ] src/sundials/sundials_nonlinearsolver.c — todo
 - [ ] src/sundials/sundials_nvector_senswrapper.c — todo
 - [ ] src/sundials/sundials_memory.c — todo
-- [ ] src/sundials/sundials_logger.c — todo
-- [ ] src/sundials/sundials_profiler.c — todo
+- [x] src/sundials/sundials_logger.c — committed
+- [x] src/sundials/sundials_profiler.c — committed
 - [ ] src/sundials/sundials_futils.c — todo
-- [ ] src/sundials/sundials_hashmap.c — todo
-- [ ] src/sundials/sundials_version.c — todo
+- [x] src/sundials/sundials_hashmap.c — committed
+- [x] src/sundials/sundials_version.c — committed
 - [ ] src/sundials/sundials_cli.c — todo
 - [ ] src/sundials/sundials_adaptcontroller.c — todo
 - [ ] src/sundials/sundials_stepper.c — todo (deferred to Phase 7 start)
@@ -31,7 +31,7 @@ Status legend: todo | ported | building | committed
 - [ ] src/sundials/sundials_datanode.c — todo (deferred to Phase 7 start)
 - [ ] src/sundials/sundials_domeigestimator.c — todo (deferred to Phase 7 start)
 - [ ] src/sundials/sundatanode/sundatanode_inmem.c — todo (deferred to Phase 7 start)
-- [ ] src/sundials/stl/sunstl_vector.h — todo (header-only; deferred to Phase 7 start)
+- [x] src/sundials/stl/sunstl_vector.h — committed (pulled forward: hashmap needs it)
 - [ ] src/nvector/serial/nvector_serial.c — todo
 - [ ] src/sunmatrix/band/sunmatrix_band.c — todo
 - [ ] src/sunmatrix/dense/sunmatrix_dense.c — todo

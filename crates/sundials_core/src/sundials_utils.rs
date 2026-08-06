@@ -208,3 +208,204 @@ pub fn sun_format_sg(x: f64) -> String {
         format!("+{s}")
     }
 }
+
+/* ----------------------------------------------------------------------
+ * Port of `src/sundials/sundials_utils.h` (common utility helpers) and
+ * the C `FILE*` model used across the workspace.
+ * -------------------------------------------------------------------- */
+
+use std::cell::RefCell;
+use std::io::Write;
+use std::rc::Rc;
+
+use crate::sundials_types::{sunrealtype, SUNOutputFormat};
+
+/// Rust stand-in for C `FILE*`. `Null` is a NULL `FILE*`; `Stdout`/`Stderr`
+/// are the C standard streams; `File` is an `fopen`ed handle (`Rc` clone =
+/// C pointer copy, so pointer equality is `Rc::ptr_eq`).
+#[derive(Clone, Default)]
+pub enum SUNFile {
+    #[default]
+    Null,
+    Stdout,
+    Stderr,
+    File(Rc<RefCell<std::fs::File>>),
+}
+
+impl SUNFile {
+    /// C `fopen(fname, mode)` (modes used in this workspace: "w", "w+", "a").
+    pub fn fopen(fname: &str, mode: &str) -> SUNFile {
+        let mut opts = std::fs::OpenOptions::new();
+        match mode {
+            "r" => {
+                opts.read(true);
+            }
+            "a" | "a+" => {
+                opts.append(true).create(true).read(mode == "a+");
+            }
+            _ => {
+                /* "w" / "w+" */
+                opts.write(true).create(true).truncate(true).read(mode == "w+");
+            }
+        }
+        match opts.open(fname) {
+            Ok(f) => SUNFile::File(Rc::new(RefCell::new(f))),
+            Err(_) => SUNFile::Null,
+        }
+    }
+
+    pub fn is_null(&self) -> bool {
+        matches!(self, SUNFile::Null)
+    }
+
+    /// C `fp == stdout` / `fp == stderr` / pointer comparison.
+    pub fn ptr_eq(&self, other: &SUNFile) -> bool {
+        match (self, other) {
+            (SUNFile::Null, SUNFile::Null) => true,
+            (SUNFile::Stdout, SUNFile::Stdout) => true,
+            (SUNFile::Stderr, SUNFile::Stderr) => true,
+            (SUNFile::File(a), SUNFile::File(b)) => Rc::ptr_eq(a, b),
+            _ => false,
+        }
+    }
+
+    /// C `fprintf(fp, "%s", s)`. Writing to a NULL stream is a no-op here
+    /// (C would crash; no caller does this on a valid path).
+    pub fn write_str(&self, s: &str) {
+        match self {
+            SUNFile::Null => {}
+            SUNFile::Stdout => {
+                let mut out = std::io::stdout();
+                let _ = out.write_all(s.as_bytes());
+            }
+            SUNFile::Stderr => {
+                let mut err = std::io::stderr();
+                let _ = err.write_all(s.as_bytes());
+            }
+            SUNFile::File(f) => {
+                let _ = f.borrow_mut().write_all(s.as_bytes());
+            }
+        }
+    }
+
+    /// C `fflush(fp)`.
+    pub fn fflush(&self) {
+        match self {
+            SUNFile::Null => {}
+            SUNFile::Stdout => {
+                let _ = std::io::stdout().flush();
+            }
+            SUNFile::Stderr => {
+                let _ = std::io::stderr().flush();
+            }
+            SUNFile::File(f) => {
+                let _ = f.borrow_mut().flush();
+            }
+        }
+    }
+}
+
+/// Width of name field in `sunfprintf_<type>` for aligning table output.
+pub const SUN_TABLE_WIDTH: usize = 29;
+
+pub fn sunIsNullOrEmpty(str_: Option<&str>) -> bool {
+    match str_ {
+        None => true,
+        Some(s) => s.is_empty(),
+    }
+}
+
+pub fn sunSignedToString(val: i64) -> String {
+    format!("{val}")
+}
+
+pub fn sunCombineFileAndLine(line: i32, file: &str) -> String {
+    format!("{file}:{line}")
+}
+
+/// C `sunCompensatedSum` (Kahan step; `volatile` in C only inhibits
+/// contraction/reassociation, which Rust never performs).
+pub fn sunCompensatedSum(
+    base: sunrealtype,
+    inc: sunrealtype,
+    sum: &mut sunrealtype,
+    error: &mut sunrealtype,
+) {
+    let err = *error;
+    let tmp1 = inc - err;
+    let tmp2 = base + tmp1;
+    *error = (tmp2 - base) - tmp1;
+    *sum = tmp2;
+}
+
+/// C `sunfprintf_real`: `"%-29s = %.15g\n"` (table) or `"%s,% .15e"` (CSV).
+pub fn sunfprintf_real(
+    fp: &SUNFile,
+    fmt: SUNOutputFormat,
+    start: bool,
+    name: &str,
+    value: sunrealtype,
+) {
+    if fmt == SUNOutputFormat::SUN_OUTPUTFORMAT_TABLE {
+        fp.write_str(&format!(
+            "{:<width$} = {}\n",
+            name,
+            sun_format_g(value),
+            width = SUN_TABLE_WIDTH
+        ));
+    } else {
+        if !start {
+            fp.write_str(",");
+        }
+        fp.write_str(&format!("{},{}", name, sun_format_e(value)));
+    }
+}
+
+/// C `sunfprintf_long`.
+pub fn sunfprintf_long(fp: &SUNFile, fmt: SUNOutputFormat, start: bool, name: &str, value: i64) {
+    if fmt == SUNOutputFormat::SUN_OUTPUTFORMAT_TABLE {
+        fp.write_str(&format!(
+            "{:<width$} = {}\n",
+            name,
+            value,
+            width = SUN_TABLE_WIDTH
+        ));
+    } else {
+        if !start {
+            fp.write_str(",");
+        }
+        fp.write_str(&format!("{name},{value}"));
+    }
+}
+
+/// C `sunfprintf_long_array`.
+pub fn sunfprintf_long_array(
+    fp: &SUNFile,
+    fmt: SUNOutputFormat,
+    start: bool,
+    name: &str,
+    value: &[i64],
+) {
+    if value.is_empty() {
+        return;
+    }
+    if fmt == SUNOutputFormat::SUN_OUTPUTFORMAT_TABLE {
+        fp.write_str(&format!(
+            "{:<width$} = {}",
+            name,
+            value[0],
+            width = SUN_TABLE_WIDTH
+        ));
+        for v in &value[1..] {
+            fp.write_str(&format!(", {v}"));
+        }
+        fp.write_str("\n");
+    } else {
+        if !start {
+            fp.write_str(",");
+        }
+        for (i, v) in value.iter().enumerate() {
+            fp.write_str(&format!("{name} {i},{v}"));
+        }
+    }
+}

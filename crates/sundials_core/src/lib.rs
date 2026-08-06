@@ -1,5 +1,12 @@
 #![allow(non_snake_case, non_camel_case_types, non_upper_case_globals)]
 
+pub mod sundials_context;
+pub mod sundials_errors;
+pub mod sundials_hashmap;
+pub mod sundials_logger;
 pub mod sundials_math;
+pub mod sundials_profiler;
 pub mod sundials_types;
 pub mod sundials_utils;
+pub mod sundials_version;
+pub mod sunstl_vector;
