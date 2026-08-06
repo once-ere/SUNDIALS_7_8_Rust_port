@@ -16,7 +16,7 @@ Status legend: todo | ported | building | committed
 - [x] src/sundials/sundials_iterative.c — committed
 - [x] src/sundials/sundials_linearsolver.c — committed
 - [x] src/sundials/sundials_nonlinearsolver.c — committed
-- [ ] src/sundials/sundials_nvector_senswrapper.c — todo
+- [x] src/sundials/sundials_nvector_senswrapper.c — committed
 - [ ] src/sundials/sundials_memory.c — todo
 - [x] src/sundials/sundials_logger.c — committed
 - [x] src/sundials/sundials_profiler.c — committed
@@ -43,7 +43,7 @@ Status legend: todo | ported | building | committed
 - [x] src/sunlinsol/spfgmr/sunlinsol_spfgmr.c — committed
 - [x] src/sunlinsol/spgmr/sunlinsol_spgmr.c — committed
 - [x] src/sunlinsol/sptfqmr/sunlinsol_sptfqmr.c — committed
-- [ ] src/sunnonlinsol/newton/sunnonlinsol_newton.c — todo
+- [x] src/sunnonlinsol/newton/sunnonlinsol_newton.c — committed
 - [ ] src/sunnonlinsol/fixedpoint/sunnonlinsol_fixedpoint.c — todo
 - [ ] src/sunnonlinsol/auto/sunnonlinsol_auto.c — todo
 - [ ] src/sunadaptcontroller/soderlind/sunadaptcontroller_soderlind.c — todo
