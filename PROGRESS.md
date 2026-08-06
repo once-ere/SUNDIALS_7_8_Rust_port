@@ -44,7 +44,7 @@ Status legend: todo | ported | building | committed
 - [x] src/sunlinsol/spgmr/sunlinsol_spgmr.c — committed
 - [x] src/sunlinsol/sptfqmr/sunlinsol_sptfqmr.c — committed
 - [x] src/sunnonlinsol/newton/sunnonlinsol_newton.c — committed
-- [ ] src/sunnonlinsol/fixedpoint/sunnonlinsol_fixedpoint.c — todo
+- [x] src/sunnonlinsol/fixedpoint/sunnonlinsol_fixedpoint.c — committed
 - [ ] src/sunnonlinsol/auto/sunnonlinsol_auto.c — todo
 - [ ] src/sunadaptcontroller/soderlind/sunadaptcontroller_soderlind.c — todo
 - [ ] src/sunadaptcontroller/imexgus/sunadaptcontroller_imexgus.c — todo

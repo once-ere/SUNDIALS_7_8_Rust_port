@@ -27,6 +27,7 @@ pub mod sundials_types;
 pub mod sundials_utils;
 pub mod sundials_version;
 pub mod sunmatrix_band;
+pub mod sunnonlinsol_fixedpoint;
 pub mod sunnonlinsol_newton;
 pub mod sunmatrix_dense;
 pub mod sunmatrix_sparse;
