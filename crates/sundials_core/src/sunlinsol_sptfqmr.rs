@@ -178,7 +178,7 @@ pub fn SUNLinSolSetOptions_SPTFQMR(
             match key {
                 "prec_type" => {
                     idx += 1;
-                    let iarg: i32 = argv[idx].trim().parse().unwrap_or(0);
+                    let iarg: i32 = crate::sundials_utils::atoi(&argv[idx]);
                     let retval = SUNLinSol_SPTFQMRSetPrecType(S, iarg);
                     if retval != SUN_SUCCESS {
                         return retval;
@@ -186,7 +186,7 @@ pub fn SUNLinSolSetOptions_SPTFQMR(
                 }
                 "maxl" => {
                     idx += 1;
-                    let iarg: i32 = argv[idx].trim().parse().unwrap_or(0);
+                    let iarg: i32 = crate::sundials_utils::atoi(&argv[idx]);
                     let retval = SUNLinSol_SPTFQMRSetMaxl(S, iarg);
                     if retval != SUN_SUCCESS {
                         return retval;

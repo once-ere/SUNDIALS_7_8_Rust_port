@@ -98,7 +98,7 @@ pub fn SUNProfiler_Create(comm: SUNComm, title: &str, p: &mut Option<SUNProfiler
     /* Check to see if max entries env variable was set, and use if it was. */
     let mut max_entries: i64 = 2560;
     if let Ok(v) = std::env::var("SUNPROFILER_MAX_ENTRIES") {
-        max_entries = v.trim().parse().unwrap_or(0);
+        max_entries = crate::sundials_utils::atol(&v);
     }
     if max_entries <= 0 {
         max_entries = 2560;

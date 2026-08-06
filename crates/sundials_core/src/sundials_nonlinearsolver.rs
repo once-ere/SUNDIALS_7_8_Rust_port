@@ -213,7 +213,7 @@ fn sunnlsSetFromCommandLine(
         let key = &argv[idx][prefix.len()..];
         if key == "max_iters" {
             idx += 1;
-            let iarg: i32 = argv[idx].trim().parse().unwrap_or(0);
+            let iarg: i32 = crate::sundials_utils::atoi(&argv[idx]);
             let retval = SUNNonlinSolSetMaxIters(NLS, iarg);
             if retval != SUN_SUCCESS {
                 return retval;

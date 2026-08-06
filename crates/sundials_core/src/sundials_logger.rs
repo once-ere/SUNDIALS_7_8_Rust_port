@@ -233,7 +233,7 @@ pub fn SUNLogger_CreateFromEnv(comm: SUNComm, logger_out: &mut Option<SUNLogger>
     let output_rank_env = std::env::var("SUNLOGGER_OUTPUT_RANK").ok();
     let output_rank: i32 = output_rank_env
         .as_deref()
-        .map(|s| s.trim().parse().unwrap_or(0))
+        .map(|s| crate::sundials_utils::atoi(s))
         .unwrap_or(0);
     let error_fname_env = std::env::var("SUNLOGGER_ERROR_FILENAME").ok();
     let warning_fname_env = std::env::var("SUNLOGGER_WARNING_FILENAME").ok();

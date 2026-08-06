@@ -175,6 +175,17 @@ mod tests {
     }
 
     #[test]
+    fn c_atoi_semantics() {
+        assert_eq!(atoi("3abc"), 3);
+        assert_eq!(atoi("  -42xyz"), -42);
+        assert_eq!(atoi("abc"), 0);
+        assert_eq!(atoi(""), 0);
+        assert_eq!(atoi("+7"), 7);
+        assert_eq!(atol("123456789012"), 123456789012i64);
+        assert_eq!(atol("- 5"), 0); /* sign must abut digits, as in C */
+    }
+
+    #[test]
     fn width_helpers_right_justify() {
         assert_eq!(fmt_ew(1.5, 14, 6), "  1.500000e+00");
         assert_eq!(fmt_fw(3.14159265, 10, 4), "    3.1416");
@@ -407,5 +418,38 @@ pub fn sunfprintf_long_array(
         for (i, v) in value.iter().enumerate() {
             fp.write_str(&format!("{name} {i},{v}"));
         }
+    }
+}
+
+/// C `atoi(s)`: skip leading whitespace, optional sign, then the longest
+/// digit prefix; 0 if no digits. Trailing junk is ignored (unlike Rust's
+/// strict `parse`), matching libc for tokens like "3abc".
+pub fn atoi(s: &str) -> i32 {
+    atol(s) as i32
+}
+
+/// C `atol(s)` (see [`atoi`]).
+pub fn atol(s: &str) -> i64 {
+    let t = s.trim_start();
+    let b = t.as_bytes();
+    let mut i = 0usize;
+    let mut neg = false;
+    if i < b.len() && (b[i] == b'+' || b[i] == b'-') {
+        neg = b[i] == b'-';
+        i += 1;
+    }
+    let start = i;
+    let mut val: i64 = 0;
+    while i < b.len() && b[i].is_ascii_digit() {
+        val = val.wrapping_mul(10).wrapping_add((b[i] - b'0') as i64);
+        i += 1;
+    }
+    if i == start {
+        return 0;
+    }
+    if neg {
+        -val
+    } else {
+        val
     }
 }

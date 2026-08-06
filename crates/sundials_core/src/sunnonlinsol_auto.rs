@@ -717,9 +717,9 @@ fn setFromCommandLine_Auto(
             let retval = SUNNonlinSolSetSwitchingParameters_Auto(
                 NLS,
                 SUNStrToReal(argv[idx + 1].trim()),
-                argv[idx + 2].trim().parse::<i64>().unwrap_or(0),
+                crate::sundials_utils::atol(&argv[idx + 2]),
                 SUNStrToReal(argv[idx + 3].trim()),
-                argv[idx + 4].trim().parse::<i64>().unwrap_or(0),
+                crate::sundials_utils::atol(&argv[idx + 4]),
             );
             if retval != SUN_SUCCESS {
                 return retval;

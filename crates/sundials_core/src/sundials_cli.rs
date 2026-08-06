@@ -43,7 +43,7 @@ pub fn sunCheckAndSetIntArgs(
         *arg_used = SUNFALSE;
         if argv[*argidx as usize][offset..] == *testpairs[j as usize].key {
             *argidx += 1;
-            let iarg: i32 = argv[*argidx as usize].trim().parse().unwrap_or(0);
+            let iarg: i32 = crate::sundials_utils::atoi(&argv[*argidx as usize]);
             let retval = (testpairs[j as usize].set)(mem, iarg);
             if retval != SUN_SUCCESS {
                 *failedarg = j;
@@ -79,9 +79,9 @@ pub fn sunCheckAndSetTwoIntArgs(
         *arg_used = SUNFALSE;
         if argv[*argidx as usize][offset..] == *testpairs[j as usize].key {
             *argidx += 1;
-            let iarg1: i32 = argv[*argidx as usize].trim().parse().unwrap_or(0);
+            let iarg1: i32 = crate::sundials_utils::atoi(&argv[*argidx as usize]);
             *argidx += 1;
-            let iarg2: i32 = argv[*argidx as usize].trim().parse().unwrap_or(0);
+            let iarg2: i32 = crate::sundials_utils::atoi(&argv[*argidx as usize]);
             let retval = (testpairs[j as usize].set)(mem, iarg1, iarg2);
             if retval != SUN_SUCCESS {
                 *failedarg = j;
@@ -117,7 +117,7 @@ pub fn sunCheckAndSetLongArgs(
         *arg_used = SUNFALSE;
         if argv[*argidx as usize][offset..] == *testpairs[j as usize].key {
             *argidx += 1;
-            let iarg: i64 = argv[*argidx as usize].trim().parse().unwrap_or(0);
+            let iarg: i64 = crate::sundials_utils::atol(&argv[*argidx as usize]);
             let retval = (testpairs[j as usize].set)(mem, iarg);
             if retval != SUN_SUCCESS {
                 *failedarg = j;
@@ -153,7 +153,7 @@ pub fn sunCheckAndSetIntRealArgs(
         *arg_used = SUNFALSE;
         if argv[*argidx as usize][offset..] == *testpairs[j as usize].key {
             *argidx += 1;
-            let iarg: i32 = argv[*argidx as usize].trim().parse().unwrap_or(0);
+            let iarg: i32 = crate::sundials_utils::atoi(&argv[*argidx as usize]);
             *argidx += 1;
             let rarg: sunrealtype = SUNStrToReal(argv[*argidx as usize].trim());
             let retval = (testpairs[j as usize].set)(mem, iarg, rarg);
@@ -192,7 +192,7 @@ pub fn sunCheckAndSetIntRealRealArgs(
         *arg_used = SUNFALSE;
         if argv[*argidx as usize][offset..] == *testpairs[j as usize].key {
             *argidx += 1;
-            let iarg: i32 = argv[*argidx as usize].trim().parse().unwrap_or(0);
+            let iarg: i32 = crate::sundials_utils::atoi(&argv[*argidx as usize]);
             *argidx += 1;
             let rarg1: sunrealtype = SUNStrToReal(argv[*argidx as usize].trim());
             *argidx += 1;
@@ -232,9 +232,9 @@ pub fn sunCheckAndSetIntLongArgs(
         *arg_used = SUNFALSE;
         if argv[*argidx as usize][offset..] == *testpairs[j as usize].key {
             *argidx += 1;
-            let iarg: i32 = argv[*argidx as usize].trim().parse().unwrap_or(0);
+            let iarg: i32 = crate::sundials_utils::atoi(&argv[*argidx as usize]);
             *argidx += 1;
-            let large: i64 = argv[*argidx as usize].trim().parse().unwrap_or(0);
+            let large: i64 = crate::sundials_utils::atol(&argv[*argidx as usize]);
             let retval = (testpairs[j as usize].set)(mem, iarg, large);
             if retval != SUN_SUCCESS {
                 *failedarg = j;

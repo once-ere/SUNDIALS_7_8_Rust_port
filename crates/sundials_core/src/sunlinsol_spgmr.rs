@@ -182,7 +182,7 @@ pub fn SUNLinSolSetOptions_SPGMR(
             match key {
                 "prec_type" => {
                     idx += 1;
-                    let iarg: i32 = argv[idx].trim().parse().unwrap_or(0);
+                    let iarg: i32 = crate::sundials_utils::atoi(&argv[idx]);
                     let retval = SUNLinSol_SPGMRSetPrecType(S, iarg);
                     if retval != SUN_SUCCESS {
                         return retval;
@@ -190,7 +190,7 @@ pub fn SUNLinSolSetOptions_SPGMR(
                 }
                 "gs_type" => {
                     idx += 1;
-                    let iarg: i32 = argv[idx].trim().parse().unwrap_or(0);
+                    let iarg: i32 = crate::sundials_utils::atoi(&argv[idx]);
                     let retval = SUNLinSol_SPGMRSetGSType(S, iarg);
                     if retval != SUN_SUCCESS {
                         return retval;
@@ -198,7 +198,7 @@ pub fn SUNLinSolSetOptions_SPGMR(
                 }
                 "max_restarts" => {
                     idx += 1;
-                    let iarg: i32 = argv[idx].trim().parse().unwrap_or(0);
+                    let iarg: i32 = crate::sundials_utils::atoi(&argv[idx]);
                     let retval = SUNLinSol_SPGMRSetMaxRestarts(S, iarg);
                     if retval != SUN_SUCCESS {
                         return retval;
