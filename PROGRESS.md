@@ -17,14 +17,14 @@ Status legend: todo | ported | building | committed
 - [x] src/sundials/sundials_linearsolver.c — committed
 - [x] src/sundials/sundials_nonlinearsolver.c — committed
 - [x] src/sundials/sundials_nvector_senswrapper.c — committed
-- [ ] src/sundials/sundials_memory.c — todo
+- [x] src/sundials/sundials_memory.c — committed
 - [x] src/sundials/sundials_logger.c — committed
 - [x] src/sundials/sundials_profiler.c — committed
-- [ ] src/sundials/sundials_futils.c — todo
+- [x] src/sundials/sundials_futils.c — committed
 - [x] src/sundials/sundials_hashmap.c — committed
 - [x] src/sundials/sundials_version.c — committed
-- [ ] src/sundials/sundials_cli.c — todo
-- [ ] src/sundials/sundials_adaptcontroller.c — todo
+- [x] src/sundials/sundials_cli.c — committed
+- [x] src/sundials/sundials_adaptcontroller.c — committed
 - [ ] src/sundials/sundials_stepper.c — todo (deferred to Phase 7 start)
 - [ ] src/sundials/sundials_adjointstepper.c — todo (deferred to Phase 7 start)
 - [ ] src/sundials/sundials_adjointcheckpointscheme.c — todo (deferred to Phase 7 start)
@@ -45,14 +45,14 @@ Status legend: todo | ported | building | committed
 - [x] src/sunlinsol/sptfqmr/sunlinsol_sptfqmr.c — committed
 - [x] src/sunnonlinsol/newton/sunnonlinsol_newton.c — committed
 - [x] src/sunnonlinsol/fixedpoint/sunnonlinsol_fixedpoint.c — committed
-- [ ] src/sunnonlinsol/auto/sunnonlinsol_auto.c — todo
-- [ ] src/sunadaptcontroller/soderlind/sunadaptcontroller_soderlind.c — todo
-- [ ] src/sunadaptcontroller/imexgus/sunadaptcontroller_imexgus.c — todo
-- [ ] src/sunadaptcontroller/mrihtol/sunadaptcontroller_mrihtol.c — todo
+- [x] src/sunnonlinsol/auto/sunnonlinsol_auto.c — committed
+- [x] src/sunadaptcontroller/soderlind/sunadaptcontroller_soderlind.c — committed
+- [x] src/sunadaptcontroller/imexgus/sunadaptcontroller_imexgus.c — committed
+- [x] src/sunadaptcontroller/mrihtol/sunadaptcontroller_mrihtol.c — committed
 - [ ] src/sundomeigest/power/sundomeigest_power.c — todo (deferred to Phase 7 start)
 - [ ] src/sundomeigest/arnoldi/sundomeigest_arnoldi.c — todo (deferred to Phase 7 start)
 - [ ] src/sunadjointcheckpointscheme/fixed/sunadjointcheckpointscheme_fixed.c — todo (deferred to Phase 7 start)
-- [ ] src/sunmemory/system/sundials_system_memory.c — todo
+- [x] src/sunmemory/system/sundials_system_memory.c — committed
 
 ## Phase 2 — cvode
 

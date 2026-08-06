@@ -269,7 +269,11 @@ pub fn SUNNonlinSolSolve_Newton(
                     }
 
                     /* not yet converged, test for max allowed iterations */
-                    if content_mut(NLS).curiter >= content_mut(NLS).maxiters {
+                    let (curiter, maxiters) = {
+                        let content = content_mut(NLS);
+                        (content.curiter, content.maxiters)
+                    };
+                    if curiter >= maxiters {
                         retval = SUN_NLS_CONV_RECVR;
                         break;
                     }
