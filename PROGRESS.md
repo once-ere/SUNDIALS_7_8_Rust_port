@@ -15,7 +15,7 @@ Status legend: todo | ported | building | committed
 - [x] src/sundials/sundials_dense.c — committed
 - [x] src/sundials/sundials_iterative.c — committed
 - [x] src/sundials/sundials_linearsolver.c — committed
-- [ ] src/sundials/sundials_nonlinearsolver.c — todo
+- [x] src/sundials/sundials_nonlinearsolver.c — committed
 - [ ] src/sundials/sundials_nvector_senswrapper.c — todo
 - [ ] src/sundials/sundials_memory.c — todo
 - [x] src/sundials/sundials_logger.c — committed
