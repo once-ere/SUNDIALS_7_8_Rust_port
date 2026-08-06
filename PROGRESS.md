@@ -5,7 +5,7 @@ Status legend: todo | ported | building | committed
 
 ## Phase 1 — sundials_core
 
-- [ ] src/sundials/sundials_math.c — todo
+- [x] src/sundials/sundials_math.c — committed
 - [ ] src/sundials/sundials_errors.c — todo
 - [ ] src/sundials/sundials_context.c — todo
 - [ ] src/sundials/sundials_nvector.c — todo
