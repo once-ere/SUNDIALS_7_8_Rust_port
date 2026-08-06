@@ -9,10 +9,10 @@ Status legend: todo | ported | building | committed
 - [x] src/sundials/sundials_errors.c — committed
 - [x] src/sundials/sundials_context.c — committed
 - [x] src/sundials/sundials_nvector.c — committed
-- [ ] src/sundials/sundials_matrix.c — todo
-- [ ] src/sundials/sundials_direct.c — todo
-- [ ] src/sundials/sundials_band.c — todo
-- [ ] src/sundials/sundials_dense.c — todo
+- [x] src/sundials/sundials_matrix.c — committed
+- [x] src/sundials/sundials_direct.c — committed
+- [x] src/sundials/sundials_band.c — committed
+- [x] src/sundials/sundials_dense.c — committed
 - [ ] src/sundials/sundials_iterative.c — todo
 - [ ] src/sundials/sundials_linearsolver.c — todo
 - [ ] src/sundials/sundials_nonlinearsolver.c — todo
@@ -33,8 +33,8 @@ Status legend: todo | ported | building | committed
 - [ ] src/sundials/sundatanode/sundatanode_inmem.c — todo (deferred to Phase 7 start)
 - [x] src/sundials/stl/sunstl_vector.h — committed (pulled forward: hashmap needs it)
 - [x] src/nvector/serial/nvector_serial.c — committed
-- [ ] src/sunmatrix/band/sunmatrix_band.c — todo
-- [ ] src/sunmatrix/dense/sunmatrix_dense.c — todo
+- [x] src/sunmatrix/band/sunmatrix_band.c — committed
+- [x] src/sunmatrix/dense/sunmatrix_dense.c — committed
 - [ ] src/sunmatrix/sparse/sunmatrix_sparse.c — todo
 - [ ] src/sunlinsol/band/sunlinsol_band.c — todo
 - [ ] src/sunlinsol/dense/sunlinsol_dense.c — todo
