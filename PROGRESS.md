@@ -36,12 +36,12 @@ Status legend: todo | ported | building | committed
 - [x] src/sunmatrix/band/sunmatrix_band.c — committed
 - [x] src/sunmatrix/dense/sunmatrix_dense.c — committed
 - [x] src/sunmatrix/sparse/sunmatrix_sparse.c — committed
-- [ ] src/sunlinsol/band/sunlinsol_band.c — todo
-- [ ] src/sunlinsol/dense/sunlinsol_dense.c — todo
+- [x] src/sunlinsol/band/sunlinsol_band.c — committed
+- [x] src/sunlinsol/dense/sunlinsol_dense.c — committed
 - [ ] src/sunlinsol/pcg/sunlinsol_pcg.c — todo
 - [ ] src/sunlinsol/spbcgs/sunlinsol_spbcgs.c — todo
 - [ ] src/sunlinsol/spfgmr/sunlinsol_spfgmr.c — todo
-- [ ] src/sunlinsol/spgmr/sunlinsol_spgmr.c — todo
+- [x] src/sunlinsol/spgmr/sunlinsol_spgmr.c — committed
 - [ ] src/sunlinsol/sptfqmr/sunlinsol_sptfqmr.c — todo
 - [ ] src/sunnonlinsol/newton/sunnonlinsol_newton.c — todo
 - [ ] src/sunnonlinsol/fixedpoint/sunnonlinsol_fixedpoint.c — todo
