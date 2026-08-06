@@ -19,6 +19,7 @@ pub mod sunlinsol_spfgmr;
 pub mod sunlinsol_spgmr;
 pub mod sunlinsol_sptfqmr;
 pub mod sundials_matrix;
+pub mod sundials_nonlinearsolver;
 pub mod sundials_nvector;
 pub mod sundials_profiler;
 pub mod sundials_types;
