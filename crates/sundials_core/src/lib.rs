@@ -17,4 +17,5 @@ pub mod sundials_utils;
 pub mod sundials_version;
 pub mod sunmatrix_band;
 pub mod sunmatrix_dense;
+pub mod sunmatrix_sparse;
 pub mod sunstl_vector;

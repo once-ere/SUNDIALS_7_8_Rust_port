@@ -35,7 +35,7 @@ Status legend: todo | ported | building | committed
 - [x] src/nvector/serial/nvector_serial.c — committed
 - [x] src/sunmatrix/band/sunmatrix_band.c — committed
 - [x] src/sunmatrix/dense/sunmatrix_dense.c — committed
-- [ ] src/sunmatrix/sparse/sunmatrix_sparse.c — todo
+- [x] src/sunmatrix/sparse/sunmatrix_sparse.c — committed
 - [ ] src/sunlinsol/band/sunlinsol_band.c — todo
 - [ ] src/sunlinsol/dense/sunlinsol_dense.c — todo
 - [ ] src/sunlinsol/pcg/sunlinsol_pcg.c — todo
