@@ -1,0 +1,7 @@
+[package]
+name = "idas_rs"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+sundials_core = { path = "../sundials_core" }
