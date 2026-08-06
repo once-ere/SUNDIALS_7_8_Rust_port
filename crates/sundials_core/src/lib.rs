@@ -3,6 +3,8 @@
 pub mod sundials_context;
 pub mod sundials_errors;
 pub mod sundials_hashmap;
+pub mod sundials_iterative;
+pub mod sundials_linearsolver;
 pub mod sundials_logger;
 pub mod nvector_serial;
 pub mod sundials_band;
