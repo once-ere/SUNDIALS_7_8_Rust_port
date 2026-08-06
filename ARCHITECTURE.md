@@ -78,3 +78,39 @@ Exact C flag names and values (`CV_SUCCESS`, `CV_MEM_NULL`, `IDA_SUCCESS`,
 positive = recoverable. Functions that return flags in C return the same
 integer type in Rust; output parameters in C (`T *out`) become `&mut T`
 in the same argument position with the same name.
+
+## Established porting patterns (locked during Phase 1)
+
+- **Content downcast**: every implementation module defines
+  `fn content_mut(X) -> RefMut<'_, ContentStruct>` via
+  `RefMut::map(x.content.borrow_mut(), downcast_mut)`. Public accessor
+  macros (`NV_DATA_S`, `SM_DATA_D`, …) are functions returning `RefMut`
+  guards; drop the guard before any other op on the same object.
+- **Granular borrow rule**: never hold a RefCell borrow (of a mem, a
+  solver content, or vector data) across a call that can re-enter it —
+  callbacks (RHS, ATimes, Psolve, Jacobian) reach integrator state
+  through their own handle. Iterative-solver `solve` ops move ALL content
+  state into locals at entry (`Option::take` for `Box<dyn Any>` callback
+  data, `mem::take` for arrays, `Rc` clones for vectors), run the C
+  algorithm inside a closure returning the flag, and restore + write back
+  (numiters/resnorm/zeroguess/last_flag) at one exit point. Final flag
+  values are identical to C's multi-return-path writes because
+  logging-level-2 builds have no observable effects in between.
+- **`SUNCheck*`/`SUNAssert`**: release no-ops; call sites evaluate the
+  call and continue (`let _ = f(...)` where C had `(void)`).
+  `SUNLogInfo`/`SUNLogDebug`/`SUNLogExtraDebug*` compile away entirely at
+  logging level 2 and are omitted at translation time.
+- **CLI parsing**: `argv: &[String]` with `argv[0]` = program name; C
+  `atoi` maps to `s.trim().parse().unwrap_or(0)`; prefix matching is
+  literal (`<id>.` with no leading dashes).
+- **C output params**: `T *out` → `&mut T` same position/name;
+  functions returning object pointers return `Option<Handle>`
+  (NULL = `None`). Constructors that C would fail with NULL return
+  `None`.
+- **fmt helpers**: `fmt_e/f/g(x, prec)`, width variants
+  `fmt_ew/fmt_fw/fmt_gw(x, width, prec)`, and `sun_format_e/g/sg(x)` for
+  the `SUN_FORMAT_E/G/SG` macros ("% .15e" / "%.15g" / "%+.15g").
+- **Vector arrays**: C `N_Vector*` → `&[N_Vector]` (handles are Rc
+  clones); `N_Vector**` → `&[Vec<N_Vector>]`. Row-wise Hessenberg
+  `sunrealtype**` → `&mut [Vec<f64>]`; column-pointer arrays
+  (`SUNDlsMat cols`) → `dls_cols()` chunks_mut views.
