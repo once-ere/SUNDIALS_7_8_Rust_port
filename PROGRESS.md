@@ -40,7 +40,7 @@ Status legend: todo | ported | building | committed
 - [x] src/sunlinsol/dense/sunlinsol_dense.c — committed
 - [ ] src/sunlinsol/pcg/sunlinsol_pcg.c — todo
 - [ ] src/sunlinsol/spbcgs/sunlinsol_spbcgs.c — todo
-- [ ] src/sunlinsol/spfgmr/sunlinsol_spfgmr.c — todo
+- [x] src/sunlinsol/spfgmr/sunlinsol_spfgmr.c — committed
 - [x] src/sunlinsol/spgmr/sunlinsol_spgmr.c — committed
 - [ ] src/sunlinsol/sptfqmr/sunlinsol_sptfqmr.c — todo
 - [ ] src/sunnonlinsol/newton/sunnonlinsol_newton.c — todo
