@@ -1,3 +1,5 @@
 #![allow(non_snake_case, non_camel_case_types, non_upper_case_globals)]
 
+pub mod sundials_math;
+pub mod sundials_types;
 pub mod sundials_utils;

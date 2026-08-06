@@ -183,3 +183,28 @@ mod tests {
         assert_eq!(fmt_ew(1.5, 3, 6), "1.500000e+00");
     }
 }
+
+/// C `SUN_FORMAT_E` = `"% .15e"` (space flag: non-negatives get a space).
+pub fn sun_format_e(x: f64) -> String {
+    let s = fmt_e(x, 15);
+    if s.starts_with('-') {
+        s
+    } else {
+        format!(" {s}")
+    }
+}
+
+/// C `SUN_FORMAT_G` = `"%.15g"`.
+pub fn sun_format_g(x: f64) -> String {
+    fmt_g(x, 15)
+}
+
+/// C `SUN_FORMAT_SG` = `"%+.15g"`.
+pub fn sun_format_sg(x: f64) -> String {
+    let s = fmt_g(x, 15);
+    if s.starts_with('-') {
+        s
+    } else {
+        format!("+{s}")
+    }
+}

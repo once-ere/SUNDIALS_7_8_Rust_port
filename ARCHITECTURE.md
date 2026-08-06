@@ -17,16 +17,27 @@ including module.
 
 ## Core type model (fixed in Phase 1)
 
-- `sunrealtype` = `f64`, `sunindextype` = `i64`, `sunbooleantype` = `bool`.
-- C "object with ops table" structs (N_Vector, SUNMatrix, SUNLinearSolver,
-  SUNNonlinearSolver, SUNAdaptController, …) become Rust structs holding
-  their content directly; polymorphism over implementations is expressed
-  the same way the C code does — an ops table of plain `fn` pointers where
-  the C API exposes one, so user-supplied overrides keep working.
+- `sunrealtype` = `f64`, `sunindextype` = `i64`, `suncountertype` = `i64`,
+  `sunbooleantype` = `bool`, `SUNErrCode` = `i32`, `SUNComm` = `i32`.
+- **Handle model.** Every C heap object reached through a pointer
+  (`N_Vector`, `SUNMatrix`, `SUNLinearSolver`, `SUNNonlinearSolver`,
+  `SUNAdaptController`, `SUNContext`, solver mems, …) becomes
+  `pub type X = Rc<X_>` where `X_` holds `content: RefCell<Box<dyn Any>>`
+  (C `void* content`) plus an ops struct of plain `fn` pointers (where the
+  C API has one) and the `sunctx` handle. Cloning the `Rc` is the C
+  pointer copy; `Rc::ptr_eq` is C pointer equality.
+- Ops are plain `fn` pointers taking `&Handle` arguments — identical call
+  shape to C — and mutate through the `RefCell`. User-supplied override
+  implementations keep working exactly as in C.
 - `SUNContext` owns the error handler stack, logger, and profiler exactly
   as in C.
 - `user_data`: `Option<Box<dyn Any>>`, passed to callbacks as
-  `Option<&mut dyn Any>` (C: `void*`).
+  `Option<&mut dyn Any>` (C: `void*`). Solver internals `Option::take`
+  the box out of the mem record around each callback invocation, so the
+  callback gets exclusive access without re-borrowing the mem.
+- Solver mems: the public handle is `Rc<RefCell<CVodeMemRec>>`-style;
+  public API functions borrow once at entry and pass `&mut CVodeMemRec`
+  internally — matching C's `cv_mem->` style with zero borrow churn.
 - User callbacks are plain `fn` pointer types matching the C signature
   argument-for-argument (same names in the same order in Rust signatures).
   Do not change a callback signature without updating every example.
@@ -38,10 +49,13 @@ IDA `ida_yy`/`yret` etc., ARKODE `ycur`/`yout`), the Rust port copies the
 internal buffer to the user buffer at every return path — success, early
 error, and root-return alike.
 
-Vector ops: in-place methods handle aliased operands
-(`linear_sum_with`-style); free functions (`N_VLinearSum`) mirror the C
-call shape for distinct operands. Which one an internal call site uses is
-decided by what the C source actually aliases at that site.
+Vector ops: free functions (`N_VLinearSum(a, &x, b, &y, &z)`) mirror the
+C call shape for **all** call sites and are alias-safe by construction —
+implementations detect operand aliasing (`Rc::ptr_eq`) and take a single
+mutable borrow for the aliased case. This satisfies the in-place-method
+contract trivially: the free function *is* safe under aliasing, so C call
+sites translate 1:1 whether or not they alias. In-place convenience
+methods may exist additionally but are never required for safety.
 
 ## Formatting
 
