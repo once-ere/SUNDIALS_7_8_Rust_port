@@ -14,6 +14,7 @@ pub mod sundials_math;
 pub mod sunlinsol_band;
 pub mod sunlinsol_dense;
 pub mod sunlinsol_pcg;
+pub mod sunlinsol_spbcgs;
 pub mod sunlinsol_spfgmr;
 pub mod sunlinsol_spgmr;
 pub mod sundials_matrix;
