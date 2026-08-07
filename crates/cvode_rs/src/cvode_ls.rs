@@ -18,8 +18,13 @@
 //! This reproduces the C pointer aliasing without double ownership; the
 //! only divergence is that a C snapshot of a *stale* `cv_user_data`
 //! (user data replaced after the Set* call) cannot occur — the current
-//! `cv_user_data` is always passed, which is what `cvLsInitialize`'s
-//! "reset (just in case)" assignments re-establish in C anyway.
+//! `cv_user_data` is always passed. For `J_data`/`jt_data`/`A_data`
+//! that matches C exactly (`cvLsInitialize`'s "reset just in case"
+//! assignments refresh them); for `P_data` C keeps the attach-time
+//! snapshot forever, so a `CVodeSetUserData` call AFTER
+//! `CVodeSetLinearSolver` diverges: C's pset/psolve keep seeing the
+//! old pointer, this port passes the new box (accepted deviation
+//! class 6, see ARCHITECTURE.md).
 //!
 //! Granular borrow discipline: no `cv_mem` borrow is held across a user
 //! callback, an N_Vector op on user-visible vectors, or a
@@ -2160,6 +2165,10 @@ pub fn cvLsSetup(
             cv_mem.borrow_mut().cv_user_data = a_data;
         }
 
+        /* jcurPtr aliases cv_jcur in C (cvode_nls.c:307): write the linsys
+        result through so any pset reached via SUNLinSolSetup observes it */
+        cv_mem.borrow_mut().cv_jcur = *jcurPtr;
+
         /* Update J eval count and step when J was last updated */
         if *jcurPtr {
             let (nst_now, tn_now) = {
@@ -2197,12 +2206,19 @@ pub fn cvLsSetup(
     } else {
         /* Matrix-free case, set jcur to jbad */
         *jcurPtr = cvls_mem_mut(cv_mem).jbad;
+        /* write through the C alias (jcurPtr == &cv_jcur) so cvLsPSetup
+        passes the fresh suggestion to the user psetup */
+        cv_mem.borrow_mut().cv_jcur = *jcurPtr;
     }
 
     /* Call LS setup routine -- the LS may call cvLsPSetup, who will
     pass the heuristic suggestions above to the user code(s) */
     let flag = SUNLinSolSetup(&LS, A.as_ref());
     cvls_mem_mut(cv_mem).last_flag = flag;
+
+    /* re-read through the C alias: a user psetup reached via
+    SUNLinSolSetup -> cvLsPSetup may have overridden jcur */
+    *jcurPtr = cv_mem.borrow().cv_jcur;
 
     /* If Matrix-free, update heuristics flags */
     if A.is_none() {
@@ -2221,6 +2237,8 @@ pub fn cvLsSetup(
         /* Update jcur flag if we suggested an update */
         if cvls_mem_mut(cv_mem).jbad {
             *jcurPtr = SUNTRUE;
+            /* write through the C alias */
+            cv_mem.borrow_mut().cv_jcur = SUNTRUE;
         }
     }
 

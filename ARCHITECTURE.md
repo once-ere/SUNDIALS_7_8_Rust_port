@@ -138,3 +138,23 @@ be applied CONSISTENTLY in later phases:
    maps to `wrapping_sub` (never a panicking `-=`).
 5. **C UB → deterministic panic.** NULL deref / out-of-bounds /
    double-free in C map to Rust panics at the same site.
+6. **`user_data` pointer-snapshot sites (Phase 2).** C code that
+   snapshots the raw `user_data` pointer and reuses it later
+   (CVODE `cv_e_data = cv_user_data` in `cvInitialSetup`; CVLS
+   `P_data = cv_user_data` at `CVodeSetLinearSolver`) cannot alias a
+   `Box`: the port passes the CURRENT `cv_user_data` box at call time
+   instead. Divergent only when `CVodeSetUserData` is called
+   mid-integration after the snapshot point — no reference example
+   does this, and the Rust behavior matches the documented SUNDIALS
+   semantics. Same class: `void*`-returning getters
+   (`CVodeGetUserData`, `CVodeGetNonlinearSystemData`) SWAP the box
+   with the caller's out-param; the caller must hand it back (via
+   `CVodeSetUserData` or a second swap) before the integrator next
+   invokes a user callback.
+7. **Hoisted callback fn-pointers within one evaluation.** DQ loops
+   (`cvLsDQJtimes` retries, dense/band DQJac column loops) copy the
+   RHS/jt fn pointer to a local before the loop where C re-reads the
+   field each iteration; a callback re-entrantly swapping the fn
+   mid-evaluation would take effect one call later than in C. This is
+   the locked move-state-into-locals pattern; observable by no valid
+   example.

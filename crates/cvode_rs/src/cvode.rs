@@ -1833,6 +1833,11 @@ pub fn CVodeFree(cvode_mem: &mut Option<CVodeMem>) {
         cv_mem.borrow_mut().proj_mem = None;
     }
 
+    /* C frees the mem struct wholesale; the Rust handle is dropped by the
+    caller, so break the Rc cycle the default-efun e_data token creates
+    (cv_e_data holds a CVodeMem clone pointing back at this record) */
+    cv_mem.borrow_mut().cv_e_data = None;
+
     *cvode_mem = None;
 }
 
