@@ -88,13 +88,13 @@ Status legend: todo | ported | building | committed
 
 ## Phase 4 — kinsol
 
-- [ ] src/kinsol/kinsol.c — todo
-- [ ] src/kinsol/kinsol_aa.c — todo
-- [ ] src/kinsol/kinsol_bbdpre.c — todo
-- [ ] src/kinsol/kinsol_cli.c — todo
-- [ ] src/kinsol/kinsol_io.c — todo
-- [ ] src/kinsol/kinsol_ls.c — todo
-- [ ] src/kinsol/kinsol_orth.c — todo
+- [x] src/kinsol/kinsol.c — building
+- [x] src/kinsol/kinsol_aa.c — building
+- [x] src/kinsol/kinsol_bbdpre.c — building
+- [x] src/kinsol/kinsol_cli.c — building
+- [x] src/kinsol/kinsol_io.c — building
+- [x] src/kinsol/kinsol_ls.c — building
+- [x] src/kinsol/kinsol_orth.c — building
 
 ## Phase 5 — ida
 

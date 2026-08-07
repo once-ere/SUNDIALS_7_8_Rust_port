@@ -1,10 +1,14 @@
 #![allow(non_snake_case, non_camel_case_types, non_upper_case_globals)]
 
-/* kinsol modules (one per upstream C file; port agents append their
- * `pub mod` + prelude lines as files land:
- * kinsol, kinsol_aa, kinsol_bbdpre, kinsol_cli, kinsol_io, kinsol_ls,
- * kinsol_orth) */
+/* kinsol modules (one per upstream C file) */
+pub mod kinsol;
+pub mod kinsol_aa;
+pub mod kinsol_bbdpre;
+pub mod kinsol_cli;
 pub mod kinsol_impl;
+pub mod kinsol_io;
+pub mod kinsol_ls;
+pub mod kinsol_orth;
 
 /* Re-export every shared module from sundials_core (workspace rule) */
 pub use sundials_core::nvector_serial;
@@ -51,7 +55,14 @@ pub use sundials_core::sunstl_vector;
 
 /* Flat prelude so examples can `use kinsol_rs::*;` */
 pub mod prelude {
+    pub use crate::kinsol::*;
+    pub use crate::kinsol_aa::*;
+    pub use crate::kinsol_bbdpre::*;
+    pub use crate::kinsol_cli::*;
     pub use crate::kinsol_impl::*;
+    pub use crate::kinsol_io::*;
+    pub use crate::kinsol_ls::*;
+    pub use crate::kinsol_orth::*;
     pub use sundials_core::nvector_serial::*;
     pub use sundials_core::sundials_context::*;
     pub use sundials_core::sundials_errors::*;
