@@ -1,6 +1,12 @@
 #![allow(non_snake_case, non_camel_case_types, non_upper_case_globals)]
 
+pub mod sunadjointcheckpointscheme_fixed;
+pub mod sundatanode_inmem;
+pub mod sundials_adjointcheckpointscheme;
+pub mod sundials_adjointstepper;
 pub mod sundials_context;
+pub mod sundials_datanode;
+pub mod sundials_domeigestimator;
 pub mod sundials_errors;
 pub mod sundials_futils;
 pub mod sundials_hashmap;
@@ -17,6 +23,9 @@ pub mod sundials_cli;
 pub mod sundials_dense;
 pub mod sundials_direct;
 pub mod sundials_math;
+pub mod sundials_stepper;
+pub mod sundomeigest_arnoldi;
+pub mod sundomeigest_power;
 pub mod sunlinsol_band;
 pub mod sunlinsol_dense;
 pub mod sunlinsol_pcg;

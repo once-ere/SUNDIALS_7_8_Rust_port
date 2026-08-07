@@ -25,12 +25,12 @@ Status legend: todo | ported | building | committed
 - [x] src/sundials/sundials_version.c — committed
 - [x] src/sundials/sundials_cli.c — committed
 - [x] src/sundials/sundials_adaptcontroller.c — committed
-- [ ] src/sundials/sundials_stepper.c — todo (deferred to Phase 7 start)
-- [ ] src/sundials/sundials_adjointstepper.c — todo (deferred to Phase 7 start)
-- [ ] src/sundials/sundials_adjointcheckpointscheme.c — todo (deferred to Phase 7 start)
-- [ ] src/sundials/sundials_datanode.c — todo (deferred to Phase 7 start)
-- [ ] src/sundials/sundials_domeigestimator.c — todo (deferred to Phase 7 start)
-- [ ] src/sundials/sundatanode/sundatanode_inmem.c — todo (deferred to Phase 7 start)
+- [x] src/sundials/sundials_stepper.c — committed
+- [x] src/sundials/sundials_adjointstepper.c — committed
+- [x] src/sundials/sundials_adjointcheckpointscheme.c — committed
+- [x] src/sundials/sundials_datanode.c — committed
+- [x] src/sundials/sundials_domeigestimator.c — committed
+- [x] src/sundials/sundatanode/sundatanode_inmem.c — committed
 - [x] src/sundials/stl/sunstl_vector.h — committed (pulled forward: hashmap needs it)
 - [x] src/nvector/serial/nvector_serial.c — committed
 - [x] src/sunmatrix/band/sunmatrix_band.c — committed
@@ -49,9 +49,9 @@ Status legend: todo | ported | building | committed
 - [x] src/sunadaptcontroller/soderlind/sunadaptcontroller_soderlind.c — committed
 - [x] src/sunadaptcontroller/imexgus/sunadaptcontroller_imexgus.c — committed
 - [x] src/sunadaptcontroller/mrihtol/sunadaptcontroller_mrihtol.c — committed
-- [ ] src/sundomeigest/power/sundomeigest_power.c — todo (deferred to Phase 7 start)
-- [ ] src/sundomeigest/arnoldi/sundomeigest_arnoldi.c — todo (deferred to Phase 7 start)
-- [ ] src/sunadjointcheckpointscheme/fixed/sunadjointcheckpointscheme_fixed.c — todo (deferred to Phase 7 start)
+- [x] src/sundomeigest/power/sundomeigest_power.c — committed
+- [x] src/sundomeigest/arnoldi/sundomeigest_arnoldi.c — committed
+- [x] src/sunadjointcheckpointscheme/fixed/sunadjointcheckpointscheme_fixed.c — committed
 - [x] src/sunmemory/system/sundials_system_memory.c — committed
 
 ## Phase 2 — cvode
