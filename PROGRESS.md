@@ -56,17 +56,17 @@ Status legend: todo | ported | building | committed
 
 ## Phase 2 — cvode
 
-- [ ] src/cvode/cvode.c — todo
-- [ ] src/cvode/cvode_bandpre.c — todo
-- [ ] src/cvode/cvode_bbdpre.c — todo
-- [ ] src/cvode/cvode_cli.c — todo
-- [ ] src/cvode/cvode_diag.c — todo
-- [ ] src/cvode/cvode_fused_stubs.c — todo
-- [ ] src/cvode/cvode_io.c — todo
-- [ ] src/cvode/cvode_ls.c — todo
-- [ ] src/cvode/cvode_nls.c — todo
-- [ ] src/cvode/cvode_proj.c — todo
-- [ ] src/cvode/cvode_resize.c — todo
+- [x] src/cvode/cvode.c — building
+- [x] src/cvode/cvode_bandpre.c — building
+- [x] src/cvode/cvode_bbdpre.c — building
+- [x] src/cvode/cvode_cli.c — building
+- [x] src/cvode/cvode_diag.c — building
+- [x] src/cvode/cvode_fused_stubs.c — building
+- [x] src/cvode/cvode_io.c — building
+- [x] src/cvode/cvode_ls.c — building
+- [x] src/cvode/cvode_nls.c — building
+- [x] src/cvode/cvode_proj.c — building
+- [x] src/cvode/cvode_resize.c — building
 
 ## Phase 3 — cvodes
 
