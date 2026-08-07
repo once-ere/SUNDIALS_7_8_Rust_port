@@ -98,13 +98,13 @@ Status legend: todo | ported | building | committed
 
 ## Phase 5 — ida
 
-- [ ] src/ida/ida.c — todo
-- [ ] src/ida/ida_bbdpre.c — todo
-- [ ] src/ida/ida_cli.c — todo
-- [ ] src/ida/ida_ic.c — todo
-- [ ] src/ida/ida_io.c — todo
-- [ ] src/ida/ida_ls.c — todo
-- [ ] src/ida/ida_nls.c — todo
+- [x] src/ida/ida.c — building
+- [x] src/ida/ida_bbdpre.c — building
+- [x] src/ida/ida_cli.c — building
+- [x] src/ida/ida_ic.c — building
+- [x] src/ida/ida_io.c — building
+- [x] src/ida/ida_ls.c — building
+- [x] src/ida/ida_nls.c — building
 
 ## Phase 6 — idas
 

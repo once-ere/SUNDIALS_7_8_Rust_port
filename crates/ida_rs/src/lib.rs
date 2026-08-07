@@ -1,7 +1,14 @@
 #![allow(non_snake_case, non_camel_case_types, non_upper_case_globals)]
 
 /* ida modules (one per upstream C file) */
+pub mod ida;
+pub mod ida_bbdpre;
+pub mod ida_cli;
+pub mod ida_ic;
 pub mod ida_impl;
+pub mod ida_io;
+pub mod ida_ls;
+pub mod ida_nls;
 
 /* Re-export every shared module from sundials_core (workspace rule) */
 pub use sundials_core::nvector_serial;
@@ -48,7 +55,14 @@ pub use sundials_core::sunstl_vector;
 
 /* Flat prelude so examples can `use ida_rs::*;` */
 pub mod prelude {
+    pub use crate::ida::*;
+    pub use crate::ida_bbdpre::*;
+    pub use crate::ida_cli::*;
+    pub use crate::ida_ic::*;
     pub use crate::ida_impl::*;
+    pub use crate::ida_io::*;
+    pub use crate::ida_ls::*;
+    pub use crate::ida_nls::*;
     pub use sundials_core::nvector_serial::*;
     pub use sundials_core::sundials_context::*;
     pub use sundials_core::sundials_errors::*;
