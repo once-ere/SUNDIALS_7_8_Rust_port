@@ -1,7 +1,22 @@
 #![allow(non_snake_case, non_camel_case_types, non_upper_case_globals)]
 
 /* cvodes modules (one per upstream C file) */
+pub mod cvodea;
+pub mod cvodea_io;
+pub mod cvodes;
+pub mod cvodes_bandpre;
+pub mod cvodes_bbdpre;
+pub mod cvodes_cli;
+pub mod cvodes_diag;
 pub mod cvodes_impl;
+pub mod cvodes_io;
+pub mod cvodes_ls;
+pub mod cvodes_nls;
+pub mod cvodes_nls_sim;
+pub mod cvodes_nls_stg;
+pub mod cvodes_nls_stg1;
+pub mod cvodes_proj;
+pub mod cvodes_resize;
 
 /* Re-export every shared module from sundials_core (workspace rule) */
 pub use sundials_core::nvector_serial;
@@ -48,7 +63,22 @@ pub use sundials_core::sunstl_vector;
 
 /* Flat prelude so examples can `use cvode_rs::*;` */
 pub mod prelude {
+    pub use crate::cvodea::*;
+    pub use crate::cvodea_io::*;
+    pub use crate::cvodes::*;
+    pub use crate::cvodes_bandpre::*;
+    pub use crate::cvodes_bbdpre::*;
+    pub use crate::cvodes_cli::*;
+    pub use crate::cvodes_diag::*;
     pub use crate::cvodes_impl::*;
+    pub use crate::cvodes_io::*;
+    pub use crate::cvodes_ls::*;
+    pub use crate::cvodes_nls::*;
+    pub use crate::cvodes_nls_sim::*;
+    pub use crate::cvodes_nls_stg::*;
+    pub use crate::cvodes_nls_stg1::*;
+    pub use crate::cvodes_proj::*;
+    pub use crate::cvodes_resize::*;
     pub use sundials_core::nvector_serial::*;
     pub use sundials_core::sundials_context::*;
     pub use sundials_core::sundials_errors::*;

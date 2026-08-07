@@ -70,21 +70,21 @@ Status legend: todo | ported | building | committed
 
 ## Phase 3 — cvodes
 
-- [ ] src/cvodes/cvodea.c — todo
-- [ ] src/cvodes/cvodea_io.c — todo
-- [ ] src/cvodes/cvodes.c — todo
-- [ ] src/cvodes/cvodes_bandpre.c — todo
-- [ ] src/cvodes/cvodes_bbdpre.c — todo
-- [ ] src/cvodes/cvodes_cli.c — todo
-- [ ] src/cvodes/cvodes_diag.c — todo
-- [ ] src/cvodes/cvodes_io.c — todo
-- [ ] src/cvodes/cvodes_ls.c — todo
-- [ ] src/cvodes/cvodes_nls.c — todo
-- [ ] src/cvodes/cvodes_nls_sim.c — todo
-- [ ] src/cvodes/cvodes_nls_stg.c — todo
-- [ ] src/cvodes/cvodes_nls_stg1.c — todo
-- [ ] src/cvodes/cvodes_proj.c — todo
-- [ ] src/cvodes/cvodes_resize.c — todo
+- [x] src/cvodes/cvodea.c — building
+- [x] src/cvodes/cvodea_io.c — building
+- [x] src/cvodes/cvodes.c — building
+- [x] src/cvodes/cvodes_bandpre.c — building
+- [x] src/cvodes/cvodes_bbdpre.c — building
+- [x] src/cvodes/cvodes_cli.c — building
+- [x] src/cvodes/cvodes_diag.c — building
+- [x] src/cvodes/cvodes_io.c — building
+- [x] src/cvodes/cvodes_ls.c — building
+- [x] src/cvodes/cvodes_nls.c — building
+- [x] src/cvodes/cvodes_nls_sim.c — building
+- [x] src/cvodes/cvodes_nls_stg.c — building
+- [x] src/cvodes/cvodes_nls_stg1.c — building
+- [x] src/cvodes/cvodes_proj.c — building
+- [x] src/cvodes/cvodes_resize.c — building
 
 ## Phase 4 — kinsol
 
