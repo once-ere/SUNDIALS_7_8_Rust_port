@@ -108,17 +108,17 @@ Status legend: todo | ported | building | committed
 
 ## Phase 6 — idas
 
-- [ ] src/idas/idaa.c — todo
-- [ ] src/idas/idaa_io.c — todo
-- [ ] src/idas/idas.c — todo
-- [ ] src/idas/idas_bbdpre.c — todo
-- [ ] src/idas/idas_cli.c — todo
-- [ ] src/idas/idas_ic.c — todo
-- [ ] src/idas/idas_io.c — todo
-- [ ] src/idas/idas_ls.c — todo
-- [ ] src/idas/idas_nls.c — todo
-- [ ] src/idas/idas_nls_sim.c — todo
-- [ ] src/idas/idas_nls_stg.c — todo
+- [x] src/idas/idaa.c — building
+- [x] src/idas/idaa_io.c — building
+- [x] src/idas/idas.c — building
+- [x] src/idas/idas_bbdpre.c — building
+- [x] src/idas/idas_cli.c — building
+- [x] src/idas/idas_ic.c — building
+- [x] src/idas/idas_io.c — building
+- [x] src/idas/idas_ls.c — building
+- [x] src/idas/idas_nls.c — building
+- [x] src/idas/idas_nls_sim.c — building
+- [x] src/idas/idas_nls_stg.c — building
 
 ## Phase 7 — arkode
 
