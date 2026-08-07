@@ -2,31 +2,39 @@
 
 One line per (example, args) reference variant parsed from the upstream
 CMakeLists.txt files (199 total; tools/verify_examples.sh list regenerates
-the tuple set). Status: todo | identical | last-digit(reason) | excluded(reason).
+the tuple set). Status: todo | identical | last-digit(reason) |
+excluded(reason) | ref-libm(reason).
+
+`ref-libm`: the shipped `.out` embeds the generating machine's glibc
+transcendental rounding (sin/exp) inside the integration feedback loop and
+cannot be byte-matched on this platform's libm; the port is verified
+byte-identical to a pristine upstream-C build (reference config,
+`-ffp-contract=off`) run locally. See the diurnal-family note below the
+table.
 
 | crate | example | args | reference .out | status |
 |---|---|---|---|---|
-| cvode_rs | cvAdvDiff_bnd | — | cvAdvDiff_bnd.out | todo |
-| cvode_rs | cvAnalytic_mels | — | cvAnalytic_mels.out | todo |
-| cvode_rs | cvDirectDemo_ls | — | cvDirectDemo_ls.out | todo |
-| cvode_rs | cvDisc_dns | — | cvDisc_dns.out | todo |
-| cvode_rs | cvDiurnal_kry_bp | — | cvDiurnal_kry_bp.out | todo |
-| cvode_rs | cvDiurnal_kry | — | cvDiurnal_kry.out | todo |
-| cvode_rs | cvKrylovDemo_ls | — | cvKrylovDemo_ls.out | todo |
-| cvode_rs | cvKrylovDemo_ls | 1 | cvKrylovDemo_ls_1.out | todo |
-| cvode_rs | cvKrylovDemo_ls | 2 | cvKrylovDemo_ls_2.out | todo |
-| cvode_rs | cvKrylovDemo_prec | — | cvKrylovDemo_prec.out | todo |
-| cvode_rs | cvParticle_dns | — | cvParticle_dns.out | todo |
-| cvode_rs | cvPendulum_dns | — | cvPendulum_dns.out | todo |
-| cvode_rs | cvRoberts_dns | — | cvRoberts_dns.out | todo |
-| cvode_rs | cvRoberts_dns_constraints | — | cvRoberts_dns_constraints.out | todo |
-| cvode_rs | cvRoberts_dns_negsol | — | cvRoberts_dns_negsol.out | todo |
-| cvode_rs | cvRoberts_dns_uw | — | cvRoberts_dns_uw.out | todo |
-| cvode_rs | cvRocket_dns | — | cvRocket_dns.out | todo |
-| cvode_rs | cvVdp_auto_nls | — | cvVdp_auto_nls.out | todo |
-| cvode_rs | cvKrylovDemo_ls | 0 1 | cvKrylovDemo_ls_0_1.out | todo |
-| cvode_rs | cvAdvDiff_bndL | — | cvAdvDiff_bndL.out | todo |
-| cvode_rs | cvRoberts_dnsL | — | cvRoberts_dnsL.out | todo |
+| cvode_rs | cvAdvDiff_bnd | — | cvAdvDiff_bnd.out | IDENTICAL |
+| cvode_rs | cvAnalytic_mels | — | cvAnalytic_mels.out | IDENTICAL |
+| cvode_rs | cvDirectDemo_ls | — | cvDirectDemo_ls.out | IDENTICAL |
+| cvode_rs | cvDisc_dns | — | cvDisc_dns.out | IDENTICAL |
+| cvode_rs | cvDiurnal_kry_bp | — | cvDiurnal_kry_bp.out | ref-libm(glibc-2.27-era CR sin + modern exp) |
+| cvode_rs | cvDiurnal_kry | — | cvDiurnal_kry.out | ref-libm(glibc>=2.28 sin/exp) |
+| cvode_rs | cvKrylovDemo_ls | — | cvKrylovDemo_ls.out | ref-libm(pre-2.27 glibc CR sin/exp) |
+| cvode_rs | cvKrylovDemo_ls | 1 | cvKrylovDemo_ls_1.out | ref-libm(same as no-arg variant) |
+| cvode_rs | cvKrylovDemo_ls | 2 | cvKrylovDemo_ls_2.out | ref-libm(same as no-arg variant) |
+| cvode_rs | cvKrylovDemo_prec | — | cvKrylovDemo_prec.out | IDENTICAL |
+| cvode_rs | cvParticle_dns | — | cvParticle_dns.out | IDENTICAL |
+| cvode_rs | cvPendulum_dns | — | cvPendulum_dns.out | exception: upstream .out anomaly |
+| cvode_rs | cvRoberts_dns | — | cvRoberts_dns.out | IDENTICAL |
+| cvode_rs | cvRoberts_dns_constraints | — | cvRoberts_dns_constraints.out | IDENTICAL |
+| cvode_rs | cvRoberts_dns_negsol | — | cvRoberts_dns_negsol.out | exception: stale ref line 20 |
+| cvode_rs | cvRoberts_dns_uw | — | cvRoberts_dns_uw.out | IDENTICAL |
+| cvode_rs | cvRocket_dns | — | cvRocket_dns.out | IDENTICAL |
+| cvode_rs | cvVdp_auto_nls | — | cvVdp_auto_nls.out | IDENTICAL |
+| cvode_rs | cvKrylovDemo_ls | 0 1 | cvKrylovDemo_ls_0_1.out | ref-libm(same as no-arg variant) |
+| cvode_rs | cvAdvDiff_bndL | — | cvAdvDiff_bndL.out | IDENTICAL (native band for LAPACK) |
+| cvode_rs | cvRoberts_dnsL | — | cvRoberts_dnsL.out | last-digit (LAPACK->native dense) |
 | cvode_rs | cvRoberts_block_klu | — | cvRoberts_block_klu.out | excluded(klu) |
 | cvode_rs | cvRoberts_klu | — | cvRoberts_klu.out | excluded(klu) |
 | cvode_rs | cvRoberts_sps | — | cvRoberts_sps.out | excluded(superlu) |
@@ -205,3 +213,63 @@ the tuple set). Status: todo | identical | last-digit(reason) | excluded(reason)
 | arkode_rs | ark_robertson | — | ark_robertson.out | todo |
 | arkode_rs | ark_twowaycouple_mri | — | ark_twowaycouple_mri.out | todo |
 | arkode_rs | ark_brusselator_fp | 1 | ark_brusselator_fp_1.out | todo |
+
+## Documented exceptions
+
+- **cvPendulum_dns**: the upstream reference `cvPendulum_dns.out` prints
+  `atol = 1.00e-5` (single-digit exponent) on its 5 header lines while the
+  C source formats both tolerances with `%8.2e` — no conforming C `printf`
+  produces a one-digit exponent, so the shipped reference cannot be
+  reproduced by its own source. The port prints `1.00e-05` (what `%8.2e`
+  yields); those 5 lines (10 diff lines) are the only divergence accepted
+  for this variant once the remainder verifies.
+- **cvRoberts_dnsL**: LAPACK dense solver replaced by the native dense
+  solver per the port plan; different factorization arithmetic gives
+  last-digit drift in printed `y` values (§1 documented exception class).
+- **cvRoberts_dns_negsol**: reference line 20 (`netf = 59     ncfn`, 5-space
+  gap) is unproducible by the example's single `%-6ld` format string, which
+  yields the 8-space gap seen on the same run's line 41 — the shipped line
+  predates the current PrintFinalStats format. Port output matches the
+  current C source; the 2-diff-line exception is accepted.
+- **Deterministic `pow`** (not an exception — a fix): `SUNRpowerR` ports the
+  ARM optimized-routines `pow` (via musl, MIT; the glibc >= 2.28 algorithm
+  that generated the references) instead of calling platform libm — Apple
+  libm `pow` is 1 ulp off glibc on rare arguments inside the step-size
+  heuristics, which forked `cvDirectDemo_ls`, `cvParticle_dns`, and
+  `cvVdp_auto_nls` before the port. All three are byte-IDENTICAL with it.
+
+## Diurnal-family reference-libm exception (2026-08-06)
+
+The six cvode_rs variants marked `ref-libm` (cvDiurnal_kry, cvDiurnal_kry_bp,
+cvKrylovDemo_ls x4) all solve the 2-species diurnal problem, whose RHS/Jtimes
+evaluate `sin`/`exp` inside the integration feedback loop. Evidence that the
+mismatch is the reference environment, not the port:
+
+1. **Port == upstream C.** Pristine upstream 7.8.0 C sources compiled locally
+   (clang and gcc, `-O3 -DNDEBUG -ffp-contract=off`, logging 2, monitoring on,
+   profiling off, error checks off) produce output byte-identical to the Rust
+   port for all six variants — including the same divergence from the shipped
+   `.out` (e.g. cvDiurnal_kry t=2.88e4: both give nst=311/order 3 vs shipped
+   nst=307/order 4).
+2. **Shipped `.out`s reproduced by libm substitution.** Linking the same
+   pristine C build against the reference platform's libm implementations
+   reproduces each shipped `.out` byte-for-byte:
+   - cvDiurnal_kry.out (regenerated 2024-09-10, LLNL commit bb6cf3e7): glibc
+     dbl-64 `sin`+`exp` (glibc >= 2.28 era, IBM s_sin.c + Nagy e_exp.c).
+   - cvDiurnal_kry_bp.out (same commit, different CI node): correctly-rounded
+     `sin` (pre-2.28 glibc IBM sin with mp fallback) + modern (>= 2.27) glibc
+     `exp` — the glibc 2.27 signature.
+   - cvKrylovDemo_ls*.out (regenerated 2020-05-19, commit 56289b71): fully
+     correctly-rounded `sin`/`exp` (pre-2.27 glibc, e.g. RHEL7 2.17) — all
+     four argv variants match byte-for-byte.
+3. **Mutual inconsistency.** The three `.out`s require three different `sin`
+   implementations (glibc-2.28+ for kry, <= 2.27 CR for bp/ls), so no single
+   libm — and therefore no faithful port — can byte-match all of them
+   simultaneously. First consequential deviation for cvDiurnal_kry: Apple
+   libm and glibc >= 2.28 sin differ by 1 ulp at x = 0x1.27b7ca8e314fp-3
+   (om*t, t ~= 1986 s); 47 of ~7600 sin calls differ over the run; the
+   ulp-level trajectory drift first flips a step-size/order decision between
+   nst 277 (t = 2.16e4, still byte-identical) and the t = 2.88e4 checkpoint.
+
+Acceptance for these six variants is therefore byte-identity against the
+locally-built pristine upstream C binary (satisfied), not the shipped `.out`.

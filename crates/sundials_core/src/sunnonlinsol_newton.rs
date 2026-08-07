@@ -216,12 +216,22 @@ pub fn SUNNonlinSolSolve_Newton(
 
         /* compute the nonlinear residual, store in delta */
         retval = Sys(ycor, &delta, mem);
+        if retval != SUN_SUCCESS {
+            /* C breaks straight out of the outer loop here
+            (sunnonlinsol_newton.c:258-259): initial-residual failures
+            must NOT reach the jbad-retry block below */
+            break 'setup_loop;
+        }
         if retval == SUN_SUCCESS {
             /* if indicated, setup the linear system */
             if callLSetup {
                 let mut jcur = content_mut(NLS).jcur;
                 retval = (LSetup.expect("LSetup set"))(jbad, &mut jcur, mem);
                 content_mut(NLS).jcur = jcur;
+                if retval != SUN_SUCCESS {
+                    /* C direct exit (sunnonlinsol_newton.c:266) */
+                    break 'setup_loop;
+                }
             }
 
             if retval == SUN_SUCCESS {
