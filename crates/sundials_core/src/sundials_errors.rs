@@ -142,7 +142,9 @@ pub fn SUNAbortErrHandlerFn(
     err_code: SUNErrCode,
     _err_user_data: &mut Option<Box<dyn Any>>,
     sunctx: &SUNContext,
-) -> ! {
+) {
+    /* C signature is void (the abort never returns); declaring `()` keeps
+    the fn item coercible to SUNErrHandlerFn at user call sites */
     /* Flush all buffered logging messages now before we abort */
     let logger = sunctx.borrow().logger.clone();
     if let Some(logger) = logger.as_ref() {
