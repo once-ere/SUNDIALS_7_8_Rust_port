@@ -3,7 +3,12 @@
 One line per (example, args) reference variant parsed from the upstream
 CMakeLists.txt files (199 total; tools/verify_examples.sh list regenerates
 the tuple set). Status: todo | identical | last-digit(reason) |
-excluded(reason) | ref-libm(reason).
+excluded(reason) | ref-libm(reason) | OPEN(reason).
+
+`OPEN`: the variant runs to completion but diverges from the reference in
+solver-visible quantities (counters, converged values). Not yet diagnosed —
+handed to the debug phase with the evidence recorded below the table. Never
+"fixed" by tuning the example.
 
 `ref-libm`: the shipped `.out` embeds the generating machine's glibc
 transcendental rounding (sin/exp) inside the integration feedback loop and
@@ -77,26 +82,26 @@ table.
 | cvodes_rs | cvsRoberts_ASAi_sps | — | cvsRoberts_ASAi_sps.out | excluded(superlu) |
 | cvodes_rs | cvsRoberts_FSA_sps | -sensi stg1 t | cvsRoberts_FSA_sps_-sensi_stg1_t.out | excluded(superlu) |
 | cvodes_rs | cvsRoberts_sps | — | cvsRoberts_sps.out | excluded(superlu) |
-| kinsol_rs | kinAnalytic_fp | — | kinAnalytic_fp.out | todo |
-| kinsol_rs | kinAnalytic_fp | --damping_fp 0.5 | kinAnalytic_fp_--damping_fp_0.5.out | todo |
-| kinsol_rs | kinAnalytic_fp | --damping_fn | kinAnalytic_fp_--damping_fn.out | todo |
-| kinsol_rs | kinAnalytic_fp | --m_aa 2 | kinAnalytic_fp_--m_aa_2.out | todo |
-| kinsol_rs | kinAnalytic_fp | --m_aa 2 --delay_aa 2 | kinAnalytic_fp_--m_aa_2_--delay_aa_2.out | todo |
-| kinsol_rs | kinAnalytic_fp | --m_aa 2 --damping_aa 0.5 | kinAnalytic_fp_--m_aa_2_--damping_aa_0.5.out | todo |
-| kinsol_rs | kinAnalytic_fp | --m_aa 2 --damping_fn | kinAnalytic_fp_--m_aa_2_--damping_fn.out | todo |
-| kinsol_rs | kinAnalytic_fp | --m_aa 3 --depth_fn | kinAnalytic_fp_--m_aa_3_--depth_fn.out | todo |
-| kinsol_rs | kinAnalytic_fp | --m_aa 2 --orth_aa 1 | kinAnalytic_fp_--m_aa_2_--orth_aa_1.out | todo |
-| kinsol_rs | kinAnalytic_fp | --m_aa 2 --orth_aa 2 | kinAnalytic_fp_--m_aa_2_--orth_aa_2.out | todo |
-| kinsol_rs | kinAnalytic_fp | --m_aa 2 --orth_aa 3 | kinAnalytic_fp_--m_aa_2_--orth_aa_3.out | todo |
-| kinsol_rs | kinFerTron_dns | — | kinFerTron_dns.out | todo |
-| kinsol_rs | kinFoodWeb_kry | — | kinFoodWeb_kry.out | todo |
-| kinsol_rs | kinKrylovDemo_ls | — | kinKrylovDemo_ls.out | todo |
-| kinsol_rs | kinLaplace_bnd | — | kinLaplace_bnd.out | todo |
-| kinsol_rs | kinLaplace_picard_bnd | — | kinLaplace_picard_bnd.out | todo |
-| kinsol_rs | kinLaplace_picard_kry | — | kinLaplace_picard_kry.out | todo |
-| kinsol_rs | kinRoberts_fp | — | kinRoberts_fp.out | todo |
-| kinsol_rs | kinRoberts_fp | kinsol.m_aa 1 | kinRoberts_fp_kinsol.m_aa_1.out | todo |
-| kinsol_rs | kinRoboKin_dns | — | kinRoboKin_dns.out | todo |
+| kinsol_rs | kinAnalytic_fp | — | kinAnalytic_fp.out | IDENTICAL |
+| kinsol_rs | kinAnalytic_fp | --damping_fp 0.5 | kinAnalytic_fp_--damping_fp_0.5.out | IDENTICAL |
+| kinsol_rs | kinAnalytic_fp | --damping_fn | kinAnalytic_fp_--damping_fn.out | IDENTICAL |
+| kinsol_rs | kinAnalytic_fp | --m_aa 2 | kinAnalytic_fp_--m_aa_2.out | IDENTICAL |
+| kinsol_rs | kinAnalytic_fp | --m_aa 2 --delay_aa 2 | kinAnalytic_fp_--m_aa_2_--delay_aa_2.out | IDENTICAL |
+| kinsol_rs | kinAnalytic_fp | --m_aa 2 --damping_aa 0.5 | kinAnalytic_fp_--m_aa_2_--damping_aa_0.5.out | IDENTICAL |
+| kinsol_rs | kinAnalytic_fp | --m_aa 2 --damping_fn | kinAnalytic_fp_--m_aa_2_--damping_fn.out | IDENTICAL |
+| kinsol_rs | kinAnalytic_fp | --m_aa 3 --depth_fn | kinAnalytic_fp_--m_aa_3_--depth_fn.out | IDENTICAL |
+| kinsol_rs | kinAnalytic_fp | --m_aa 2 --orth_aa 1 | kinAnalytic_fp_--m_aa_2_--orth_aa_1.out | IDENTICAL |
+| kinsol_rs | kinAnalytic_fp | --m_aa 2 --orth_aa 2 | kinAnalytic_fp_--m_aa_2_--orth_aa_2.out | IDENTICAL |
+| kinsol_rs | kinAnalytic_fp | --m_aa 2 --orth_aa 3 | kinAnalytic_fp_--m_aa_2_--orth_aa_3.out | IDENTICAL |
+| kinsol_rs | kinFerTron_dns | — | kinFerTron_dns.out | IDENTICAL |
+| kinsol_rs | kinFoodWeb_kry | — | kinFoodWeb_kry.out | IDENTICAL |
+| kinsol_rs | kinKrylovDemo_ls | — | kinKrylovDemo_ls.out | IDENTICAL |
+| kinsol_rs | kinLaplace_bnd | — | kinLaplace_bnd.out | IDENTICAL |
+| kinsol_rs | kinLaplace_picard_bnd | — | kinLaplace_picard_bnd.out | IDENTICAL |
+| kinsol_rs | kinLaplace_picard_kry | — | kinLaplace_picard_kry.out | IDENTICAL |
+| kinsol_rs | kinRoberts_fp | — | kinRoberts_fp.out | IDENTICAL |
+| kinsol_rs | kinRoberts_fp | kinsol.m_aa 1 | kinRoberts_fp_kinsol.m_aa_1.out | IDENTICAL |
+| kinsol_rs | kinRoboKin_dns | — | kinRoboKin_dns.out | exception: stale ref (SUN_TABLE_WIDTH 28); values identical |
 | kinsol_rs | kinFerTron_klu | — | kinFerTron_klu.out | excluded(klu) |
 | kinsol_rs | kinRoboKin_slu | — | kinRoboKin_slu.out | excluded(superlu) |
 | ida_rs | idaAnalytic_mels | — | idaAnalytic_mels.out | todo |
@@ -113,22 +118,22 @@ table.
 | ida_rs | idaHeat2D_klu | — | idaHeat2D_klu.out | excluded(klu) |
 | ida_rs | idaRoberts_klu | — | idaRoberts_klu.out | excluded(klu) |
 | ida_rs | idaRoberts_sps | — | idaRoberts_sps.out | excluded(superlu) |
-| idas_rs | idasAkzoNob_ASAi_dns | — | idasAkzoNob_ASAi_dns.out | todo |
-| idas_rs | idasAkzoNob_dns | — | idasAkzoNob_dns.out | todo |
-| idas_rs | idasAnalytic_mels | — | idasAnalytic_mels.out | todo |
-| idas_rs | idasAnalytic_mels | idas.init_step 1e-5 | idasAnalytic_mels_idas.init_step_1e-5.out | todo |
-| idas_rs | idasFoodWeb_bnd | — | idasFoodWeb_bnd.out | todo |
-| idas_rs | idasHeat2D_bnd | — | idasHeat2D_bnd.out | todo |
-| idas_rs | idasHeat2D_kry | — | idasHeat2D_kry.out | todo |
-| idas_rs | idasHessian_ASA_FSA | — | idasHessian_ASA_FSA.out | todo |
-| idas_rs | idasKrylovDemo_ls | — | idasKrylovDemo_ls.out | todo |
-| idas_rs | idasKrylovDemo_ls | 1 | idasKrylovDemo_ls_1.out | todo |
-| idas_rs | idasKrylovDemo_ls | 2 | idasKrylovDemo_ls_2.out | todo |
-| idas_rs | idasRoberts_ASAi_dns | — | idasRoberts_ASAi_dns.out | todo |
-| idas_rs | idasRoberts_FSA_dns | -sensi stg t | idasRoberts_FSA_dns_-sensi_stg_t.out | todo |
-| idas_rs | idasRoberts_dns | — | idasRoberts_dns.out | todo |
-| idas_rs | idasSlCrank_dns | — | idasSlCrank_dns.out | todo |
-| idas_rs | idasSlCrank_FSA_dns | — | idasSlCrank_FSA_dns.out | todo |
+| idas_rs | idasAkzoNob_ASAi_dns | — | idasAkzoNob_ASAi_dns.out | exception: ref trailing whitespace stripped; values identical |
+| idas_rs | idasAkzoNob_dns | — | idasAkzoNob_dns.out | IDENTICAL |
+| idas_rs | idasAnalytic_mels | — | idasAnalytic_mels.out | IDENTICAL |
+| idas_rs | idasAnalytic_mels | idas.init_step 1e-5 | idasAnalytic_mels_idas.init_step_1e-5.out | IDENTICAL |
+| idas_rs | idasFoodWeb_bnd | — | idasFoodWeb_bnd.out | OPEN(last-digit: hused col, t=0.7/1.0) |
+| idas_rs | idasHeat2D_bnd | — | idasHeat2D_bnd.out | IDENTICAL |
+| idas_rs | idasHeat2D_kry | — | idasHeat2D_kry.out | IDENTICAL |
+| idas_rs | idasHessian_ASA_FSA | — | idasHessian_ASA_FSA.out | IDENTICAL |
+| idas_rs | idasKrylovDemo_ls | — | idasKrylovDemo_ls.out | IDENTICAL |
+| idas_rs | idasKrylovDemo_ls | 1 | idasKrylovDemo_ls_1.out | IDENTICAL |
+| idas_rs | idasKrylovDemo_ls | 2 | idasKrylovDemo_ls_2.out | IDENTICAL |
+| idas_rs | idasRoberts_ASAi_dns | — | idasRoberts_ASAi_dns.out | IDENTICAL |
+| idas_rs | idasRoberts_FSA_dns | -sensi stg t | idasRoberts_FSA_dns_-sensi_stg_t.out | IDENTICAL |
+| idas_rs | idasRoberts_dns | — | idasRoberts_dns.out | IDENTICAL |
+| idas_rs | idasSlCrank_dns | — | idasSlCrank_dns.out | OPEN(nre/nni off by 1, G @ digit 11) |
+| idas_rs | idasSlCrank_FSA_dns | — | idasSlCrank_FSA_dns.out | OPEN(nst 263 vs 233; dG/dp digit 5) |
 | idas_rs | idasRoberts_ASAi_klu | — | idasRoberts_ASAi_klu.out | excluded(klu) |
 | idas_rs | idasRoberts_FSA_klu | -sensi stg t | idasRoberts_FSA_klu_-sensi_stg_t.out | excluded(klu) |
 | idas_rs | idasRoberts_klu | — | idasRoberts_klu.out | excluded(klu) |
@@ -237,6 +242,74 @@ table.
   libm `pow` is 1 ulp off glibc on rare arguments inside the step-size
   heuristics, which forked `cvDirectDemo_ls`, `cvParticle_dns`, and
   `cvVdp_auto_nls` before the port. All three are byte-IDENTICAL with it.
+- **kinRoboKin_dns**: the only kinsol variant that calls `KINPrintAllStats`
+  in `SUN_OUTPUTFORMAT_TABLE`. All 16 stat lines differ by exactly one space
+  before the `=`: the shipped `.out` puts `=` at column 29 (name field padded
+  to 28), while `src/sundials/sundials_utils.h:31` defines
+  `SUN_TABLE_WIDTH 29` and `sunfprintf_long` formats `"%-*s = %ld\n"`, giving
+  column 30. Every printed value is byte-identical (verified: 0
+  non-whitespace diffs over all 46 lines). The shipped 7.8.0 reference tree
+  is self-inconsistent on this point — `ark_kepler.out` has `=` at column 29
+  while `ark_kepler_--stepper_ERK_--step-mode_adapt.out` has it at column 30
+  for the same `Current time` field, and every cvode/cvodes/ida/idas
+  reference uses column 30 — so a subset of `.out` files predates the
+  `SUN_TABLE_WIDTH` 28 -> 29 change. The port follows the shipped header;
+  matching the stale reference would require contradicting it.
+- **idasAkzoNob_ASAi_dns**: 3 diff lines, zero value differences. (a) The
+  `G:` line: the C source is
+  `printf("G:          %24.16f \n", Ith(q, 1));` — note the space before
+  `\n` — so the port emits a trailing space and the reference does not.
+  (b) The file ends with
+  `printf("------...------\n\n")`, so the port emits a final blank line the
+  reference lacks. The reference has been trailing-whitespace-normalized;
+  the stripping is NOT systematic — the sibling `idasAkzoNob_dns.c` has the
+  byte-identical `G:` printf and its shipped `idasAkzoNob_dns.out` line 37
+  DOES retain the trailing space (that variant is IDENTICAL). Port output
+  matches the C source character-for-character.
+
+## OPEN divergences handed to the debug phase (2026-08-07)
+
+Three idas_rs variants run to completion but do not match. None is a
+formatting or example-setup issue (every one of them is byte-identical up
+to the first solver-visible quantity), so per §6 they are recorded, not
+guessed at.
+
+- **idasFoodWeb_bnd** — 4 diff lines. The entire trajectory table matches:
+  all `c_bl`/`c_tr` species values, `nst = 239` and order `k = 1` are
+  byte-identical at every output time, and `hused` matches at
+  t = 1e-8 … 4e-1. Only the last column (`hused`, `IDAGetLastStep`, `%12.4e`)
+  differs at the final two output times: ref `6.2655e-01` vs port
+  `6.2656e-01` at t = 7.0e-1 and t = 1.0e+0. Relative delta ~1.6e-5, i.e. a
+  value sitting on the `%.4e` rounding boundary (~0.626555); a 1-ulp
+  difference in the last accepted step size flips the printed digit. Not a
+  formatting bug: both C `printf` and the port's `fmt_e` round the exact
+  binary double correctly, so identical doubles print identically. Suspect
+  the step-size heuristic arithmetic on the final step; `nst` never diverges.
+- **idasSlCrank_dns** — 6 diff lines, no sensitivities involved. All 26
+  trajectory rows (q, dq, lambda, nst, k, h) are byte-identical through
+  t = 10.0, and `nst = 251`, `nje = 39`, `netf = 1`, `ncfn = 20`,
+  `nsf = 0` all match. Only `nre` (1066 -> 1065) and `nni` (676 -> 675) are
+  each low by exactly one, and the quadrature `G` differs at digit 11
+  (3.3366160662909388 vs 3.3366160663381925, rel. 1.4e-11). Signature: one
+  nonlinear iteration fewer somewhere that does not perturb the step
+  sequence — most likely in `IDACalcIC` or the first step. Cross-check
+  against `ida_rs`'s `idaSlCrank_dns` was not possible: the ida_rs examples
+  do not currently compile (unrelated, in-flight phase).
+- **idasSlCrank_FSA_dns** — 22 diff lines, the largest divergence.
+  `nst` 233 -> 263, `nre` 1180 -> 1203, `nje` 46 -> 44, `nni` 720 -> 763,
+  `ncfn` 26 -> 23, `nsf` 1 -> 2; `G` differs at digit 8 and the four
+  `dG/dp` blocks differ in the 5th significant digit of the second
+  component (-3.6375e-01 vs -3.6376e-01 / -3.6373e-01). This example calls
+  `IDASensInit(..., fS = None, ...)`, i.e. the INTERNAL difference-quotient
+  sensitivity residual, and reaches the live `ida_p` from its user data via
+  a `Weak<RefCell<IDAMemRec>>` handle rather than the shared-handle
+  `SensParams` pattern that ARCHITECTURE §8 fixes for CVODES. Prime suspect
+  is therefore the IDAS parameter-aliasing path (`IDASetSensParams` copies
+  into `ida_mem.ida_p` instead of sharing the caller's array); the debug
+  phase should decide whether to give IDAS the same `SensParams` contract
+  CVODES has. Note the no-sensitivity `idasSlCrank_dns` above also diverges
+  slightly, so part of this may be the same underlying base-integrator
+  issue rather than sensitivity-specific.
 
 ## Diurnal-family reference-libm exception (2026-08-06)
 

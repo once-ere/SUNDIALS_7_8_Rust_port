@@ -120,6 +120,17 @@ Status legend: todo | ported | building | committed
 - [x] src/idas/idas_nls_sim.c — building
 - [x] src/idas/idas_nls_stg.c — building
 
+Library fix found by the first example sweep (2026-08-07): the six call
+sites that invoke `ida_resS` (`idas_ic.rs` x4, `idas_nls_sim.rs`,
+`idas_nls_stg.rs`) took `ida_user_dataS` unconditionally and so handed a
+user-supplied `IDASensResFn` a `None` user_data, panicking every example
+with an analytic sensitivity residual. C `idas.c:1359` sets
+`ida_user_dataS = ida_user_data` in that branch; the port encodes that as
+`None` (see `IDASensInit`, `idas.rs:1083`) and the call sites must fall
+back to `ida_user_data` — the same "Invariant D" already implemented by
+`idab_call_rhsQS` (`idas.rs:3116`) and by CVODES `cvSensRhsWrapper`. Fixed;
+unblocks idasRoberts_FSA_dns and idasHessian_ASA_FSA (both now IDENTICAL).
+
 ## Phase 7 — arkode
 
 - [ ] src/arkode/arkode.c — todo
@@ -248,25 +259,25 @@ Status legend: todo | ported | building | committed
 - [ ] ida_rs example idaKrylovDemo_ls — todo
 - [ ] ida_rs example idaRoberts_dns — todo
 - [ ] ida_rs example idaSlCrank_dns — todo
-- [ ] idas_rs example idasAkzoNob_ASAi_dns — todo
-- [ ] idas_rs example idasAkzoNob_dns — todo
-- [ ] idas_rs example idasAnalytic_mels — todo
-- [ ] idas_rs example idasFoodWeb_bnd — todo
-- [ ] idas_rs example idasHeat2D_bnd — todo
-- [ ] idas_rs example idasHeat2D_kry — todo
-- [ ] idas_rs example idasHessian_ASA_FSA — todo
-- [ ] idas_rs example idasKrylovDemo_ls — todo
-- [ ] idas_rs example idasRoberts_ASAi_dns — todo
-- [ ] idas_rs example idasRoberts_FSA_dns — todo
-- [ ] idas_rs example idasRoberts_dns — todo
-- [ ] idas_rs example idasSlCrank_FSA_dns — todo
-- [ ] idas_rs example idasSlCrank_dns — todo
-- [ ] kinsol_rs example kinAnalytic_fp — todo
-- [ ] kinsol_rs example kinFerTron_dns — todo
-- [ ] kinsol_rs example kinFoodWeb_kry — todo
-- [ ] kinsol_rs example kinKrylovDemo_ls — todo
-- [ ] kinsol_rs example kinLaplace_bnd — todo
-- [ ] kinsol_rs example kinLaplace_picard_bnd — todo
-- [ ] kinsol_rs example kinLaplace_picard_kry — todo
-- [ ] kinsol_rs example kinRoberts_fp — todo
-- [ ] kinsol_rs example kinRoboKin_dns — todo
+- [x] idas_rs example idasAkzoNob_ASAi_dns — verified (exception: ref trailing whitespace; values identical)
+- [x] idas_rs example idasAkzoNob_dns — verified IDENTICAL
+- [x] idas_rs example idasAnalytic_mels — verified IDENTICAL (2 variants)
+- [x] idas_rs example idasFoodWeb_bnd — OPEN (last-digit: hused col at t=0.7/1.0)
+- [x] idas_rs example idasHeat2D_bnd — verified IDENTICAL
+- [x] idas_rs example idasHeat2D_kry — verified IDENTICAL
+- [x] idas_rs example idasHessian_ASA_FSA — verified IDENTICAL
+- [x] idas_rs example idasKrylovDemo_ls — verified IDENTICAL (3 variants)
+- [x] idas_rs example idasRoberts_ASAi_dns — verified IDENTICAL
+- [x] idas_rs example idasRoberts_FSA_dns — verified IDENTICAL
+- [x] idas_rs example idasRoberts_dns — verified IDENTICAL
+- [x] idas_rs example idasSlCrank_FSA_dns — OPEN (nst 263 vs 233; dG/dp digit 5)
+- [x] idas_rs example idasSlCrank_dns — OPEN (nre/nni off by 1; G digit 11)
+- [x] kinsol_rs example kinAnalytic_fp — verified IDENTICAL (11 variants)
+- [x] kinsol_rs example kinFerTron_dns — verified IDENTICAL
+- [x] kinsol_rs example kinFoodWeb_kry — verified IDENTICAL
+- [x] kinsol_rs example kinKrylovDemo_ls — verified IDENTICAL
+- [x] kinsol_rs example kinLaplace_bnd — verified IDENTICAL
+- [x] kinsol_rs example kinLaplace_picard_bnd — verified IDENTICAL
+- [x] kinsol_rs example kinLaplace_picard_kry — verified IDENTICAL
+- [x] kinsol_rs example kinRoberts_fp — verified IDENTICAL (2 variants)
+- [x] kinsol_rs example kinRoboKin_dns — verified (exception: stale ref SUN_TABLE_WIDTH 28; values identical)

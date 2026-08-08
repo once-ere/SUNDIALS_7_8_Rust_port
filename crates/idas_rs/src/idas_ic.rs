@@ -686,6 +686,14 @@ fn IDANlsIC(IDA_mem: &IDAMem) -> i32 {
             )
         };
         let mut user_dataS = IDA_mem.borrow_mut().ida_user_dataS.take();
+        /* C: `ida_user_dataS` is `IDA_mem` when the internal DQ residual is in
+        use and `ida_user_data` otherwise (idas.c:1359/1365). Invariant D:
+        `Some(box)` is the module-owned token, `None` means hand over
+        `ida_user_data`. */
+        let resS_from_user_data = user_dataS.is_none();
+        if resS_from_user_data {
+            user_dataS = IDA_mem.borrow_mut().ida_user_data.take();
+        }
         retval = resS(
             Ns,
             t0,
@@ -702,7 +710,11 @@ fn IDANlsIC(IDA_mem: &IDAMem) -> i32 {
         );
         {
             let mut m = IDA_mem.borrow_mut();
-            m.ida_user_dataS = user_dataS;
+            if resS_from_user_data {
+                m.ida_user_data = user_dataS;
+            } else {
+                m.ida_user_dataS = user_dataS;
+            }
             m.ida_nrSe += 1;
         }
         if retval < 0 {
@@ -1189,6 +1201,14 @@ fn IDAfnorm(IDA_mem: &IDAMem, fnorm: &mut sunrealtype) -> i32 {
             )
         };
         let mut user_dataS = IDA_mem.borrow_mut().ida_user_dataS.take();
+        /* C: `ida_user_dataS` is `IDA_mem` when the internal DQ residual is in
+        use and `ida_user_data` otherwise (idas.c:1359/1365). Invariant D:
+        `Some(box)` is the module-owned token, `None` means hand over
+        `ida_user_data`. */
+        let resS_from_user_data = user_dataS.is_none();
+        if resS_from_user_data {
+            user_dataS = IDA_mem.borrow_mut().ida_user_data.take();
+        }
         retval = resS(
             Ns,
             t0,
@@ -1205,7 +1225,11 @@ fn IDAfnorm(IDA_mem: &IDAMem, fnorm: &mut sunrealtype) -> i32 {
         );
         {
             let mut m = IDA_mem.borrow_mut();
-            m.ida_user_dataS = user_dataS;
+            if resS_from_user_data {
+                m.ida_user_data = user_dataS;
+            } else {
+                m.ida_user_dataS = user_dataS;
+            }
             m.ida_nrSe += 1;
         }
         if retval < 0 {
@@ -1405,6 +1429,14 @@ fn IDASensNlsIC(IDA_mem: &IDAMem) -> i32 {
     };
 
     let mut user_dataS = IDA_mem.borrow_mut().ida_user_dataS.take();
+    /* C: `ida_user_dataS` is `IDA_mem` when the internal DQ residual is in
+    use and `ida_user_data` otherwise (idas.c:1359/1365). Invariant D:
+    `Some(box)` is the module-owned token, `None` means hand over
+    `ida_user_data`. */
+    let resS_from_user_data = user_dataS.is_none();
+    if resS_from_user_data {
+        user_dataS = IDA_mem.borrow_mut().ida_user_data.take();
+    }
     retval = resS(
         Ns,
         t0,
@@ -1421,7 +1453,11 @@ fn IDASensNlsIC(IDA_mem: &IDAMem) -> i32 {
     );
     {
         let mut m = IDA_mem.borrow_mut();
-        m.ida_user_dataS = user_dataS;
+        if resS_from_user_data {
+            m.ida_user_data = user_dataS;
+        } else {
+            m.ida_user_dataS = user_dataS;
+        }
         m.ida_nrSe += 1;
     }
     if retval < 0 {
@@ -1742,6 +1778,14 @@ fn IDASensfnorm(IDA_mem: &IDAMem, fnorm: &mut sunrealtype) -> i32 {
     };
 
     let mut user_dataS = IDA_mem.borrow_mut().ida_user_dataS.take();
+    /* C: `ida_user_dataS` is `IDA_mem` when the internal DQ residual is in
+    use and `ida_user_data` otherwise (idas.c:1359/1365). Invariant D:
+    `Some(box)` is the module-owned token, `None` means hand over
+    `ida_user_data`. */
+    let resS_from_user_data = user_dataS.is_none();
+    if resS_from_user_data {
+        user_dataS = IDA_mem.borrow_mut().ida_user_data.take();
+    }
     retval = resS(
         Ns,
         t0,
@@ -1758,7 +1802,11 @@ fn IDASensfnorm(IDA_mem: &IDAMem, fnorm: &mut sunrealtype) -> i32 {
     );
     {
         let mut m = IDA_mem.borrow_mut();
-        m.ida_user_dataS = user_dataS;
+        if resS_from_user_data {
+            m.ida_user_data = user_dataS;
+        } else {
+            m.ida_user_dataS = user_dataS;
+        }
         m.ida_nrSe += 1;
     }
     if retval < 0 {
