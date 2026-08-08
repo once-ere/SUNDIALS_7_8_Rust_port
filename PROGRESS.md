@@ -225,40 +225,40 @@ unblocks idasRoberts_FSA_dns and idasHessian_ASA_FSA (both now IDENTICAL).
 - [ ] cvode_rs example cvRoberts_dns_uw — todo
 - [ ] cvode_rs example cvRocket_dns — todo
 - [ ] cvode_rs example cvVdp_auto_nls — todo
-- [ ] cvodes_rs example cvsAdvDiff_ASAi_bnd — todo
-- [ ] cvodes_rs example cvsAdvDiff_FSA_non — todo
-- [ ] cvodes_rs example cvsAdvDiff_bnd — todo
-- [ ] cvodes_rs example cvsAdvDiff_bndL — todo
-- [ ] cvodes_rs example cvsAnalytic_mels — todo
-- [ ] cvodes_rs example cvsDirectDemo_ls — todo
-- [ ] cvodes_rs example cvsDiurnal_FSA_kry — todo
-- [ ] cvodes_rs example cvsDiurnal_kry — todo
-- [ ] cvodes_rs example cvsDiurnal_kry_bp — todo
-- [ ] cvodes_rs example cvsFoodWeb_ASAi_kry — todo
-- [ ] cvodes_rs example cvsFoodWeb_ASAp_kry — todo
-- [ ] cvodes_rs example cvsHessian_ASA_FSA — todo
-- [ ] cvodes_rs example cvsKrylovDemo_ls — todo
-- [ ] cvodes_rs example cvsKrylovDemo_prec — todo
-- [ ] cvodes_rs example cvsLotkaVolterra_ASA — todo
-- [ ] cvodes_rs example cvsParticle_dns — todo
-- [ ] cvodes_rs example cvsPendulum_dns — todo
-- [ ] cvodes_rs example cvsRoberts_ASAi_dns — todo
-- [ ] cvodes_rs example cvsRoberts_ASAi_dns_constraints — todo
-- [ ] cvodes_rs example cvsRoberts_FSA_dns — todo
-- [ ] cvodes_rs example cvsRoberts_FSA_dns_Switch — todo
-- [ ] cvodes_rs example cvsRoberts_FSA_dns_constraints — todo
-- [ ] cvodes_rs example cvsRoberts_dns — todo
-- [ ] cvodes_rs example cvsRoberts_dnsL — todo
-- [ ] cvodes_rs example cvsRoberts_dns_constraints — todo
-- [ ] cvodes_rs example cvsRoberts_dns_uw — todo
-- [ ] ida_rs example idaAnalytic_mels — todo
-- [ ] ida_rs example idaFoodWeb_bnd — todo
-- [ ] ida_rs example idaFoodWeb_kry — todo
-- [ ] ida_rs example idaHeat2D_bnd — todo
-- [ ] ida_rs example idaHeat2D_kry — todo
-- [ ] ida_rs example idaKrylovDemo_ls — todo
-- [ ] ida_rs example idaRoberts_dns — todo
-- [ ] ida_rs example idaSlCrank_dns — todo
+- [x] cvodes_rs example cvsAdvDiff_ASAi_bnd — verified IDENTICAL
+- [x] cvodes_rs example cvsAdvDiff_FSA_non — verified IDENTICAL (2 variants)
+- [x] cvodes_rs example cvsAdvDiff_bnd — verified IDENTICAL
+- [x] cvodes_rs example cvsAdvDiff_bndL — verified IDENTICAL (native band for LAPACK)
+- [x] cvodes_rs example cvsAnalytic_mels — verified IDENTICAL (2 variants)
+- [x] cvodes_rs example cvsDirectDemo_ls — verified IDENTICAL
+- [x] cvodes_rs example cvsDiurnal_FSA_kry — verified (ref-libm: diurnal family, 2 variants; no cvode counterpart)
+- [x] cvodes_rs example cvsDiurnal_kry — verified (ref-libm; port == cvode_rs cvDiurnal_kry)
+- [x] cvodes_rs example cvsDiurnal_kry_bp — verified (ref-libm; port == cvode_rs cvDiurnal_kry_bp)
+- [x] cvodes_rs example cvsFoodWeb_ASAi_kry — verified IDENTICAL
+- [x] cvodes_rs example cvsFoodWeb_ASAp_kry — verified IDENTICAL
+- [x] cvodes_rs example cvsHessian_ASA_FSA — verified IDENTICAL
+- [x] cvodes_rs example cvsKrylovDemo_ls — verified (ref-libm + ref trailing-ws stripped, 4 variants; port == cvode_rs cvKrylovDemo_ls)
+- [x] cvodes_rs example cvsKrylovDemo_prec — verified IDENTICAL
+- [x] cvodes_rs example cvsLotkaVolterra_ASA — verified IDENTICAL
+- [x] cvodes_rs example cvsParticle_dns — verified IDENTICAL
+- [x] cvodes_rs example cvsPendulum_dns — verified (exception: upstream .out anomaly, same as cvPendulum_dns)
+- [x] cvodes_rs example cvsRoberts_ASAi_dns — verified IDENTICAL
+- [x] cvodes_rs example cvsRoberts_ASAi_dns_constraints — verified IDENTICAL
+- [x] cvodes_rs example cvsRoberts_FSA_dns — verified IDENTICAL (2 variants)
+- [x] cvodes_rs example cvsRoberts_FSA_dns_Switch — verified IDENTICAL
+- [x] cvodes_rs example cvsRoberts_FSA_dns_constraints — verified IDENTICAL
+- [x] cvodes_rs example cvsRoberts_dns — verified IDENTICAL
+- [x] cvodes_rs example cvsRoberts_dnsL — verified (last-digit LAPACK->native, drift == cvRoberts_dnsL; + stale-ref spacing)
+- [x] cvodes_rs example cvsRoberts_dns_constraints — verified IDENTICAL
+- [x] cvodes_rs example cvsRoberts_dns_uw — verified IDENTICAL
+- [x] ida_rs example idaAnalytic_mels — verified IDENTICAL (2 variants)
+- [x] ida_rs example idaFoodWeb_bnd — OPEN (last-digit: hused col at t=0.7/1.0; identical to idas_rs -> shared IDA core)
+- [x] ida_rs example idaFoodWeb_kry — verified IDENTICAL
+- [x] ida_rs example idaHeat2D_bnd — verified IDENTICAL
+- [x] ida_rs example idaHeat2D_kry — verified IDENTICAL
+- [x] ida_rs example idaKrylovDemo_ls — verified IDENTICAL (3 variants)
+- [x] ida_rs example idaRoberts_dns — verified IDENTICAL
+- [x] ida_rs example idaSlCrank_dns — verified IDENTICAL (clears the idas_rs cross-check: idasSlCrank_dns is IDAS-specific)
 - [x] idas_rs example idasAkzoNob_ASAi_dns — verified (exception: ref trailing whitespace; values identical)
 - [x] idas_rs example idasAkzoNob_dns — verified IDENTICAL
 - [x] idas_rs example idasAnalytic_mels — verified IDENTICAL (2 variants)

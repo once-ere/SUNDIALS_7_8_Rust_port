@@ -43,39 +43,39 @@ table.
 | cvode_rs | cvRoberts_block_klu | — | cvRoberts_block_klu.out | excluded(klu) |
 | cvode_rs | cvRoberts_klu | — | cvRoberts_klu.out | excluded(klu) |
 | cvode_rs | cvRoberts_sps | — | cvRoberts_sps.out | excluded(superlu) |
-| cvodes_rs | cvsAdvDiff_ASAi_bnd | — | cvsAdvDiff_ASAi_bnd.out | todo |
-| cvodes_rs | cvsAdvDiff_FSA_non | -sensi sim t | cvsAdvDiff_FSA_non_-sensi_sim_t.out | todo |
-| cvodes_rs | cvsAdvDiff_FSA_non | -sensi stg t | cvsAdvDiff_FSA_non_-sensi_stg_t.out | todo |
-| cvodes_rs | cvsAdvDiff_bnd | — | cvsAdvDiff_bnd.out | todo |
-| cvodes_rs | cvsAnalytic_mels | — | cvsAnalytic_mels.out | todo |
-| cvodes_rs | cvsAnalytic_mels | cvodes.max_order 3 | cvsAnalytic_mels_cvodes.max_order_3.out | todo |
-| cvodes_rs | cvsDirectDemo_ls | — | cvsDirectDemo_ls.out | todo |
-| cvodes_rs | cvsDiurnal_FSA_kry | -sensi sim t | cvsDiurnal_FSA_kry_-sensi_sim_t.out | todo |
-| cvodes_rs | cvsDiurnal_FSA_kry | -sensi stg t | cvsDiurnal_FSA_kry_-sensi_stg_t.out | todo |
-| cvodes_rs | cvsDiurnal_kry | — | cvsDiurnal_kry.out | todo |
-| cvodes_rs | cvsDiurnal_kry_bp | — | cvsDiurnal_kry_bp.out | todo |
-| cvodes_rs | cvsFoodWeb_ASAi_kry | — | cvsFoodWeb_ASAi_kry.out | todo |
-| cvodes_rs | cvsFoodWeb_ASAp_kry | — | cvsFoodWeb_ASAp_kry.out | todo |
-| cvodes_rs | cvsHessian_ASA_FSA | — | cvsHessian_ASA_FSA.out | todo |
-| cvodes_rs | cvsKrylovDemo_ls | — | cvsKrylovDemo_ls.out | todo |
-| cvodes_rs | cvsKrylovDemo_ls | 1 | cvsKrylovDemo_ls_1.out | todo |
-| cvodes_rs | cvsKrylovDemo_ls | 2 | cvsKrylovDemo_ls_2.out | todo |
-| cvodes_rs | cvsKrylovDemo_prec | — | cvsKrylovDemo_prec.out | todo |
-| cvodes_rs | cvsLotkaVolterra_ASA | — | cvsLotkaVolterra_ASA.out | todo |
-| cvodes_rs | cvsParticle_dns | — | cvsParticle_dns.out | todo |
-| cvodes_rs | cvsPendulum_dns | — | cvsPendulum_dns.out | todo |
-| cvodes_rs | cvsRoberts_ASAi_dns | — | cvsRoberts_ASAi_dns.out | todo |
-| cvodes_rs | cvsRoberts_ASAi_dns_constraints | — | cvsRoberts_ASAi_dns_constraints.out | todo |
-| cvodes_rs | cvsRoberts_FSA_dns | -sensi sim t | cvsRoberts_FSA_dns_-sensi_sim_t.out | todo |
-| cvodes_rs | cvsRoberts_FSA_dns | -sensi stg1 t | cvsRoberts_FSA_dns_-sensi_stg1_t.out | todo |
-| cvodes_rs | cvsRoberts_FSA_dns_Switch | — | cvsRoberts_FSA_dns_Switch.out | todo |
-| cvodes_rs | cvsRoberts_FSA_dns_constraints | -sensi stg1 t | cvsRoberts_FSA_dns_constraints_-sensi_stg1_t.out | todo |
-| cvodes_rs | cvsRoberts_dns | — | cvsRoberts_dns.out | todo |
-| cvodes_rs | cvsRoberts_dns_constraints | — | cvsRoberts_dns_constraints.out | todo |
-| cvodes_rs | cvsRoberts_dns_uw | — | cvsRoberts_dns_uw.out | todo |
-| cvodes_rs | cvsKrylovDemo_ls | 0 1 | cvsKrylovDemo_ls_0_1.out | todo |
-| cvodes_rs | cvsAdvDiff_bndL | — | cvsAdvDiff_bndL.out | todo |
-| cvodes_rs | cvsRoberts_dnsL | — | cvsRoberts_dnsL.out | todo |
+| cvodes_rs | cvsAdvDiff_ASAi_bnd | — | cvsAdvDiff_ASAi_bnd.out | IDENTICAL |
+| cvodes_rs | cvsAdvDiff_FSA_non | -sensi sim t | cvsAdvDiff_FSA_non_-sensi_sim_t.out | IDENTICAL |
+| cvodes_rs | cvsAdvDiff_FSA_non | -sensi stg t | cvsAdvDiff_FSA_non_-sensi_stg_t.out | IDENTICAL |
+| cvodes_rs | cvsAdvDiff_bnd | — | cvsAdvDiff_bnd.out | IDENTICAL |
+| cvodes_rs | cvsAnalytic_mels | — | cvsAnalytic_mels.out | IDENTICAL |
+| cvodes_rs | cvsAnalytic_mels | cvodes.max_order 3 | cvsAnalytic_mels_cvodes.max_order_3.out | IDENTICAL |
+| cvodes_rs | cvsDirectDemo_ls | — | cvsDirectDemo_ls.out | IDENTICAL |
+| cvodes_rs | cvsDiurnal_FSA_kry | -sensi sim t | cvsDiurnal_FSA_kry_-sensi_sim_t.out | ref-libm(diurnal family; sin/exp in RHS, FSA amplifies) |
+| cvodes_rs | cvsDiurnal_FSA_kry | -sensi stg t | cvsDiurnal_FSA_kry_-sensi_stg_t.out | ref-libm(diurnal family; sin/exp in RHS, FSA amplifies) |
+| cvodes_rs | cvsDiurnal_kry | — | cvsDiurnal_kry.out | ref-libm(glibc>=2.28 sin/exp; port == cvode_rs cvDiurnal_kry) |
+| cvodes_rs | cvsDiurnal_kry_bp | — | cvsDiurnal_kry_bp.out | ref-libm(glibc-2.27-era CR sin + modern exp; port == cvode_rs cvDiurnal_kry_bp) |
+| cvodes_rs | cvsFoodWeb_ASAi_kry | — | cvsFoodWeb_ASAi_kry.out | IDENTICAL |
+| cvodes_rs | cvsFoodWeb_ASAp_kry | — | cvsFoodWeb_ASAp_kry.out | IDENTICAL |
+| cvodes_rs | cvsHessian_ASA_FSA | — | cvsHessian_ASA_FSA.out | IDENTICAL |
+| cvodes_rs | cvsKrylovDemo_ls | — | cvsKrylovDemo_ls.out | ref-libm(pre-2.27 glibc CR sin/exp; port == cvode_rs cvKrylovDemo_ls) + ref trailing-ws stripped |
+| cvodes_rs | cvsKrylovDemo_ls | 1 | cvsKrylovDemo_ls_1.out | ref-libm(pre-2.27 glibc CR sin/exp; port == cvode_rs cvKrylovDemo_ls) + ref trailing-ws stripped |
+| cvodes_rs | cvsKrylovDemo_ls | 2 | cvsKrylovDemo_ls_2.out | ref-libm(pre-2.27 glibc CR sin/exp; port == cvode_rs cvKrylovDemo_ls) + ref trailing-ws stripped |
+| cvodes_rs | cvsKrylovDemo_prec | — | cvsKrylovDemo_prec.out | IDENTICAL |
+| cvodes_rs | cvsLotkaVolterra_ASA | — | cvsLotkaVolterra_ASA.out | IDENTICAL |
+| cvodes_rs | cvsParticle_dns | — | cvsParticle_dns.out | IDENTICAL |
+| cvodes_rs | cvsPendulum_dns | — | cvsPendulum_dns.out | exception: upstream .out anomaly (same as cvPendulum_dns) |
+| cvodes_rs | cvsRoberts_ASAi_dns | — | cvsRoberts_ASAi_dns.out | IDENTICAL |
+| cvodes_rs | cvsRoberts_ASAi_dns_constraints | — | cvsRoberts_ASAi_dns_constraints.out | IDENTICAL |
+| cvodes_rs | cvsRoberts_FSA_dns | -sensi sim t | cvsRoberts_FSA_dns_-sensi_sim_t.out | IDENTICAL |
+| cvodes_rs | cvsRoberts_FSA_dns | -sensi stg1 t | cvsRoberts_FSA_dns_-sensi_stg1_t.out | IDENTICAL |
+| cvodes_rs | cvsRoberts_FSA_dns_Switch | — | cvsRoberts_FSA_dns_Switch.out | IDENTICAL |
+| cvodes_rs | cvsRoberts_FSA_dns_constraints | -sensi stg1 t | cvsRoberts_FSA_dns_constraints_-sensi_stg1_t.out | IDENTICAL |
+| cvodes_rs | cvsRoberts_dns | — | cvsRoberts_dns.out | IDENTICAL |
+| cvodes_rs | cvsRoberts_dns_constraints | — | cvsRoberts_dns_constraints.out | IDENTICAL |
+| cvodes_rs | cvsRoberts_dns_uw | — | cvsRoberts_dns_uw.out | IDENTICAL |
+| cvodes_rs | cvsKrylovDemo_ls | 0 1 | cvsKrylovDemo_ls_0_1.out | ref-libm(pre-2.27 glibc CR sin/exp; port == cvode_rs cvKrylovDemo_ls) + ref trailing-ws stripped |
+| cvodes_rs | cvsAdvDiff_bndL | — | cvsAdvDiff_bndL.out | IDENTICAL (native band for LAPACK) |
+| cvodes_rs | cvsRoberts_dnsL | — | cvsRoberts_dnsL.out | last-digit (LAPACK->native dense; drift == cvRoberts_dnsL) + stale-ref spacing |
 | cvodes_rs | cvsRoberts_ASAi_klu | — | cvsRoberts_ASAi_klu.out | excluded(klu) |
 | cvodes_rs | cvsRoberts_FSA_klu | -sensi stg1 t | cvsRoberts_FSA_klu_-sensi_stg1_t.out | excluded(klu) |
 | cvodes_rs | cvsRoberts_klu | — | cvsRoberts_klu.out | excluded(klu) |
@@ -104,17 +104,17 @@ table.
 | kinsol_rs | kinRoboKin_dns | — | kinRoboKin_dns.out | exception: stale ref (SUN_TABLE_WIDTH 28); values identical |
 | kinsol_rs | kinFerTron_klu | — | kinFerTron_klu.out | excluded(klu) |
 | kinsol_rs | kinRoboKin_slu | — | kinRoboKin_slu.out | excluded(superlu) |
-| ida_rs | idaAnalytic_mels | — | idaAnalytic_mels.out | todo |
-| ida_rs | idaAnalytic_mels | ida.scalar_tolerances 1e-3 1e-8 | idaAnalytic_mels_ida.scalar_tolerances_1e-3_1e-8.out | todo |
-| ida_rs | idaFoodWeb_bnd | — | idaFoodWeb_bnd.out | todo |
-| ida_rs | idaFoodWeb_kry | — | idaFoodWeb_kry.out | todo |
-| ida_rs | idaHeat2D_bnd | — | idaHeat2D_bnd.out | todo |
-| ida_rs | idaHeat2D_kry | — | idaHeat2D_kry.out | todo |
-| ida_rs | idaKrylovDemo_ls | — | idaKrylovDemo_ls.out | todo |
-| ida_rs | idaKrylovDemo_ls | 1 | idaKrylovDemo_ls_1.out | todo |
-| ida_rs | idaKrylovDemo_ls | 2 | idaKrylovDemo_ls_2.out | todo |
-| ida_rs | idaRoberts_dns | — | idaRoberts_dns.out | todo |
-| ida_rs | idaSlCrank_dns | — | idaSlCrank_dns.out | todo |
+| ida_rs | idaAnalytic_mels | — | idaAnalytic_mels.out | IDENTICAL |
+| ida_rs | idaAnalytic_mels | ida.scalar_tolerances 1e-3 1e-8 | idaAnalytic_mels_ida.scalar_tolerances_1e-3_1e-8.out | IDENTICAL |
+| ida_rs | idaFoodWeb_bnd | — | idaFoodWeb_bnd.out | OPEN(last-digit: hused col, t=0.7/1.0; == idas_rs) |
+| ida_rs | idaFoodWeb_kry | — | idaFoodWeb_kry.out | IDENTICAL |
+| ida_rs | idaHeat2D_bnd | — | idaHeat2D_bnd.out | IDENTICAL |
+| ida_rs | idaHeat2D_kry | — | idaHeat2D_kry.out | IDENTICAL |
+| ida_rs | idaKrylovDemo_ls | — | idaKrylovDemo_ls.out | IDENTICAL |
+| ida_rs | idaKrylovDemo_ls | 1 | idaKrylovDemo_ls_1.out | IDENTICAL |
+| ida_rs | idaKrylovDemo_ls | 2 | idaKrylovDemo_ls_2.out | IDENTICAL |
+| ida_rs | idaRoberts_dns | — | idaRoberts_dns.out | IDENTICAL |
+| ida_rs | idaSlCrank_dns | — | idaSlCrank_dns.out | IDENTICAL |
 | ida_rs | idaHeat2D_klu | — | idaHeat2D_klu.out | excluded(klu) |
 | ida_rs | idaRoberts_klu | — | idaRoberts_klu.out | excluded(klu) |
 | ida_rs | idaRoberts_sps | — | idaRoberts_sps.out | excluded(superlu) |
@@ -231,6 +231,39 @@ table.
 - **cvRoberts_dnsL**: LAPACK dense solver replaced by the native dense
   solver per the port plan; different factorization arithmetic gives
   last-digit drift in printed `y` values (§1 documented exception class).
+- **cvsPendulum_dns** (2026-08-07): identical to the cvPendulum_dns anomaly
+  above and traceable to the same cause — `cvsPendulum_dns.c:204` is
+  byte-identical to `cvPendulum_dns.c:204`
+  (`printf("\n\nrtol = %8.2" ESYM ", atol = %8.2" ESYM "\n", ...)`), yet the
+  shipped `cvsPendulum_dns.out` prints `rtol = 1.00e-05` and
+  `atol = 1.00e-5` **on the same line from the same format string**. One
+  conversion cannot emit two different exponent widths, so the reference is
+  not reproducible from its own source. The port emits `1.00e-05` for both.
+  10 diff lines (5 header lines); the rest of the variant is byte-identical.
+- **cvsRoberts_dnsL** (2026-08-07): two independent causes, neither a port
+  defect. (a) *Numeric*: the LAPACK->native dense substitution drift is
+  **byte-for-byte the same divergence already accepted for cvRoberts_dnsL** —
+  both ports move `1.832300e-01`->`1.832299e-01`, `5.168091e-04`->
+  `5.168093e-04`, `5.202435e-05`->`5.202440e-05` and the same counter set
+  (`nst` 538->542, `nfe` 749->754, `nsetups` 108->107, `nni` 746->751,
+  `netf` 23->22, `nge` 566->570). (b) *Stale reference spacing*: the shipped
+  `cvsRoberts_dnsL.out` puts 7 spaces after `%0.4e` and 5 between the `y`
+  values, but the source format is
+  `"At t = %0.4e      y =%14.6e  %14.6e  %14.6e\n"` (6 and 4) — identical in
+  `cvsRoberts_dnsL.c`, `cvRoberts_dnsL.c` and `cvsRoberts_dns.c`. The port's
+  spacing matches the shipped `cvRoberts_dnsL.out` and `cvsRoberts_dns.out`
+  exactly; only this one reference disagrees with its own source, so it
+  predates the current PrintOutput format (same class as
+  cvRoberts_dns_negsol). `diff -w` reduces the 32 diff lines to the 16
+  numeric lines shared with cvRoberts_dnsL.
+- **cvsKrylovDemo_ls** (all 4 argv variants, 2026-08-07): the reference has
+  been trailing-whitespace-stripped (0 lines with trailing blanks; the port
+  emits 12). The source genuinely prints them —
+  `printf(" -------"); printf(" \n| SPGMR |\n");` at
+  `cvsKrylovDemo_ls.c:290-291` puts a space at the end of the banner line,
+  as does `printf(" \n2-species diurnal...")` at line 385. Same class as
+  idasAkzoNob_ASAi_dns. Under `diff -w` only the diurnal-family numeric
+  divergence remains (see the ref-libm note below).
 - **cvRoberts_dns_negsol**: reference line 20 (`netf = 59     ncfn`, 5-space
   gap) is unproducible by the example's single `%-6ld` format string, which
   yields the 8-space gap seen on the same run's line 41 — the shipped line
@@ -285,6 +318,12 @@ guessed at.
   formatting bug: both C `printf` and the port's `fmt_e` round the exact
   binary double correctly, so identical doubles print identically. Suspect
   the step-size heuristic arithmetic on the final step; `nst` never diverges.
+  **Cross-check added 2026-08-07:** `ida_rs`'s `idaFoodWeb_bnd` reproduces
+  this divergence *exactly* — same two output times, same
+  `6.2655e-01` -> `6.2656e-01`, and the two ports' stdout is byte-identical
+  to each other apart from the program name in the banner. Unlike
+  idasSlCrank_dns, this one **is** in the shared IDA core (present in ida_rs
+  and idas_rs alike), so fixing it in `ida.rs` fixes both.
 - **idasSlCrank_dns** — 6 diff lines, no sensitivities involved. All 26
   trajectory rows (q, dq, lambda, nst, k, h) are byte-identical through
   t = 10.0, and `nst = 251`, `nje = 39`, `netf = 1`, `ncfn = 20`,
@@ -295,6 +334,12 @@ guessed at.
   sequence — most likely in `IDACalcIC` or the first step. Cross-check
   against `ida_rs`'s `idaSlCrank_dns` was not possible: the ida_rs examples
   do not currently compile (unrelated, in-flight phase).
+  **Cross-check now available (2026-08-07, ida_rs example sweep):**
+  `ida_rs`'s `idaSlCrank_dns` — the same mechanism, same IC calculation, same
+  problem, without IDAS — is byte-**IDENTICAL** to its reference. The
+  divergence is therefore **IDAS-specific and not inherited from the shared
+  IDA algorithm**; the debug phase should look at what `idas.rs`/`idas_ic.rs`
+  do differently from `ida.rs`/`ida_ic.rs`, not at the base integrator.
 - **idasSlCrank_FSA_dns** — 22 diff lines, the largest divergence.
   `nst` 233 -> 263, `nre` 1180 -> 1203, `nje` 46 -> 44, `nni` 720 -> 763,
   `ncfn` 26 -> 23, `nsf` 1 -> 2; `G` differs at digit 8 and the four
@@ -346,3 +391,31 @@ mismatch is the reference environment, not the port:
 
 Acceptance for these six variants is therefore byte-identity against the
 locally-built pristine upstream C binary (satisfied), not the shipped `.out`.
+
+### Extension to the cvodes_rs diurnal variants (2026-08-07)
+
+The cvodes examples solve the same 2-species diurnal problem, so the same
+exception applies. For six of the eight cvodes variants the evidence chains
+onto the proof above **without repeating the libm-substitution experiment**:
+
+- `cvsDiurnal_kry`, `cvsDiurnal_kry_bp`, `cvsKrylovDemo_ls` (all four argv
+  variants) produce output **byte-identical to the corresponding verified
+  `cvode_rs` port**, the sole difference being the CVODES workspace-size line
+  (`lenrw = 2696  leniw = 65` vs CVODE's `2689 / 53`) — a genuine and correct
+  difference that matches each example's own reference. Since
+  cvode_rs port == pristine upstream C (established above), the cvodes ports
+  equal pristine upstream C too. The documented fingerprint reappears exactly:
+  cvsDiurnal_kry at t = 2.88e4 gives nst = 311 / order 3 against the shipped
+  nst = 307 / order 4, the same numbers recorded for cvDiurnal_kry.
+- `cvsDiurnal_FSA_kry` (`-sensi sim t`, `-sensi stg t`) has **no cvode
+  counterpart**, so it is classified by family rather than by chained proof.
+  Its RHS carries the same transcendentals in the feedback loop
+  (`cvsDiurnal_FSA_kry.c:374-378`: `s = sin(data->om * t); q3 = exp(-A3/s);
+  data->q4 = exp(-A4/s);`), and it diverges the same way — trajectory
+  identical through t = 7.2e3, then step-count/step-size drift with no
+  formatting or setup difference anywhere. Forward sensitivity analysis
+  multiplies the RHS evaluations and adds DQ perturbations, which is why it
+  forks earlier (t = 7.2e3) than the plain variants (t = 2.88e4). If the
+  debug phase wants this variant on the same footing as the other six, the
+  outstanding work is to build pristine upstream C for it and confirm
+  byte-identity — not to change the port.
