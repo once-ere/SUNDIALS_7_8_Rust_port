@@ -10243,3 +10243,181 @@ fn IDAQuadSensRhs1InternalDQ(
 
     0
 }
+
+/*
+ * =================================================================
+ * Regression tests
+ * =================================================================
+ */
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::idas_io::{IDASetSensParams, IDASetUserData};
+    use crate::idas_ls::{IDASetLinearSolver, IDALS_SUCCESS};
+    use sundials_core::nvector_serial::N_VNew_Serial;
+    use sundials_core::sundials_context::SUNContext_Create;
+    use sundials_core::sunlinsol_dense::SUNLinSol_Dense;
+    use sundials_core::sunmatrix_dense::SUNDenseMatrix;
+
+    /* -----------------------------------------------------------------
+     * Internal-DQ forward sensitivity relies on ALIASING: C stores the
+     * caller's `p` POINTER in `IDA_mem->ida_p` and `IDASensRes1DQ`
+     * perturbs `ida_p[which]` in place around each call to the user's
+     * `res`, which reads the very same array through its `user_data`. The
+     * port shares the array as a `SensParams` handle (ARCHITECTURE §8);
+     * this test is the executable proof that the perturbation reaches the
+     * callback.
+     *
+     * Problem:  F(t,y,y',p) = y' + p*y = 0,  y(0) = 1,  p = 2
+     *   exact:  y(t)     = exp(-p t)
+     *           dy/dp(t) = -t exp(-p t)
+     * With a private copy of `p` the callback would never see the
+     * perturbation, so dF/dp would be identically zero and the computed
+     * sensitivity would stay exactly 0 for all time.
+     * -----------------------------------------------------------------*/
+
+    const P0: sunrealtype = 2.0;
+    const TEND: sunrealtype = 1.0;
+
+    struct SensTestData {
+        /* the shared parameter array — the solver holds a clone of this
+        very handle (C: the same `sunrealtype*`) */
+        p: SensParams,
+        /* extreme parameter values observed by the residual callback */
+        pmin: sunrealtype,
+        pmax: sunrealtype,
+    }
+
+    fn sens_test_res(
+        _tres: sunrealtype,
+        yy: &N_Vector,
+        yp: &N_Vector,
+        rr: &N_Vector,
+        user_data: &mut Option<Box<dyn Any>>,
+    ) -> i32 {
+        let data = user_data
+            .as_mut()
+            .and_then(|b| b.downcast_mut::<SensTestData>())
+            .expect("user_data is SensTestData");
+
+        /* read the parameter exactly as a C callback would read
+        data->p[0]; the borrow ends with this statement */
+        let p = data.p.borrow()[0];
+
+        if p < data.pmin {
+            data.pmin = p;
+        }
+        if p > data.pmax {
+            data.pmax = p;
+        }
+
+        let yval = N_VGetArrayPointer(yy).expect("N_VGetArrayPointer")[0];
+        let ypval = N_VGetArrayPointer(yp).expect("N_VGetArrayPointer")[0];
+        N_VGetArrayPointer(rr).expect("N_VGetArrayPointer")[0] = ypval + p * yval;
+
+        0
+    }
+
+    #[test]
+    fn internal_dq_sensitivity_sees_perturbed_parameters() {
+        let mut sunctx: Option<SUNContext> = None;
+        assert_eq!(SUNContext_Create(SUN_COMM_NULL, &mut sunctx), 0);
+        let sunctx = sunctx.expect("SUNContext_Create");
+
+        /* the parameter array the user owns and the solver shares */
+        let p: SensParams = Rc::new(RefCell::new(vec![P0]));
+
+        let yy = N_VNew_Serial(1, &sunctx).expect("N_VNew_Serial");
+        let yp = N_VNew_Serial(1, &sunctx).expect("N_VNew_Serial");
+        N_VGetArrayPointer(&yy).expect("N_VGetArrayPointer")[0] = ONE;
+        N_VGetArrayPointer(&yp).expect("N_VGetArrayPointer")[0] = -P0;
+
+        let ida_mem = IDACreate(&sunctx).expect("IDACreate");
+
+        assert_eq!(
+            IDAInit(&ida_mem, sens_test_res, ZERO, &yy, &yp),
+            IDA_SUCCESS
+        );
+        assert_eq!(IDASStolerances(&ida_mem, 1.0e-8, 1.0e-10), IDA_SUCCESS);
+
+        /* the user data holds a CLONE of the same handle */
+        let data = SensTestData {
+            p: p.clone(),
+            pmin: P0,
+            pmax: P0,
+        };
+        assert_eq!(IDASetUserData(&ida_mem, Some(Box::new(data))), IDA_SUCCESS);
+
+        let A = SUNDenseMatrix(1, 1, &sunctx).expect("SUNDenseMatrix");
+        let LS = SUNLinSol_Dense(&yy, &A, &sunctx).expect("SUNLinSol_Dense");
+        assert_eq!(IDASetLinearSolver(&ida_mem, &LS, Some(&A)), IDALS_SUCCESS);
+
+        /* one sensitivity, computed by the INTERNAL DQ routine (fS = None);
+        dy/dp(0) = 0 and dy'/dp(0) = -y(0) = -1 */
+        let yS = N_VCloneVectorArray(1, &yy).expect("N_VCloneVectorArray");
+        let ypS = N_VCloneVectorArray(1, &yy).expect("N_VCloneVectorArray");
+        N_VConst(ZERO, &yS[0]);
+        N_VGetArrayPointer(&ypS[0]).expect("N_VGetArrayPointer")[0] = -ONE;
+        assert_eq!(
+            IDASensInit(&ida_mem, 1, IDA_SIMULTANEOUS, None, &yS, &ypS),
+            IDA_SUCCESS
+        );
+        assert_eq!(IDASensEEtolerances(&ida_mem), IDA_SUCCESS);
+
+        /* C: IDASetSensParams(ida_mem, data->params, pbar, NULL) */
+        let pbar = [P0];
+        assert_eq!(
+            IDASetSensParams(&ida_mem, Some(p.clone()), Some(&pbar[..]), None),
+            IDA_SUCCESS
+        );
+
+        let mut t = ZERO;
+        let flag = IDASolve(&ida_mem, TEND, &mut t, &yy, &yp, IDA_NORMAL);
+        assert_eq!(flag, IDA_SUCCESS, "IDASolve failed with flag {flag}");
+        assert_eq!(t, TEND);
+
+        /* state: y(TEND) = exp(-p*TEND) */
+        let yend = N_VGetArrayPointer(&yy).expect("N_VGetArrayPointer")[0];
+        let y_exact = (-P0 * TEND).exp();
+        assert!(
+            SUNRabs(yend - y_exact) <= 1.0e-6 * y_exact,
+            "state wrong: got {yend}, expected {y_exact}"
+        );
+
+        /* sensitivity: dy/dp(TEND) = -TEND*exp(-p*TEND) */
+        let mut tS = ZERO;
+        assert_eq!(IDAGetSens(&ida_mem, &mut tS, &yS), IDA_SUCCESS);
+        let s = N_VGetArrayPointer(&yS[0]).expect("N_VGetArrayPointer")[0];
+        let s_exact = -TEND * (-P0 * TEND).exp();
+
+        /* the defect signature: with an unshared copy of `p` this is 0 */
+        assert!(
+            s != ZERO,
+            "sensitivity is identically zero — the DQ perturbation never reached the residual callback"
+        );
+        assert!(
+            SUNRabs(s - s_exact) <= 1.0e-4 * SUNRabs(s_exact),
+            "sensitivity wrong: got {s}, expected {s_exact}"
+        );
+
+        /* direct proof of the aliasing: the callback saw p perturbed both
+        ways (IDA_CENTERED is the default DQtype) */
+        let mut user_data: Option<Box<dyn Any>> = None;
+        std::mem::swap(&mut ida_mem.borrow_mut().ida_user_data, &mut user_data);
+        let data = user_data
+            .as_ref()
+            .and_then(|b| b.downcast_ref::<SensTestData>())
+            .expect("user_data is SensTestData");
+        assert!(
+            data.pmax > P0 && data.pmin < P0,
+            "residual never observed a perturbed parameter (saw [{}, {}], p = {P0})",
+            data.pmin,
+            data.pmax
+        );
+
+        /* and the array the caller still owns was restored exactly */
+        assert_eq!(p.borrow()[0], P0);
+    }
+}

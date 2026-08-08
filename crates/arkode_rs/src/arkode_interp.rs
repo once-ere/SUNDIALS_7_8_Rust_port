@@ -336,8 +336,8 @@ pub fn arkInterpResize_Hermite(
 pub fn arkInterpFree_Hermite(ark_mem: &ARKodeMem, interp: &ARKInterp) {
     /* if interpolation structure is NULL, just return -- unrepresentable */
 
-    /* free content */
-    let has_content = !interp.content.borrow().is::<()>();
+    /* free content (C `interp->content != NULL`) */
+    let has_content = interp.content.borrow().downcast_ref::<()>().is_none();
     if has_content {
         {
             let mut v = hermite_content_mut(interp).fold.take();
@@ -1102,8 +1102,8 @@ pub fn arkInterpResize_Lagrange(
 pub fn arkInterpFree_Lagrange(ark_mem: &ARKodeMem, I: &ARKInterp) {
     /* if interpolation structure is NULL, just return -- unrepresentable */
 
-    /* free content */
-    let has_content = !I.content.borrow().is::<()>();
+    /* free content (C `I->content != NULL`) */
+    let has_content = I.content.borrow().downcast_ref::<()>().is_none();
     if has_content {
         let (have_yhist, nmaxalloc) = {
             let c = lagrange_content_mut(I);

@@ -136,11 +136,11 @@ fn main() {
     let qS = N_VCloneVectorArray(NP as i32, &q).expect("N_VCloneVectorArray");
 
     let data: UserDataRc = Rc::new(RefCell::new(UserData {
-        a: 0.5,                                   /* half-length of crank */
-        J1: 1.0,                                  /* crank moment of inertia */
-        m2: 1.0,                                  /* mass of connecting rod */
-        m1: 1.0,                                  /* */
-        J2: 2.0,                                  /* moment of inertia of connecting rod */
+        a: 0.5,  /* half-length of crank */
+        J1: 1.0, /* crank moment of inertia */
+        m2: 1.0, /* mass of connecting rod */
+        m1: 1.0, /* */
+        J2: 2.0, /* moment of inertia of connecting rod */
         params: Rc::new(RefCell::new(vec![
             1.0, /* spring constant */
             1.0, /* damper constant */
