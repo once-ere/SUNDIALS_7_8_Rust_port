@@ -25,7 +25,7 @@
 
 use std::any::Any;
 use std::cell::RefCell;
-use std::rc::{Rc, Weak};
+use std::rc::Rc;
 
 use idas_rs::prelude::*;
 
@@ -84,34 +84,17 @@ struct UserData {
     m1: sunrealtype,
     m2: sunrealtype,
     l0: sunrealtype,
-    params: [sunrealtype; NP],
-    F: sunrealtype,
     /* C passes `data->params` (the caller's own array) to
-    IDASetSensParams, which stores the POINTER in `ida_mem->ida_p`.  The
-    internal DQ sensitivity residual therefore perturbs the very array
-    that `force` reads back through `user_data`.  This port's `ida_p` is
-    a `Vec` copy of `params`, so the record keeps a NON-OWNING handle to
-    the solver memory and reads the live `ida_p` back — the same
-    observable aliasing, with no solver logic duplicated.  While no
-    sensitivity is active `ida_p` is empty and the local copy is used. */
-    ida_mem: Weak<RefCell<IDAMemRec>>,
+    IDASetSensParams, which stores the POINTER in `ida_mem->ida_p`, so the
+    internal DQ sensitivity residual perturbs the very array that `force`
+    reads back through `user_data`.  The port shares the same array as a
+    `SensParams` handle (ARCHITECTURE §8) and hands IDASetSensParams a
+    clone of it. */
+    params: SensParams,
+    F: sunrealtype,
 }
 
 type UserDataRc = Rc<RefCell<UserData>>;
-
-/* Read the problem parameters as IDAS currently sees them (see the note
-on `UserData::ida_mem`). */
-
-fn UserDataParams(data: &UserData) -> [sunrealtype; NP] {
-    let mut p: [sunrealtype; NP] = data.params;
-    if let Some(ida_mem) = data.ida_mem.upgrade() {
-        let IDA_mem = ida_mem.borrow();
-        if IDA_mem.ida_p.len() == NP {
-            p.copy_from_slice(&IDA_mem.ida_p);
-        }
-    }
-    p
-}
 
 fn data_of(user_data: &mut Option<Box<dyn Any>>) -> UserDataRc {
     user_data
@@ -158,10 +141,12 @@ fn main() {
         m2: 1.0,                                  /* mass of connecting rod */
         m1: 1.0,                                  /* */
         J2: 2.0,                                  /* moment of inertia of connecting rod */
-        params: [1.0 /* spring constant */, 1.0], /* damper constant */
-        l0: 1.0,                                  /* spring free length */
-        F: 1.0,                                   /* external constant force */
-        ida_mem: Weak::new(),                     /* set once the solver memory exists */
+        params: Rc::new(RefCell::new(vec![
+            1.0, /* spring constant */
+            1.0, /* damper constant */
+        ])),
+        l0: 1.0, /* spring free length */
+        F: 1.0,  /* external constant force */
     }));
 
     N_VConst(ONE, &id);
@@ -184,7 +169,6 @@ fn main() {
     it back; `let _ =` keeps the calls and drops the values identically. */
     let mut mem_opt = IDACreate(&ctx);
     let mem = mem_opt.as_ref().expect("IDACreate").clone();
-    data.borrow_mut().ida_mem = Rc::downgrade(&mem);
     let _ = IDAInit(&mem, ressc, TBEGIN, &yy, &yp);
     let _ = IDASStolerances(&mem, RTOLF, ATOLF);
     let _ = IDASetUserData(&mem, Some(Box::new(Rc::clone(&data))));
@@ -213,11 +197,13 @@ fn main() {
     }
 
     let _ = IDASensInit(&mem, NP as i32, IDA_SIMULTANEOUS, None, &yyS, &ypS);
-    pbar[0] = data.borrow().params[0];
-    pbar[1] = data.borrow().params[1];
+    pbar[0] = data.borrow().params.borrow()[0];
+    pbar[1] = data.borrow().params.borrow()[1];
     {
-        let params = data.borrow().params;
-        let _ = IDASetSensParams(&mem, Some(&params[..]), Some(&pbar[..]), None);
+        /* C: IDASetSensParams(mem, data->params, pbar, NULL) — the very
+        array `force` reads through `user_data`. */
+        let params = Rc::clone(&data.borrow().params);
+        let _ = IDASetSensParams(&mem, Some(params), Some(&pbar[..]), None);
     }
     let _ = IDASensEEtolerances(&mem);
     let _ = IDASetSensErrCon(&mem, SUNTRUE);
@@ -271,16 +257,11 @@ fn main() {
 
     /* Finite differences for dG/dp */
     let dp: sunrealtype = 0.00001;
-    data.borrow_mut().params[0] = ONE;
-    data.borrow_mut().params[1] = ONE;
+    data.borrow().params.borrow_mut()[0] = ONE;
+    data.borrow().params.borrow_mut()[1] = ONE;
 
     let mut mem_opt = IDACreate(&ctx);
     let mem = mem_opt.as_ref().expect("IDACreate").clone();
-    /* The sensitivity-enabled memory above is kept alive by the internal
-    DQ callback data (a boxed handle to itself), so re-point the
-    non-owning handle at the memory that is now driving the residual —
-    it carries no parameter array, and `data.params` is used directly. */
-    data.borrow_mut().ida_mem = Rc::downgrade(&mem);
 
     setIC(&yy, &yp, &data.borrow());
     let _ = IDAInit(&mem, ressc, TBEGIN, &yy, &yp);
@@ -323,7 +304,7 @@ fn main() {
     /******************************
      * BACKWARD for k
      ******************************/
-    data.borrow_mut().params[0] -= dp;
+    data.borrow().params.borrow_mut()[0] -= dp;
     setIC(&yy, &yp, &data.borrow());
 
     IDAReInit(&mem, TBEGIN, &yy, &yp);
@@ -339,7 +320,7 @@ fn main() {
     /****************************
      * FORWARD for k *
      ****************************/
-    data.borrow_mut().params[0] += TWO * dp;
+    data.borrow().params.borrow_mut()[0] += TWO * dp;
     setIC(&yy, &yp, &data.borrow());
     IDAReInit(&mem, TBEGIN, &yy, &yp);
 
@@ -352,8 +333,8 @@ fn main() {
     /*printf("Gp[0]=%12.6e\n", Ith(q,1));*/
 
     /* Backward for c */
-    data.borrow_mut().params[0] = ONE;
-    data.borrow_mut().params[1] -= dp;
+    data.borrow().params.borrow_mut()[0] = ONE;
+    data.borrow().params.borrow_mut()[1] -= dp;
     setIC(&yy, &yp, &data.borrow());
     IDAReInit(&mem, TBEGIN, &yy, &yp);
 
@@ -365,7 +346,7 @@ fn main() {
     Gm[1] = Ith(&q, 1);
 
     /* Forward for c */
-    data.borrow_mut().params[1] += TWO * dp;
+    data.borrow().params.borrow_mut()[1] += TWO * dp;
     setIC(&yy, &yp, &data.borrow());
     IDAReInit(&mem, TBEGIN, &yy, &yp);
 
@@ -449,11 +430,9 @@ fn setIC(yy: &N_Vector, yp: &N_Vector, data: &UserData) {
 }
 
 fn force(yy: &N_Vector, Q: &mut [sunrealtype; 3], data: &UserData) {
-    let params = UserDataParams(data);
-
     let a = data.a;
-    let k = params[0];
-    let c = params[1];
+    let k = data.params.borrow()[0];
+    let c = data.params.borrow()[1];
     let l0 = data.l0;
     let F = data.F;
 

@@ -398,6 +398,28 @@ pub const PT25: sunrealtype = 0.25;
 pub const PT05: sunrealtype = 0.05;
 
 /* =================================================================
+ * Sensitivity parameter array (C `sunrealtype* ida_p`)
+ * =================================================================*/
+
+/// Shared handle on the problem parameter array `p` of `F(t,y,y',p)`.
+///
+/// `IDASetSensParams` stores the caller's POINTER in `IDA_mem->ida_p`
+/// (`idas_io.c`: `IDA_mem->ida_p = p;`), and the internal difference-quotient
+/// sensitivity routines (`IDASensRes1DQ`, `IDAQuadSensRhs1InternalDQ`) perturb
+/// `ida_p[which]` IN PLACE around each call to the user's `res` / `rhsQ`. The
+/// user callback, reading the same memory through `user_data`, therefore sees
+/// the perturbed parameter — that aliasing IS the DQ mechanism. The port
+/// reproduces the shared pointer with the workspace handle model (identical to
+/// `cvodes_impl::SensParams`, ARCHITECTURE §8): the caller keeps a clone of
+/// this `Rc` inside its user data and hands an identical clone to
+/// `IDASetSensParams`.
+///
+/// Borrow discipline (same rule as every other RefCell in the port): never
+/// hold a borrow of this cell across a user callback — write the perturbed
+/// value, drop the borrow, call, then re-borrow to restore.
+pub type SensParams = Rc<RefCell<Vec<sunrealtype>>>;
+
+/* =================================================================
  * Main integrator memory block (idas_impl.h)
  * =================================================================*/
 
@@ -453,7 +475,8 @@ pub struct IDAMemRec {
                                               IDAMem clone when ida_resSDQ)          */
     pub ida_resSDQ: sunbooleantype,
 
-    pub ida_p: Vec<sunrealtype>,
+    pub ida_p: Option<SensParams>, /* parameters in F(t,y,y',p) (SHARED with the
+                                   caller's user data; `None` = C NULL)      */
     pub ida_pbar: Vec<sunrealtype>,
     pub ida_plist: Vec<i32>,
     pub ida_DQtype: i32,
@@ -873,7 +896,7 @@ impl IDAMemRec {
             ida_resS: None,
             ida_user_dataS: None,
             ida_resSDQ: SUNFALSE,
-            ida_p: Vec::new(),
+            ida_p: None,
             ida_pbar: Vec::new(),
             ida_plist: Vec::new(),
             ida_DQtype: 0,

@@ -515,7 +515,17 @@ pub fn IDASetLinearSolver(ida_mem: &IDAMem, LS: &SUNLinearSolver, A: Option<&SUN
         pset: None,
         psolve: None,
         pfree: None,
-        pdata: None, /* C: pdata = IDA_mem->ida_user_data (pass-through) */
+        /* C: `pdata = IDA_mem->ida_user_data` snapshots the raw pointer;
+        the port uses `None` as the "pass `ida_user_data` through at call
+        time" sentinel (deviation class 6). Consequence: the BBD guards
+        `if (idals_mem->pdata == NULL) -> IDALS_PMEM_NULL` (idas_bbdpre.c
+        :346/:391/:428) do NOT fire in C when the user set a non-NULL
+        user_data but never called IDABBDPrecInit — C then casts that
+        pointer to IBBDPrecData and dereferences it (UB). The port
+        type-checks the downcast, so the same misuse cleanly returns
+        IDALS_PMEM_NULL (deviation classes 1 + 5). Invalid-usage path
+        only. */
+        pdata: None,
         /* Initialize counters (idaLsInitializeCounters below re-zeros) */
         nje: 0,
         npe: 0,
@@ -551,7 +561,16 @@ pub fn IDASetLinearSolver(ida_mem: &IDAMem, LS: &SUNLinearSolver, A: Option<&SUN
     /* Initialize counters */
     let _ = idaLsInitializeCounters(&mut idals_mem);
 
-    /* If LS supports ATimes, attach IDALs routine */
+    /* If LS supports ATimes, attach IDALs routine.
+    C: `SUNLinSolSetATimes(LS, IDA_mem, idaLsATimes)` stores a NON-owning
+    `IDAMem` pointer as the ATimes token. Under the handle model an `Rc`
+    clone IS the C pointer copy, so the token OWNS a reference: `idaLsFree`
+    clears `ida_lmem` (breaking the mem<->lmem cycle), but the solver's
+    `A_data` keeps the mem alive until `SUNLinSolFree`. Reclamation of the
+    IDAMemRec and its N_Vectors is therefore deferred from IDAFree to
+    SUNLinSolFree — a resource-lifetime divergence with no arithmetic or
+    output effect (every reference example frees the LS after IDAFree).
+    Detaching the token here would ADD a call C does not make. */
     if LS.ops.borrow().setatimes.is_some() {
         let retval = SUNLinSolSetATimes(LS, Some(Box::new(ida_mem.clone())), Some(idaLsATimes));
         if retval != SUN_SUCCESS {

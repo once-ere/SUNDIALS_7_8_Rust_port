@@ -922,17 +922,22 @@ pub fn IDASetSensMaxNonlinIters(ida_mem: &IDAMem, maxcorS: i32) -> i32 {
 /*-----------------------------------------------------------------*/
 
 /// C stores the caller's `p` POINTER in `IDA_mem->ida_p`, so the internal DQ
-/// sensitivity residual (`IDASensResDQ`) perturbs the user's own parameter
-/// array in place and the user's `res` (reading the same memory through
-/// `user_data`) observes the perturbation. The frozen contract types
-/// `ida_p` as `Vec<sunrealtype>`, which cannot alias a caller-owned slice,
-/// so this port COPIES `p` into the mem — see the integration note in the
-/// hand-off: any DQ-sensitivity example whose `res` reads parameters from
-/// `user_data` (e.g. `idasSlCrank_FSA_dns`) needs the perturbation routed
-/// back to that data.
+/// sensitivity residual (`IDASensResDQ`) and quadrature-sensitivity RHS
+/// (`IDAQuadSensRhsInternalDQ`) perturb the user's own parameter array in
+/// place and the user's `res`/`rhsQ` (reading the same memory through
+/// `user_data`) observe the perturbation — that aliasing IS the DQ
+/// mechanism. The port reproduces it with the `SensParams` shared handle
+/// (`Rc<RefCell<Vec<sunrealtype>>>`, ARCHITECTURE §8): pass a CLONE of the
+/// very handle the user data holds, and the perturbations reach the
+/// callback exactly as in C. `None` is C's `NULL` (legal only when both
+/// the sensitivity residual and the quadrature-sensitivity RHS are
+/// user-supplied).
+///
+/// `pbar` and `plist` stay borrowed slices: C copies them element-wise into
+/// `IDA_mem`'s own arrays and never writes back, so an owned copy is faithful.
 pub fn IDASetSensParams(
     ida_mem: &IDAMem,
-    p: Option<&[sunrealtype]>,
+    p: Option<SensParams>,
     pbar: Option<&[sunrealtype]>,
     plist: Option<&[i32]>,
 ) -> i32 {
@@ -956,10 +961,7 @@ pub fn IDASetSensParams(
 
     /* Parameters */
 
-    ida_mem.borrow_mut().ida_p = match p {
-        Some(p) => p.to_vec(),
-        None => Vec::new(),
-    };
+    ida_mem.borrow_mut().ida_p = p;
 
     /* pbar */
 

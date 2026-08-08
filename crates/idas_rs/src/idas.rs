@@ -179,7 +179,7 @@ pub fn IDACreate(sunctx: &SUNContext) -> Option<IDAMem> {
     IDA_mem.ida_resSDQ = SUNTRUE;
     IDA_mem.ida_DQtype = IDA_CENTERED;
     IDA_mem.ida_DQrhomax = ZERO;
-    IDA_mem.ida_p = Vec::new();
+    IDA_mem.ida_p = None;
     IDA_mem.ida_pbar = Vec::new();
     IDA_mem.ida_plist = Vec::new();
     IDA_mem.ida_errconS = SUNFALSE;
@@ -2270,7 +2270,7 @@ pub fn IDASolve(
         let token: Box<dyn Any> = Box::new(IDA_mem.clone());
         IDA_mem.borrow_mut().ida_user_dataS = Some(token);
         /* Test if we have the problem parameters */
-        if IDA_mem.borrow().ida_p.is_empty() {
+        if IDA_mem.borrow().ida_p.is_none() {
             IDAProcessError(
                 Some(IDA_mem),
                 IDA_ILL_INPUT,
@@ -2291,7 +2291,7 @@ pub fn IDASolve(
         let token: Box<dyn Any> = Box::new(IDA_mem.clone());
         IDA_mem.borrow_mut().ida_user_dataQS = Some(token);
         /* Test if we have the problem parameters */
-        if IDA_mem.borrow().ida_p.is_empty() {
+        if IDA_mem.borrow().ida_p.is_none() {
             IDAProcessError(
                 Some(IDA_mem),
                 IDA_ILL_INPUT,
@@ -5239,7 +5239,7 @@ pub fn IDAInitialSetup(IDA_mem: &IDAMem) -> i32 {
             }
 
             /* Test if we have the problem parameters */
-            if IDA_mem.borrow().ida_p.is_empty() {
+            if IDA_mem.borrow().ida_p.is_none() {
                 IDAProcessError(
                     Some(IDA_mem),
                     IDA_ILL_INPUT,
@@ -5436,9 +5436,14 @@ fn IDAQuadSetup(IDA_mem: &IDAMem) -> i32 {
         IDA_mem.borrow_mut().ida_nrQe += 1;
         if ier < 0 {
             /* NOTE: upstream passes the MSG_QRHSFUNC_FAILED format string
-            without its `t` argument here (a missing-vararg defect); this
-            port supplies `ida_tn`, the value every sibling call site uses
-            (ARCHITECTURE deviation class 5). */
+            without its `t` argument here (`idas.c:5181` — a missing-vararg
+            defect, so release C prints an indeterminate value for the `%g`);
+            this port supplies `ida_tn`, the value every sibling call site
+            uses. NOT deviation class 5 (that covers C UB -> deterministic
+            PANIC); this is the missing-vararg substitution class — see
+            ARCHITECTURE "Accepted deviation classes". Reachable only when
+            the quadrature RHS fails unrecoverably on the very first step,
+            which no reference example does. */
             let tn = IDA_mem.borrow().ida_tn;
             IDAProcessError(
                 Some(IDA_mem),
@@ -5486,7 +5491,8 @@ fn IDAQuadSetup(IDA_mem: &IDAMem) -> i32 {
         IDA_mem.borrow_mut().ida_nrQSe += 1;
         if ier < 0 {
             /* NOTE: same missing-vararg defect as above for
-            MSG_QSRHSFUNC_FAILED; `ida_tn` supplied. */
+            MSG_QSRHSFUNC_FAILED (`idas.c:5205`); `ida_tn` supplied, same
+            deviation class. */
             let tn = IDA_mem.borrow().ida_tn;
             IDAProcessError(
                 Some(IDA_mem),
@@ -9518,6 +9524,13 @@ fn IDARootfind(IDA_mem: &IDAMem) -> i32 {
         let m = IDA_mem.borrow();
         (m.ida_tlo, m.ida_thi, m.ida_trout)
     };
+    /* The locked move-state-into-locals pattern (ARCHITECTURE "Granular
+    borrow rule"), identical in cvode_rs/cvodes_rs/ida_rs: the six
+    rootfinding arrays live in locals for the whole Illinois search and are
+    written back at the single exit point below. C leaves them readable in
+    IDA_mem across `ida_gfun`, so a `g` that re-enters the solver
+    (IDAGetRootInfo / IDA{Get,Set}RootDirection) would see empty Vecs here.
+    No valid example calls the solver API from inside `g`. */
     let (mut glo, mut ghi, mut grout, mut iroots, rootdir, gactive) = {
         let mut m = IDA_mem.borrow_mut();
         (
@@ -9743,6 +9756,30 @@ fn IDARootfind(IDA_mem: &IDAMem) -> i32 {
  */
 
 /*
+ * `IDA_mem->ida_p` is the caller's own parameter array (C stores the
+ * POINTER; the port stores a clone of the caller's `SensParams` handle —
+ * see `idas_impl::SensParams`), so the perturbations below are visible
+ * to the user's `res`/`rhsQ` through their `user_data`, exactly as in C.
+ *
+ * Both accessors borrow the parameter cell for the duration of one
+ * statement only — never across the user callback that follows.
+ */
+
+/// C: `psave = IDA_mem->ida_p[which];`
+fn ida_p_get(IDA_mem: &IDAMem, which: i32) -> sunrealtype {
+    let p = IDA_mem.borrow().ida_p.clone().expect("ida_p set");
+    let psave = p.borrow()[which as usize];
+
+    psave
+}
+
+/// C: `IDA_mem->ida_p[which] = value;`
+fn ida_p_set(IDA_mem: &IDAMem, which: i32, value: sunrealtype) {
+    let p = IDA_mem.borrow().ida_p.clone().expect("ida_p set");
+    p.borrow_mut()[which as usize] = value;
+}
+
+/*
  * IDASensResDQ
  *
  * IDASensRhsDQ computes the residuals of the sensitivity equations
@@ -9852,7 +9889,7 @@ fn IDASensRes1DQ(
 
     let which = IDA_mem.borrow().ida_plist[is as usize];
 
-    psave = IDA_mem.borrow().ida_p[which as usize];
+    psave = ida_p_get(IDA_mem, which);
 
     Delp = pbari * del;
     rDelp = ONE / Delp;
@@ -9899,7 +9936,7 @@ fn IDASensRes1DQ(
             /* Forward perturb y, y' and parameter */
             N_VLinearSum(Del, yyS, ONE, yy, ytemp);
             N_VLinearSum(Del, ypS, ONE, yp, yptemp);
-            IDA_mem.borrow_mut().ida_p[which as usize] = psave + Del;
+            ida_p_set(IDA_mem, which, psave + Del);
 
             /* Save residual in resvalS */
             retval = idac_call_res(IDA_mem, t, ytemp, yptemp, resvalS);
@@ -9911,7 +9948,7 @@ fn IDASensRes1DQ(
             /* Backward perturb y, y' and parameter */
             N_VLinearSum(-Del, yyS, ONE, yy, ytemp);
             N_VLinearSum(-Del, ypS, ONE, yp, yptemp);
-            IDA_mem.borrow_mut().ida_p[which as usize] = psave - Del;
+            ida_p_set(IDA_mem, which, psave - Del);
 
             /* Save residual in restemp */
             retval = idac_call_res(IDA_mem, t, ytemp, yptemp, restemp);
@@ -9954,7 +9991,7 @@ fn IDASensRes1DQ(
             N_VLinearSum(r2Dely, resvalS, -r2Dely, restemp, resvalS);
 
             /* Forward perturb parameter */
-            IDA_mem.borrow_mut().ida_p[which as usize] = psave + Delp;
+            ida_p_set(IDA_mem, which, psave + Delp);
 
             /* Save residual in ytemp */
             retval = idac_call_res(IDA_mem, t, yy, yp, ytemp);
@@ -9964,7 +10001,7 @@ fn IDASensRes1DQ(
             }
 
             /* Backward perturb parameter */
-            IDA_mem.borrow_mut().ida_p[which as usize] = psave - Delp;
+            ida_p_set(IDA_mem, which, psave - Delp);
 
             /* Save residual in yptemp */
             retval = idac_call_res(IDA_mem, t, yy, yp, yptemp);
@@ -9987,7 +10024,7 @@ fn IDASensRes1DQ(
             /* Forward perturb y, y' and parameter */
             N_VLinearSum(Del, yyS, ONE, yy, ytemp);
             N_VLinearSum(Del, ypS, ONE, yp, yptemp);
-            IDA_mem.borrow_mut().ida_p[which as usize] = psave + Del;
+            ida_p_set(IDA_mem, which, psave + Del);
 
             /* Save residual in resvalS */
             retval = idac_call_res(IDA_mem, t, ytemp, yptemp, resvalS);
@@ -10016,7 +10053,7 @@ fn IDASensRes1DQ(
             N_VLinearSum(rDely, resvalS, -rDely, resval, resvalS);
 
             /* Forward perturb parameter */
-            IDA_mem.borrow_mut().ida_p[which as usize] = psave + Delp;
+            ida_p_set(IDA_mem, which, psave + Delp);
 
             /* Save residual in restemp */
             retval = idac_call_res(IDA_mem, t, yy, yp, restemp);
@@ -10036,7 +10073,7 @@ fn IDASensRes1DQ(
     }
 
     /* Restore original value of parameter */
-    IDA_mem.borrow_mut().ida_p[which as usize] = psave;
+    ida_p_set(IDA_mem, which, psave);
 
     0
 }
@@ -10136,7 +10173,7 @@ fn IDAQuadSensRhs1InternalDQ(
 
     let which = IDA_mem.borrow().ida_plist[is as usize];
 
-    psave = IDA_mem.borrow().ida_p[which as usize];
+    psave = ida_p_get(IDA_mem, which);
 
     Delp = pbari * del;
     let ewt = IDA_mem.borrow().ida_ewt.clone().unwrap();
@@ -10158,7 +10195,7 @@ fn IDAQuadSensRhs1InternalDQ(
 
             N_VLinearSum(ONE, yy, Del, yyS, yytmp);
             N_VLinearSum(ONE, yp, Del, ypS, yptmp);
-            IDA_mem.borrow_mut().ida_p[which as usize] = psave + Del;
+            ida_p_set(IDA_mem, which, psave + Del);
 
             retval = idac_call_rhsQ(IDA_mem, t, yytmp, yptmp, resvalQS);
             nfel += 1;
@@ -10169,7 +10206,7 @@ fn IDAQuadSensRhs1InternalDQ(
             N_VLinearSum(-Del, yyS, ONE, yy, yytmp);
             N_VLinearSum(-Del, ypS, ONE, yp, yptmp);
 
-            IDA_mem.borrow_mut().ida_p[which as usize] = psave - Del;
+            ida_p_set(IDA_mem, which, psave - Del);
 
             retval = idac_call_rhsQ(IDA_mem, t, yytmp, yptmp, tmpQS);
             nfel += 1;
@@ -10186,7 +10223,7 @@ fn IDAQuadSensRhs1InternalDQ(
 
             N_VLinearSum(ONE, yy, Del, yyS, yytmp);
             N_VLinearSum(ONE, yp, Del, ypS, yptmp);
-            IDA_mem.borrow_mut().ida_p[which as usize] = psave + Del;
+            ida_p_set(IDA_mem, which, psave + Del);
 
             retval = idac_call_rhsQ(IDA_mem, t, yytmp, yptmp, resvalQS);
             nfel += 1;
@@ -10200,12 +10237,9 @@ fn IDAQuadSensRhs1InternalDQ(
         _ => {}
     }
 
-    {
-        let mut m = IDA_mem.borrow_mut();
-        m.ida_p[which as usize] = psave;
-        /* Increment counter nrQeS */
-        m.ida_nrQeS += nfel as i64;
-    }
+    ida_p_set(IDA_mem, which, psave);
+    /* Increment counter nrQeS */
+    IDA_mem.borrow_mut().ida_nrQeS += nfel as i64;
 
     0
 }

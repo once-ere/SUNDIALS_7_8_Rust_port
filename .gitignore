@@ -1,3 +1,7 @@
 /target
 /logs
 .claude/
+
+# runtime artifacts written by examples into the workspace root
+*.csv
+*_ref.txt

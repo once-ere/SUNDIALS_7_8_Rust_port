@@ -34,6 +34,8 @@
 #![allow(non_snake_case, non_camel_case_types, non_upper_case_globals)]
 
 use std::any::Any;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use idas_rs::prelude::*;
 use idas_rs::sundials_futils::SUNFileClose;
@@ -67,9 +69,13 @@ const ONE: sunrealtype = 1.0;
 
 /* Type : UserData */
 
-#[derive(Clone, Copy)]
+/* C hands `data->p` (the caller's own array) to IDASetSensParams, which
+stores the POINTER; the internal DQ quadrature-sensitivity RHS perturbs
+that very array around each `rhsQ` call.  The port shares it as a
+`SensParams` handle (ARCHITECTURE §8) and hands IDASetSensParams a clone
+of the same handle. */
 struct UserData {
-    p: [sunrealtype; 3], /* problem parameters */
+    p: SensParams, /* problem parameters */
     coef: sunrealtype,
 }
 
@@ -107,16 +113,16 @@ fn main() {
 
     /* User data structure */
     let data: Option<UserData> = Some(UserData {
-        p: [ZERO; 3],
+        p: Rc::new(RefCell::new(vec![ZERO; 3])),
         coef: ZERO,
     });
     if check_retval(data.as_ref().map(|_| 0), "malloc", 2) != 0 {
         std::process::exit(1);
     }
     let mut data = data.expect("malloc");
-    data.p[0] = 0.040;
-    data.p[1] = 1.0e4;
-    data.p[2] = 3.0e7;
+    data.p.borrow_mut()[0] = 0.040;
+    data.p.borrow_mut()[1] = 1.0e4;
+    data.p.borrow_mut()[2] = 3.0e7;
     data.coef = 0.5;
 
     /* Initial conditions */
@@ -178,9 +184,10 @@ fn main() {
 
     /* C keeps `data` alive next to the integrator and re-reads `data->p`
     below to fill `pbar` and to hand the parameter array to
-    IDASetSensParams; the Rust box moves into the mem record, so snapshot
-    the parameter values here (identical values, same point in the flow). */
-    let p_saved = data.p;
+    IDASetSensParams; the Rust box moves into the mem record, so keep a
+    clone of the SHARED parameter handle here — the same array `res`,
+    `resS` and the internal DQ routines see. */
+    let p_saved = Rc::clone(&data.p);
 
     /* Attach user data */
     let data_box: Box<dyn Any> = Box::new(data);
@@ -213,9 +220,9 @@ fn main() {
 
     /* Sensitivity-related settings */
     if sensi {
-        pbar[0] = p_saved[0];
-        pbar[1] = p_saved[1];
-        pbar[2] = p_saved[2];
+        pbar[0] = p_saved.borrow()[0];
+        pbar[1] = p_saved.borrow()[1];
+        pbar[2] = p_saved.borrow()[2];
 
         let yS_opt = N_VCloneVectorArray(NS, &y);
         if check_retval(yS_opt.as_ref().map(|_| 0), "N_VCloneVectorArray", 0) != 0 {
@@ -258,7 +265,7 @@ fn main() {
             std::process::exit(1);
         }
 
-        retval = IDASetSensParams(&ida_mem, Some(&p_saved[..]), Some(&pbar[..]), None);
+        retval = IDASetSensParams(&ida_mem, Some(Rc::clone(&p_saved)), Some(&pbar[..]), None);
         if check_retval(Some(retval), "IDASetSensParams", 1) != 0 {
             std::process::exit(1);
         }
@@ -433,9 +440,9 @@ fn res(
         .as_mut()
         .and_then(|b| b.downcast_mut::<UserData>())
         .expect("user_data is UserData");
-    let p1 = data.p[0];
-    let p2 = data.p[1];
-    let p3 = data.p[2];
+    let p1 = data.p.borrow()[0];
+    let p2 = data.p.borrow()[1];
+    let p3 = data.p.borrow()[2];
 
     let y1 = Ith(yy, 1);
     let y2 = Ith(yy, 2);
@@ -474,9 +481,9 @@ fn resS(
         .as_mut()
         .and_then(|b| b.downcast_mut::<UserData>())
         .expect("user_data is UserData");
-    let p1 = data.p[0];
-    let p2 = data.p[1];
-    let p3 = data.p[2];
+    let p1 = data.p.borrow()[0];
+    let p2 = data.p.borrow()[1];
+    let p3 = data.p.borrow()[2];
 
     let y1 = Ith(yy, 1);
     let y2 = Ith(yy, 2);
