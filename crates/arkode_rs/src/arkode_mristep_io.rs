@@ -1712,7 +1712,7 @@ pub fn MRIStepWriteCoupling(arkode_mem: &ARKodeMem, fp: &SUNFile) -> i32 {
 
     /* write coupling structure to specified file */
     fp.write_str("\nMRIStep coupling structure:\n");
-    MRIStepCoupling_Write(&MRIC, fp);
+    MRIStepCoupling_Write(Some(&MRIC), fp);
 
     ARK_SUCCESS
 }

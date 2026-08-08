@@ -184,8 +184,9 @@ fn arkRelaxNewtonSolve(ark_mem: &ARKodeMem) -> i32 {
         }
 
         /* Update step length tolerance and solution */
-        let (rel_tol, relax_param, abs_tol, res, jac) =
-            relax_get(ark_mem, |r| (r.rel_tol, r.relax_param, r.abs_tol, r.res, r.jac));
+        let (rel_tol, relax_param, abs_tol, res, jac) = relax_get(ark_mem, |r| {
+            (r.rel_tol, r.relax_param, r.abs_tol, r.res, r.jac)
+        });
         let tol = rel_tol * SUNRabs(relax_param) + abs_tol;
 
         let delta = res / jac;
@@ -418,8 +419,7 @@ fn arkRelaxSolve(ark_mem: &ARKodeMem, relax_val_out: &mut sunrealtype) -> i32 {
     let (delta_e_fn, relax_jac_fn) = relax_get(ark_mem, |r| {
         (r.delta_e_fn.expect("delta_e_fn"), r.relax_jac_fn)
     });
-    let (mut evals_out, mut delta_e) =
-        relax_get(ark_mem, |r| (r.num_relax_jac_evals, r.delta_e));
+    let (mut evals_out, mut delta_e) = relax_get(ark_mem, |r| (r.num_relax_jac_evals, r.delta_e));
     let retval = delta_e_fn(ark_mem, relax_jac_fn, &mut evals_out, &mut delta_e);
     relax_set(ark_mem, |r| {
         r.num_relax_jac_evals = evals_out;

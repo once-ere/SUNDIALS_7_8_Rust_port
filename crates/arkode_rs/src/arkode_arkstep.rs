@@ -3837,7 +3837,7 @@ pub fn arkStep_Predict(ark_mem: &ARKodeMem, istage: i32, yguess: &N_Vector) -> i
                 }
 
                 /* call predictor routine */
-                retval = arkPredict_Bootstrap(ark_mem, h, tau, nvec, &cvals, &Xvecs, yguess);
+                retval = arkPredict_Bootstrap(ark_mem, h, tau, nvec, &mut cvals, &mut Xvecs, yguess);
                 if retval != ARK_ILL_INPUT {
                     return retval;
                 }
@@ -3883,7 +3883,7 @@ pub fn arkStep_Predict(ark_mem: &ARKodeMem, istage: i32, yguess: &N_Vector) -> i
                 nvec += 1;
 
                 /* compute predictor */
-                retval = N_VLinearCombination(nvec, &cvals, &Xvecs, yguess);
+                retval = N_VLinearCombination(nvec, &mut cvals, &mut Xvecs, yguess);
                 if retval != 0 {
                     return ARK_VECTOROP_ERR;
                 }
