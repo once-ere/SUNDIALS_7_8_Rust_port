@@ -409,7 +409,8 @@ pub fn IDASetId(ida_mem: &IDAMem, id: Option<&N_Vector>) -> i32 {
             if ida_mem.borrow().ida_idMallocDone {
                 /* C destroys the stored vector but leaves the pointer
                 dangling (upstream bug: any later use is UB); the safe port
-                takes the handle out, so later checks see "no id". */
+                takes the handle out, so later checks see "no id".
+                Accepted deviation C in lib.rs. */
                 let taken = ida_mem.borrow_mut().ida_id.take();
                 if let Some(v) = taken {
                     N_VDestroy(v);
@@ -456,7 +457,8 @@ pub fn IDASetConstraints(ida_mem: &IDAMem, constraints: Option<&N_Vector>) -> i3
         None => {
             /* C destroys the stored vector but leaves the pointer dangling
             (upstream bug: any later use is UB); the safe port takes the
-            handle out, so later checks see "no constraints". */
+            handle out, so later checks see "no constraints".
+            Accepted deviation C in lib.rs. */
             let taken = ida_mem.borrow_mut().ida_constraints.take();
             if let Some(c) = taken {
                 N_VDestroy(c);

@@ -606,6 +606,10 @@ impl IDAMemRec {
 /* =================================================================
  * High level error handler (relocated from ida.c; C varargs map to a
  * pre-formatted msg — call sites use the MSG_* builders below)
+ *
+ * `line`/`file` come from Rust `line!()`/`file!()` at every call site
+ * where C passes `__LINE__`/`__FILE__`; they only reach the logger
+ * scope field. See accepted deviation A in lib.rs.
  * =================================================================*/
 
 pub fn IDAProcessError(

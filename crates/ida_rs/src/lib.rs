@@ -1,5 +1,59 @@
 #![allow(non_snake_case, non_camel_case_types, non_upper_case_globals)]
 
+/* =================================================================
+ * Accepted deviations (verification pass, Phase 5)
+ *
+ * Verified divergences from the release-C reference build that are
+ * deliberate and unobservable on every path a valid serial example
+ * takes. Mirror these in `idas_rs`; do not "fix" them back toward C.
+ *
+ * A. Diagnostic source coordinates. Every `IDAProcessError` call site
+ *    passes Rust `line!()`/`file!()` where C passes `__LINE__`/
+ *    `__FILE__`; the func argument is C's exact `__func__` string (or
+ *    the forwarded `fname` parameter) at all 168 sites. Those three
+ *    values only reach `sunCombineFileAndLine` -> the logger *scope*
+ *    field on the WARNING (`MSG_INACTIVE_ROOTS`) and ERROR paths, so
+ *    the divergence is confined to the
+ *    `[WARNING][rank 0][<file>:<line>][<func>]` prefix of a diagnostic
+ *    line. None of the 37 IDA reference `.out` files contains such a
+ *    line. Rust source coordinates cannot reproduce C ones; the pattern
+ *    is uniform across all ported crates (~2200 sites), so if
+ *    byte-identical diagnostic text is ever required it must be done
+ *    workspace-wide with per-site upstream path/line literals, never
+ *    piecemeal in one module.
+ *
+ * B. Callback-window state locals. `IDARootfind` moves the mutated
+ *    rootfinding arrays (`ida_glo/ghi/grout/iroots/rootdir/gactive`)
+ *    into locals for the whole Illinois search and writes them back at
+ *    a single exit; `IDARcheck1/2/3` do the same around single
+ *    statements. This is the locked granular-borrow pattern (no RefCell
+ *    borrow may be held across the user `g` call). The written-back
+ *    values equal C's per-return-path writes on every path, including
+ *    `IDA_RTFUNC_FAIL`, so no output differs. The only divergence is a
+ *    getter invoked *re-entrantly from inside* `ida_gfun`
+ *    (`IDAGetRootInfo` reading `ida_iroots`), which sees an emptied Vec
+ *    and panics where C read live, partially-updated, meaningless
+ *    values. Mid-callback getters are not supported SUNDIALS usage.
+ *    Do NOT half-restore a subset of the arrays: that would convert a
+ *    loud panic into a silently clobbered re-entrant write.
+ *
+ * C. Freed-but-not-NULLed C fields. `IDASetId(mem, NULL)`
+ *    (`ida_io.c:524-560`) destroys `ida_id` and clears
+ *    `ida_idMallocDone` but leaves `ida_id` dangling;
+ *    `IDASetConstraints(mem, NULL)` (`ida_io.c:565-600`) destroys
+ *    `ida_constraints` with no subsequent assignment. Every later
+ *    truth-test of those fields (`IDAInitialSetup`'s constraint mask
+ *    and id/suppressalg checks, `IDASolve`'s step constraint check,
+ *    `IDACalcIC`'s `IDA_YA_YDP_INIT` id check, and the
+ *    `idaLsDenseDQJac`/`idaLsBandDQJac`/`IBBDDQJac` sign-adjustment
+ *    guards) therefore dereferences freed memory in C. The port drops
+ *    the handle (`Option::take` -> `None`), so those guards take the
+ *    "absent" branch instead. Sibling of the "C UB -> deterministic
+ *    behavior" class: the C path is use-after-free, so no reference
+ *    example can depend on it, and the Rust result matches the
+ *    documented SUNDIALS semantics.
+ * =================================================================*/
+
 /* ida modules (one per upstream C file) */
 pub mod ida;
 pub mod ida_bbdpre;

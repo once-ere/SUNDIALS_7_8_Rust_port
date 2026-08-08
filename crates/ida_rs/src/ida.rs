@@ -4152,7 +4152,9 @@ fn IDARootfind(IDA_mem: &IDAMem) -> i32 {
     be held across it). C writes through the IDA_mem fields on every return
     path; the single write-back below restores the identical state for each
     path (on the IDA_RTFUNC_FAIL path the fields hold the values from the
-    last completed iteration, exactly as in C). */
+    last completed iteration, exactly as in C).
+    Take all six together — see accepted deviation B in lib.rs for why a
+    partial restore would be worse than this. */
     let (nrtfn, ttol, yy, yp) = {
         let m = IDA_mem.borrow();
         (
