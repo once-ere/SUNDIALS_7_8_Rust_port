@@ -133,39 +133,39 @@ unblocks idasRoberts_FSA_dns and idasHessian_ASA_FSA (both now IDENTICAL).
 
 ## Phase 7 — arkode
 
-- [ ] src/arkode/arkode.c — todo
-- [ ] src/arkode/arkode_adapt.c — todo
-- [ ] src/arkode/arkode_arkstep.c — todo
-- [ ] src/arkode/arkode_arkstep_io.c — todo
-- [ ] src/arkode/arkode_arkstep_nls.c — todo
-- [ ] src/arkode/arkode_bandpre.c — todo
-- [ ] src/arkode/arkode_bbdpre.c — todo
-- [ ] src/arkode/arkode_butcher.c — todo
-- [ ] src/arkode/arkode_butcher_dirk.c — todo
-- [ ] src/arkode/arkode_butcher_erk.c — todo
-- [ ] src/arkode/arkode_cli.c — todo
-- [ ] src/arkode/arkode_erkstep.c — todo
-- [ ] src/arkode/arkode_erkstep_io.c — todo
-- [ ] src/arkode/arkode_forcingstep.c — todo
-- [ ] src/arkode/arkode_interp.c — todo
-- [ ] src/arkode/arkode_io.c — todo
-- [ ] src/arkode/arkode_ls.c — todo
-- [ ] src/arkode/arkode_lsrkstep.c — todo
-- [ ] src/arkode/arkode_lsrkstep_io.c — todo
-- [ ] src/arkode/arkode_mri_tables.c — todo
-- [ ] src/arkode/arkode_mristep.c — todo
-- [ ] src/arkode/arkode_mristep_controller.c — todo
-- [ ] src/arkode/arkode_mristep_io.c — todo
-- [ ] src/arkode/arkode_mristep_nls.c — todo
-- [ ] src/arkode/arkode_relaxation.c — todo
-- [ ] src/arkode/arkode_root.c — todo
-- [ ] src/arkode/arkode_splittingstep.c — todo
-- [ ] src/arkode/arkode_splittingstep_coefficients.c — todo
-- [ ] src/arkode/arkode_sprk.c — todo
-- [ ] src/arkode/arkode_sprkstep.c — todo
-- [ ] src/arkode/arkode_sprkstep_io.c — todo
-- [ ] src/arkode/arkode_sunstepper.c — todo
-- [ ] src/arkode/arkode_user_controller.c — todo
+- [x] src/arkode/arkode.c — building
+- [x] src/arkode/arkode_adapt.c — building
+- [x] src/arkode/arkode_arkstep.c — building
+- [x] src/arkode/arkode_arkstep_io.c — building
+- [x] src/arkode/arkode_arkstep_nls.c — building
+- [x] src/arkode/arkode_bandpre.c — building
+- [x] src/arkode/arkode_bbdpre.c — building
+- [x] src/arkode/arkode_butcher.c — building
+- [x] src/arkode/arkode_butcher_dirk.c — building
+- [x] src/arkode/arkode_butcher_erk.c — building
+- [x] src/arkode/arkode_cli.c — building
+- [x] src/arkode/arkode_erkstep.c — building
+- [x] src/arkode/arkode_erkstep_io.c — building
+- [x] src/arkode/arkode_forcingstep.c — building
+- [x] src/arkode/arkode_interp.c — building
+- [x] src/arkode/arkode_io.c — building
+- [x] src/arkode/arkode_ls.c — building
+- [x] src/arkode/arkode_lsrkstep.c — building
+- [x] src/arkode/arkode_lsrkstep_io.c — building
+- [x] src/arkode/arkode_mri_tables.c — building
+- [x] src/arkode/arkode_mristep.c — building
+- [x] src/arkode/arkode_mristep_controller.c — building
+- [x] src/arkode/arkode_mristep_io.c — building
+- [x] src/arkode/arkode_mristep_nls.c — building
+- [x] src/arkode/arkode_relaxation.c — building
+- [x] src/arkode/arkode_root.c — building
+- [x] src/arkode/arkode_splittingstep.c — building
+- [x] src/arkode/arkode_splittingstep_coefficients.c — building
+- [x] src/arkode/arkode_sprk.c — building
+- [x] src/arkode/arkode_sprkstep.c — building
+- [x] src/arkode/arkode_sprkstep_io.c — building
+- [x] src/arkode/arkode_sunstepper.c — building
+- [x] src/arkode/arkode_user_controller.c — building
 - [ ] src/arkode/arkode_butcher_dirk.def — todo
 - [ ] src/arkode/arkode_butcher_erk.def — todo
 - [ ] src/arkode/arkode_mri_tables.def — todo
