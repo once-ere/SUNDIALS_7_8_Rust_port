@@ -171,6 +171,19 @@ unblocks idasRoberts_FSA_dns and idasHessian_ASA_FSA (both now IDENTICAL).
 - [ ] src/arkode/arkode_mri_tables.def — todo
 - [ ] src/arkode/arkode_splittingstep_coefficients.def — todo
 
+## Phases 3+5 diff-debug pass (2026-08-07)
+
+Every non-IDENTICAL cvodes_rs and ida_rs variant was root-caused against a
+locally built pristine upstream-C binary (Release/clang/`-ffp-contract=off`,
+logging 2, error checks off, profiling off — the upstream Release defaults).
+Result: **11 divergent variants, 0 port defects, 0 source changes.** In all
+11 cases the Rust port is byte-identical to the local C build while the
+shipped `.out` is not. `ida_rs idaFoodWeb_bnd` moved OPEN -> `ref-libm`
+after the shipped reference was reproduced exactly from the C build with a
+single correctly-rounded `sin` value. No solver or example code changed, so
+`cargo build --workspace` stays warning-free and the cvodes/ida verification
+sweeps reproduce the same statuses. Evidence per variant: VERIFICATION.md.
+
 ## Example programs (one line per ported program; variants tracked in VERIFICATION.md)
 
 - [ ] arkode_rs example ark_KrylovDemo_prec — todo
@@ -231,28 +244,28 @@ unblocks idasRoberts_FSA_dns and idasHessian_ASA_FSA (both now IDENTICAL).
 - [x] cvodes_rs example cvsAdvDiff_bndL — verified IDENTICAL (native band for LAPACK)
 - [x] cvodes_rs example cvsAnalytic_mels — verified IDENTICAL (2 variants)
 - [x] cvodes_rs example cvsDirectDemo_ls — verified IDENTICAL
-- [x] cvodes_rs example cvsDiurnal_FSA_kry — verified (ref-libm: diurnal family, 2 variants; no cvode counterpart)
-- [x] cvodes_rs example cvsDiurnal_kry — verified (ref-libm; port == cvode_rs cvDiurnal_kry)
-- [x] cvodes_rs example cvsDiurnal_kry_bp — verified (ref-libm; port == cvode_rs cvDiurnal_kry_bp)
+- [x] cvodes_rs example cvsDiurnal_FSA_kry — verified (ref-libm, 2 variants; port == local pristine C, 0 diff lines)
+- [x] cvodes_rs example cvsDiurnal_kry — verified (ref-libm; port == local pristine C, 0 diff lines)
+- [x] cvodes_rs example cvsDiurnal_kry_bp — verified (ref-libm; port == local pristine C, 0 diff lines)
 - [x] cvodes_rs example cvsFoodWeb_ASAi_kry — verified IDENTICAL
 - [x] cvodes_rs example cvsFoodWeb_ASAp_kry — verified IDENTICAL
 - [x] cvodes_rs example cvsHessian_ASA_FSA — verified IDENTICAL
-- [x] cvodes_rs example cvsKrylovDemo_ls — verified (ref-libm + ref trailing-ws stripped, 4 variants; port == cvode_rs cvKrylovDemo_ls)
+- [x] cvodes_rs example cvsKrylovDemo_ls — verified (ref-libm + ref trailing-ws stripped, 4 variants; port == local pristine C, 0 diff lines)
 - [x] cvodes_rs example cvsKrylovDemo_prec — verified IDENTICAL
 - [x] cvodes_rs example cvsLotkaVolterra_ASA — verified IDENTICAL
 - [x] cvodes_rs example cvsParticle_dns — verified IDENTICAL
-- [x] cvodes_rs example cvsPendulum_dns — verified (exception: upstream .out anomaly, same as cvPendulum_dns)
+- [x] cvodes_rs example cvsPendulum_dns — verified (stale-ref: unreproducible atol exponent; port == local pristine C, 0 diff lines)
 - [x] cvodes_rs example cvsRoberts_ASAi_dns — verified IDENTICAL
 - [x] cvodes_rs example cvsRoberts_ASAi_dns_constraints — verified IDENTICAL
 - [x] cvodes_rs example cvsRoberts_FSA_dns — verified IDENTICAL (2 variants)
 - [x] cvodes_rs example cvsRoberts_FSA_dns_Switch — verified IDENTICAL
 - [x] cvodes_rs example cvsRoberts_FSA_dns_constraints — verified IDENTICAL
 - [x] cvodes_rs example cvsRoberts_dns — verified IDENTICAL
-- [x] cvodes_rs example cvsRoberts_dnsL — verified (last-digit LAPACK->native, drift == cvRoberts_dnsL; + stale-ref spacing)
+- [x] cvodes_rs example cvsRoberts_dnsL — verified (last-digit LAPACK->native: port == local pristine C with SUNLinSol_Dense, 0 diff lines; + stale-ref spacing)
 - [x] cvodes_rs example cvsRoberts_dns_constraints — verified IDENTICAL
 - [x] cvodes_rs example cvsRoberts_dns_uw — verified IDENTICAL
 - [x] ida_rs example idaAnalytic_mels — verified IDENTICAL (2 variants)
-- [x] ida_rs example idaFoodWeb_bnd — OPEN (last-digit: hused col at t=0.7/1.0; identical to idas_rs -> shared IDA core)
+- [x] ida_rs example idaFoodWeb_bnd — verified (ref-libm: 1-ulp Apple sin at FOURPI*15/19 in WebRates; port == local pristine C, and the shipped .out is reproduced byte-for-byte by C + correctly-rounded sin)
 - [x] ida_rs example idaFoodWeb_kry — verified IDENTICAL
 - [x] ida_rs example idaHeat2D_bnd — verified IDENTICAL
 - [x] ida_rs example idaHeat2D_kry — verified IDENTICAL
@@ -262,7 +275,7 @@ unblocks idasRoberts_FSA_dns and idasHessian_ASA_FSA (both now IDENTICAL).
 - [x] idas_rs example idasAkzoNob_ASAi_dns — verified (exception: ref trailing whitespace; values identical)
 - [x] idas_rs example idasAkzoNob_dns — verified IDENTICAL
 - [x] idas_rs example idasAnalytic_mels — verified IDENTICAL (2 variants)
-- [x] idas_rs example idasFoodWeb_bnd — OPEN (last-digit: hused col at t=0.7/1.0)
+- [x] idas_rs example idasFoodWeb_bnd — OPEN->root-caused (same ref-libm sin as ida_rs idaFoodWeb_bnd; restatus left to the idas owner)
 - [x] idas_rs example idasHeat2D_bnd — verified IDENTICAL
 - [x] idas_rs example idasHeat2D_kry — verified IDENTICAL
 - [x] idas_rs example idasHessian_ASA_FSA — verified IDENTICAL

@@ -3,7 +3,7 @@
 One line per (example, args) reference variant parsed from the upstream
 CMakeLists.txt files (199 total; tools/verify_examples.sh list regenerates
 the tuple set). Status: todo | identical | last-digit(reason) |
-excluded(reason) | ref-libm(reason) | OPEN(reason).
+excluded(reason) | ref-libm(reason) | stale-ref(reason) | OPEN(reason).
 
 `OPEN`: the variant runs to completion but diverges from the reference in
 solver-visible quantities (counters, converged values). Not yet diagnosed —
@@ -16,6 +16,19 @@ cannot be byte-matched on this platform's libm; the port is verified
 byte-identical to a pristine upstream-C build (reference config,
 `-ffp-contract=off`) run locally. See the diurnal-family note below the
 table.
+
+`stale-ref`: the shipped `.out` cannot be produced by the example source it
+ships with (format string vs printed text disagree), so it predates the
+current source; the port matches the source and the local C build.
+
+**Local pristine-C reference build** (used by every `ref-libm`,
+`stale-ref` and `last-digit` entry dated 2026-08-07): CMake out-of-source
+against the read-only upstream tree, `CMAKE_BUILD_TYPE=Release`,
+`CMAKE_C_COMPILER=clang` (Apple clang 21.0.0, arm64),
+`CMAKE_C_FLAGS="-O3 -DNDEBUG -ffp-contract=off"`,
+`SUNDIALS_LOGGING_LEVEL=2`, `SUNDIALS_ENABLE_ERROR_CHECKS=OFF`,
+`SUNDIALS_ENABLE_PROFILING=OFF`, `SUNDIALS_ENABLE_MONITORING=OFF` — i.e.
+the upstream defaults for a Release build.
 
 | crate | example | args | reference .out | status |
 |---|---|---|---|---|
@@ -50,20 +63,20 @@ table.
 | cvodes_rs | cvsAnalytic_mels | — | cvsAnalytic_mels.out | IDENTICAL |
 | cvodes_rs | cvsAnalytic_mels | cvodes.max_order 3 | cvsAnalytic_mels_cvodes.max_order_3.out | IDENTICAL |
 | cvodes_rs | cvsDirectDemo_ls | — | cvsDirectDemo_ls.out | IDENTICAL |
-| cvodes_rs | cvsDiurnal_FSA_kry | -sensi sim t | cvsDiurnal_FSA_kry_-sensi_sim_t.out | ref-libm(diurnal family; sin/exp in RHS, FSA amplifies) |
-| cvodes_rs | cvsDiurnal_FSA_kry | -sensi stg t | cvsDiurnal_FSA_kry_-sensi_stg_t.out | ref-libm(diurnal family; sin/exp in RHS, FSA amplifies) |
-| cvodes_rs | cvsDiurnal_kry | — | cvsDiurnal_kry.out | ref-libm(glibc>=2.28 sin/exp; port == cvode_rs cvDiurnal_kry) |
-| cvodes_rs | cvsDiurnal_kry_bp | — | cvsDiurnal_kry_bp.out | ref-libm(glibc-2.27-era CR sin + modern exp; port == cvode_rs cvDiurnal_kry_bp) |
+| cvodes_rs | cvsDiurnal_FSA_kry | -sensi sim t | cvsDiurnal_FSA_kry_-sensi_sim_t.out | ref-libm(sin/exp in RHS; port == local pristine C, byte-for-byte) |
+| cvodes_rs | cvsDiurnal_FSA_kry | -sensi stg t | cvsDiurnal_FSA_kry_-sensi_stg_t.out | ref-libm(sin/exp in RHS; port == local pristine C, byte-for-byte) |
+| cvodes_rs | cvsDiurnal_kry | — | cvsDiurnal_kry.out | ref-libm(glibc>=2.28 sin/exp; port == local pristine C, byte-for-byte) |
+| cvodes_rs | cvsDiurnal_kry_bp | — | cvsDiurnal_kry_bp.out | ref-libm(glibc-2.27-era CR sin + modern exp; port == local pristine C, byte-for-byte) |
 | cvodes_rs | cvsFoodWeb_ASAi_kry | — | cvsFoodWeb_ASAi_kry.out | IDENTICAL |
 | cvodes_rs | cvsFoodWeb_ASAp_kry | — | cvsFoodWeb_ASAp_kry.out | IDENTICAL |
 | cvodes_rs | cvsHessian_ASA_FSA | — | cvsHessian_ASA_FSA.out | IDENTICAL |
-| cvodes_rs | cvsKrylovDemo_ls | — | cvsKrylovDemo_ls.out | ref-libm(pre-2.27 glibc CR sin/exp; port == cvode_rs cvKrylovDemo_ls) + ref trailing-ws stripped |
-| cvodes_rs | cvsKrylovDemo_ls | 1 | cvsKrylovDemo_ls_1.out | ref-libm(pre-2.27 glibc CR sin/exp; port == cvode_rs cvKrylovDemo_ls) + ref trailing-ws stripped |
-| cvodes_rs | cvsKrylovDemo_ls | 2 | cvsKrylovDemo_ls_2.out | ref-libm(pre-2.27 glibc CR sin/exp; port == cvode_rs cvKrylovDemo_ls) + ref trailing-ws stripped |
+| cvodes_rs | cvsKrylovDemo_ls | — | cvsKrylovDemo_ls.out | ref-libm(pre-2.27 glibc CR sin/exp; port == local pristine C, byte-for-byte) + ref trailing-ws stripped |
+| cvodes_rs | cvsKrylovDemo_ls | 1 | cvsKrylovDemo_ls_1.out | ref-libm(pre-2.27 glibc CR sin/exp; port == local pristine C, byte-for-byte) + ref trailing-ws stripped |
+| cvodes_rs | cvsKrylovDemo_ls | 2 | cvsKrylovDemo_ls_2.out | ref-libm(pre-2.27 glibc CR sin/exp; port == local pristine C, byte-for-byte) + ref trailing-ws stripped |
 | cvodes_rs | cvsKrylovDemo_prec | — | cvsKrylovDemo_prec.out | IDENTICAL |
 | cvodes_rs | cvsLotkaVolterra_ASA | — | cvsLotkaVolterra_ASA.out | IDENTICAL |
 | cvodes_rs | cvsParticle_dns | — | cvsParticle_dns.out | IDENTICAL |
-| cvodes_rs | cvsPendulum_dns | — | cvsPendulum_dns.out | exception: upstream .out anomaly (same as cvPendulum_dns) |
+| cvodes_rs | cvsPendulum_dns | — | cvsPendulum_dns.out | stale-ref(unreproducible atol exponent; port == local pristine C) |
 | cvodes_rs | cvsRoberts_ASAi_dns | — | cvsRoberts_ASAi_dns.out | IDENTICAL |
 | cvodes_rs | cvsRoberts_ASAi_dns_constraints | — | cvsRoberts_ASAi_dns_constraints.out | IDENTICAL |
 | cvodes_rs | cvsRoberts_FSA_dns | -sensi sim t | cvsRoberts_FSA_dns_-sensi_sim_t.out | IDENTICAL |
@@ -73,9 +86,9 @@ table.
 | cvodes_rs | cvsRoberts_dns | — | cvsRoberts_dns.out | IDENTICAL |
 | cvodes_rs | cvsRoberts_dns_constraints | — | cvsRoberts_dns_constraints.out | IDENTICAL |
 | cvodes_rs | cvsRoberts_dns_uw | — | cvsRoberts_dns_uw.out | IDENTICAL |
-| cvodes_rs | cvsKrylovDemo_ls | 0 1 | cvsKrylovDemo_ls_0_1.out | ref-libm(pre-2.27 glibc CR sin/exp; port == cvode_rs cvKrylovDemo_ls) + ref trailing-ws stripped |
+| cvodes_rs | cvsKrylovDemo_ls | 0 1 | cvsKrylovDemo_ls_0_1.out | ref-libm(pre-2.27 glibc CR sin/exp; port == local pristine C, byte-for-byte) + ref trailing-ws stripped |
 | cvodes_rs | cvsAdvDiff_bndL | — | cvsAdvDiff_bndL.out | IDENTICAL (native band for LAPACK) |
-| cvodes_rs | cvsRoberts_dnsL | — | cvsRoberts_dnsL.out | last-digit (LAPACK->native dense; drift == cvRoberts_dnsL) + stale-ref spacing |
+| cvodes_rs | cvsRoberts_dnsL | — | cvsRoberts_dnsL.out | last-digit (LAPACK->native dense; port == local pristine C with SUNLinSol_Dense) + stale-ref spacing |
 | cvodes_rs | cvsRoberts_ASAi_klu | — | cvsRoberts_ASAi_klu.out | excluded(klu) |
 | cvodes_rs | cvsRoberts_FSA_klu | -sensi stg1 t | cvsRoberts_FSA_klu_-sensi_stg1_t.out | excluded(klu) |
 | cvodes_rs | cvsRoberts_klu | — | cvsRoberts_klu.out | excluded(klu) |
@@ -106,7 +119,7 @@ table.
 | kinsol_rs | kinRoboKin_slu | — | kinRoboKin_slu.out | excluded(superlu) |
 | ida_rs | idaAnalytic_mels | — | idaAnalytic_mels.out | IDENTICAL |
 | ida_rs | idaAnalytic_mels | ida.scalar_tolerances 1e-3 1e-8 | idaAnalytic_mels_ida.scalar_tolerances_1e-3_1e-8.out | IDENTICAL |
-| ida_rs | idaFoodWeb_bnd | — | idaFoodWeb_bnd.out | OPEN(last-digit: hused col, t=0.7/1.0; == idas_rs) |
+| ida_rs | idaFoodWeb_bnd | — | idaFoodWeb_bnd.out | ref-libm(1-ulp Apple sin in WebRates; port == local pristine C, byte-for-byte) |
 | ida_rs | idaFoodWeb_kry | — | idaFoodWeb_kry.out | IDENTICAL |
 | ida_rs | idaHeat2D_bnd | — | idaHeat2D_bnd.out | IDENTICAL |
 | ida_rs | idaHeat2D_kry | — | idaHeat2D_kry.out | IDENTICAL |
@@ -240,6 +253,10 @@ table.
   conversion cannot emit two different exponent widths, so the reference is
   not reproducible from its own source. The port emits `1.00e-05` for both.
   10 diff lines (5 header lines); the rest of the variant is byte-identical.
+  **Evidence closed 2026-08-07 (debug phase):** the pristine upstream
+  `cvsPendulum_dns` built locally (config above) is **byte-identical to the
+  Rust port** — 0 diff lines — and diverges from the shipped `.out` on
+  exactly the same 5 header lines. Reference artifact, not a port defect.
 - **cvsRoberts_dnsL** (2026-08-07): two independent causes, neither a port
   defect. (a) *Numeric*: the LAPACK->native dense substitution drift is
   **byte-for-byte the same divergence already accepted for cvRoberts_dnsL** —
@@ -256,6 +273,16 @@ table.
   predates the current PrintOutput format (same class as
   cvRoberts_dns_negsol). `diff -w` reduces the 32 diff lines to the 16
   numeric lines shared with cvRoberts_dnsL.
+  **Evidence closed 2026-08-07 (debug phase):** decisive substitution test.
+  `cvsRoberts_dnsL.c` was copied verbatim with exactly two tokens changed —
+  `#include <sunlinsol/sunlinsol_lapackdense.h>` -> `sunlinsol_dense.h` and
+  `SUNLinSol_LapackDense(y, A, sunctx)` -> `SUNLinSol_Dense(y, A, sunctx)`
+  (lines 41 and 174) — and built against the local pristine C library. Its
+  output is **byte-identical to the Rust port**, including all 7 drifting
+  `y` lines, all 6 counters and the 6/4-space PrintOutput layout. The whole
+  divergence is therefore the documented LAPACK->native dense substitution
+  plus the stale reference spacing; the CVODES transcription itself is
+  exact.
 - **cvsKrylovDemo_ls** (all 4 argv variants, 2026-08-07): the reference has
   been trailing-whitespace-stripped (0 lines with trailing blanks; the port
   emits 12). The source genuinely prints them —
@@ -264,6 +291,51 @@ table.
   as does `printf(" \n2-species diurnal...")` at line 385. Same class as
   idasAkzoNob_ASAi_dns. Under `diff -w` only the diurnal-family numeric
   divergence remains (see the ref-libm note below).
+  **Evidence closed 2026-08-07 (debug phase):** the pristine upstream
+  `cvsKrylovDemo_ls` built locally is **byte-identical to the Rust port for
+  all four argv variants** (`[]`, `1`, `2`, `0 1`) — 0 diff lines including
+  the 12 trailing-space lines — while diverging from the shipped `.out` by
+  131/131/131/774 lines respectively. Both halves of the exception (the
+  stripped trailing whitespace and the diurnal numerics) are reference-side.
+- **idaFoodWeb_bnd** (2026-08-07, debug phase — was OPEN, now `ref-libm`
+  with a fully closed causal chain). 4 diff lines: the `hused` column
+  (`IDAGetLastStep`, `%12.4e`) reads `6.2655e-01` in the shipped `.out` and
+  `6.2656e-01` in the port at t = 7.0e-1 and t = 1.0e+0; every other value,
+  `nst = 239` and the order `k` are byte-identical everywhere.
+  1. **Port == local pristine C.** The upstream `idaFoodWeb_bnd` built with
+     the config above produces output **byte-identical to the Rust port**
+     (0 diff lines) and reproduces the same 2-line divergence from the
+     shipped `.out`. Instrumenting it to print the raw double gives
+     `hused = 6.26555866512088277531e-01`; the reference's `6.2655e-01`
+     requires `hused < 0.626555`, so the two hosts genuinely computed
+     different last step sizes (rel. 1.4e-6), not a formatting difference.
+  2. **The transcendental is in the residual.** `WebRates`
+     (`idaFoodWeb_bnd.c:661`) computes
+     `fac = ONE + ALPHA*xx*yy + BETA*sin(FOURPI*xx)*sin(FOURPI*yy)` and is
+     called from `fweb`/`resweb`, i.e. inside the integration feedback loop
+     — the same structural position as the diurnal family's `sin`/`exp`.
+  3. **Exactly one grid argument is mis-rounded by Apple libm.** The 20x20
+     mesh makes `FOURPI*jx/19`, jx = 0..19, the only arguments ever passed
+     to `sin`. Comparing Apple libm against the correctly-rounded value
+     (60-digit Taylor evaluation) over all 20: 19 agree bit-for-bit; at
+     jx = 15, x = 9.9208189060730536 (`0x4023d775935e3e99`) Apple returns
+     `0xbfde75ec0ded7d50` where correct rounding gives `0xbfde75ec0ded7d4f`
+     — 1 ulp. glibc's dbl-64 `sin` is correctly rounded there.
+  4. **Substituting that one value reproduces the reference exactly.** The
+     pristine C example with a `crsin()` wrapper that returns
+     `0xbfde75ec0ded7d4f` for that single argument (and plain `sin` for
+     everything else) produces output **byte-identical to the shipped
+     `idaFoodWeb_bnd.out`**, `6.2655e-01` included.
+  A 1-ulp libm difference at one mesh point is therefore the complete and
+  sufficient explanation. Not fixed in the port: the example transcribes
+  `sin()` faithfully, and per the diurnal note below no single `sin`
+  implementation can match all shipped references (cvDiurnal_kry needs the
+  *not* correctly-rounded glibc >= 2.28 `sin`), so substituting one would
+  break the established acceptance criterion (port == pristine upstream C)
+  elsewhere. Confirmed harmless-either-way check: rebuilding the sibling
+  `idaFoodWeb_kry` with the same `crsin()` leaves it byte-identical to its
+  reference, i.e. that variant is simply insensitive to the perturbation —
+  which is why it verifies IDENTICAL today.
 - **cvRoberts_dns_negsol**: reference line 20 (`netf = 59     ncfn`, 5-space
   gap) is unproducible by the example's single `%-6ld` format string, which
   yields the 8-space gap seen on the same run's line 41 — the shipped line
@@ -306,6 +378,19 @@ Three idas_rs variants run to completion but do not match. None is a
 formatting or example-setup issue (every one of them is byte-identical up
 to the first solver-visible quantity), so per §6 they are recorded, not
 guessed at.
+
+> **Update 2026-08-07 (cvodes+ida debug phase):** the first of the three,
+> `idasFoodWeb_bnd`, is **root-caused and no longer open** — see the
+> `idaFoodWeb_bnd` entry under *Documented exceptions* above. It is a
+> `ref-libm` case: one 1-ulp Apple-vs-glibc `sin` difference at the single
+> mesh argument `FOURPI*15/19` inside `WebRates`, proven by reproducing the
+> shipped `.out` byte-for-byte from the pristine C build with that one
+> value corrected. `idas_rs`'s stdout is byte-identical to `ida_rs`'s apart
+> from the program-name banner, and `ida_rs`'s is byte-identical to the
+> pristine upstream C build, so the proof transfers unchanged. The
+> idas_rs table row is left for the idas owner to restatus; there is
+> nothing to fix in `ida.rs` or `idas.rs`. The remaining two entries
+> (`idasSlCrank_dns`, `idasSlCrank_FSA_dns`) are untouched by this phase.
 
 - **idasFoodWeb_bnd** — 4 diff lines. The entire trajectory table matches:
   all `c_bl`/`c_tr` species values, `nst = 239` and order `k = 1` are
@@ -419,3 +504,27 @@ onto the proof above **without repeating the libm-substitution experiment**:
   debug phase wants this variant on the same footing as the other six, the
   outstanding work is to build pristine upstream C for it and confirm
   byte-identity — not to change the port.
+
+#### Chained argument replaced by direct measurement (2026-08-07, debug phase)
+
+The outstanding work above was done: all eight cvodes diurnal-family
+variants were built from the pristine upstream C sources with the local
+reference config and run with the exact CMake argv. Every one is
+**byte-identical to the Rust port** (`diff` = 0 lines, whitespace
+included), while diverging from the shipped `.out` by exactly the line
+counts the harness reports:
+
+| variant | argv | port vs local C | port vs shipped `.out` |
+|---|---|---|---|
+| cvsDiurnal_kry | — | 0 | 42 |
+| cvsDiurnal_kry_bp | — | 0 | 88 |
+| cvsKrylovDemo_ls | — | 0 | 131 |
+| cvsKrylovDemo_ls | 1 | 0 | 131 |
+| cvsKrylovDemo_ls | 2 | 0 | 131 |
+| cvsKrylovDemo_ls | 0 1 | 0 | 774 |
+| cvsDiurnal_FSA_kry | -sensi sim t | 0 | 92 |
+| cvsDiurnal_FSA_kry | -sensi stg t | 0 | 94 |
+
+`cvsDiurnal_FSA_kry` is therefore no longer classified by family: it now
+rests on the same direct evidence as the rest, and no cvodes variant in
+this family depends on a chained argument any more.
