@@ -4124,7 +4124,9 @@ pub fn CVodeGetQuadDky(cvode_mem: &CVodeMem, t: sunrealtype, k: i32, dkyQ: &N_Ve
     if (t - tp) * (t - tn1) > ZERO {
         /* C passes MSGCV_BAD_T with no varargs here (the format string
         expects three); the printed text is indeterminate in C.  The port
-        supplies the same three values CVodeGetDky uses. */
+        supplies the same three values CVodeGetDky uses.  Accepted
+        deviation class 5 (C UB -> deterministic behavior); error path
+        only, reachable solely with an out-of-range t. */
         cvProcessError(
             Some(cv_mem),
             CV_BAD_T,
@@ -8266,9 +8268,24 @@ pub(crate) fn cvQuadSensNls(cv_mem: &CVodeMem) -> i32 {
             m.cv_tempvQ.clone().unwrap(),
         )
     };
-    /* NOTE (faithful to upstream): this call site passes `cv_user_data`,
-    unlike the other two `cv_fQS` call sites (cvYddNorm/CVode and
-    cvDoErrorTest) which pass `cv_fQS_data`. */
+    /* NOTE (faithful to upstream, cvodes.c:7328-7331): this call site
+    passes `cv_user_data`, unlike the three other `cv_fQS` call sites
+    (CVode cvodes.c:3075, cvYddNorm cvodes.c:5799, cvDoErrorTest
+    cvodes.c:7768) which all pass `cv_fQS_data`.  This is an upstream
+    defect, not a porting slip: when the user selects the internal DQ
+    quadrature-sensitivity RHS (`CVodeQuadSensInit(mem, None, yQS0)`),
+    C sets `cv_fQS_data = cvode_mem` (cvodes.c:2330) and
+    `cvQuadSensRhsInternalDQ` casts its data argument straight back to
+    `CVodeMem` (cvodes.c:9978) -- so this call hands it the user's own
+    pointer and C reinterprets it, which is undefined behavior.  The
+    port reproduces the call site exactly, so the same misuse turns into
+    a deterministic panic in the downcast inside
+    `cvQuadSensRhsInternalDQ` (accepted deviation class 5).  Do NOT
+    "fix" this by passing `cv_fQS_data`: that would diverge from
+    cvodes.c.  Consequence: internal-DQ quadrature sensitivities are
+    unusable in upstream 7.8.0 as well; a user-supplied `fQS` (which
+    every reference example provides) is unaffected because
+    `cv_fQS_data` then aliases `cv_user_data` in C anyway. */
     {
         let fQS = cv_mem.borrow().cv_fQS.expect("cv_fQS set");
         let mut user_data = cv_mem.borrow_mut().cv_user_data.take();
@@ -10617,9 +10634,9 @@ pub(crate) fn cvRcheck3(cv_mem: &CVodeMem, tout: sunrealtype, itask: i32) -> i32
  */
 
 pub(crate) fn cvRootfind(cv_mem: &CVodeMem) -> i32 {
-    /* Move the rootfinding state into locals for the duration of the search
-    (the user's g function is invoked inside the loop; no RefCell borrow may
-    be held across it). C writes through the cv_mem fields on every return
+    /* Move the mutated rootfinding state into locals for the duration of the
+    search (the user's g function is invoked inside the loop; no RefCell borrow
+    may be held across it). C writes through the cv_mem fields on every return
     path; the single write-back below restores the identical state for each
     path (on the CV_RTFUNC_FAIL path the fields hold the values from the
     last completed iteration, exactly as in C). */
@@ -10631,15 +10648,21 @@ pub(crate) fn cvRootfind(cv_mem: &CVodeMem) -> i32 {
         let m = cv_mem.borrow();
         (m.cv_tlo, m.cv_thi, m.cv_trout)
     };
-    let (mut glo, mut ghi, mut grout, mut iroots, rootdir, gactive) = {
+    /* Only glo/ghi/grout are mutated across the search (grout is written by
+    the user's g), so only those move into locals; cv_rootdir and cv_gactive
+    are read-only here and are CLONED, and cv_iroots is written only at the
+    two terminal points (no callback in between) so it is written in place.
+    That keeps every array the public API can reach -- CVodeGetRootInfo
+    (cv_iroots), CVodeSetRootDirection (cv_rootdir) -- populated in the mem
+    while the user's g function can re-enter, exactly as in C. */
+    let (mut glo, mut ghi, mut grout, rootdir, gactive) = {
         let mut m = cv_mem.borrow_mut();
         (
             std::mem::take(&mut m.cv_glo),
             std::mem::take(&mut m.cv_ghi),
             std::mem::take(&mut m.cv_grout),
-            std::mem::take(&mut m.cv_iroots),
-            std::mem::take(&mut m.cv_rootdir),
-            std::mem::take(&mut m.cv_gactive),
+            m.cv_rootdir.clone(),
+            m.cv_gactive.clone(),
         )
     };
 
@@ -10683,13 +10706,17 @@ pub(crate) fn cvRootfind(cv_mem: &CVodeMem) -> i32 {
                 if !zroot {
                     return CV_SUCCESS;
                 }
-                for i in 0..nrtfn {
-                    iroots[i] = 0;
-                    if !gactive[i] {
-                        continue;
-                    }
-                    if (SUNRabs(ghi[i]) == ZERO) && (rootdir[i] as sunrealtype * glo[i] <= ZERO) {
-                        iroots[i] = if glo[i] > ZERO { -1 } else { 1 };
+                {
+                    let mut m = cv_mem.borrow_mut();
+                    for i in 0..nrtfn {
+                        m.cv_iroots[i] = 0;
+                        if !gactive[i] {
+                            continue;
+                        }
+                        if (SUNRabs(ghi[i]) == ZERO) && (rootdir[i] as sunrealtype * glo[i] <= ZERO)
+                        {
+                            m.cv_iroots[i] = if glo[i] > ZERO { -1 } else { 1 };
+                        }
                     }
                 }
                 return RTFOUND;
@@ -10813,18 +10840,22 @@ pub(crate) fn cvRootfind(cv_mem: &CVodeMem) -> i32 {
 
             /* Reset trout and grout, set iroots, and return RTFOUND. */
             trout = thi;
-            for i in 0..nrtfn {
-                grout[i] = ghi[i];
-                iroots[i] = 0;
-                if !gactive[i] {
-                    continue;
-                }
-                if (SUNRabs(ghi[i]) == ZERO) && (rootdir[i] as sunrealtype * glo[i] <= ZERO) {
-                    iroots[i] = if glo[i] > ZERO { -1 } else { 1 };
-                }
-                if SUNRdifferentsign(glo[i], ghi[i]) && (rootdir[i] as sunrealtype * glo[i] <= ZERO)
-                {
-                    iroots[i] = if glo[i] > ZERO { -1 } else { 1 };
+            {
+                let mut m = cv_mem.borrow_mut();
+                for i in 0..nrtfn {
+                    grout[i] = ghi[i];
+                    m.cv_iroots[i] = 0;
+                    if !gactive[i] {
+                        continue;
+                    }
+                    if (SUNRabs(ghi[i]) == ZERO) && (rootdir[i] as sunrealtype * glo[i] <= ZERO) {
+                        m.cv_iroots[i] = if glo[i] > ZERO { -1 } else { 1 };
+                    }
+                    if SUNRdifferentsign(glo[i], ghi[i])
+                        && (rootdir[i] as sunrealtype * glo[i] <= ZERO)
+                    {
+                        m.cv_iroots[i] = if glo[i] > ZERO { -1 } else { 1 };
+                    }
                 }
             }
             RTFOUND
@@ -10841,9 +10872,6 @@ pub(crate) fn cvRootfind(cv_mem: &CVodeMem) -> i32 {
         m.cv_glo = glo;
         m.cv_ghi = ghi;
         m.cv_grout = grout;
-        m.cv_iroots = iroots;
-        m.cv_rootdir = rootdir;
-        m.cv_gactive = gactive;
     }
 
     retflag
@@ -11855,7 +11883,10 @@ pub(crate) fn cvQuadSensRhsInternalDQ(
 ) -> i32 {
     let mut retval: i32;
 
-    /* cvode_mem is passed here as user data */
+    /* cvode_mem is passed here as user data.  C: `cv_mem = (CVodeMem)cvode_mem;`
+    (cvodes.c:9978).  Reached with the user's own data instead of the mem when
+    cvQuadSensNls calls fQS -- an upstream defect (UB in C); see the note in
+    cvQuadSensNls. */
     let cv_mem = cvode_mem
         .as_mut()
         .and_then(|b| b.downcast_ref::<CVodeMem>())
