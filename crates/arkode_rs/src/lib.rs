@@ -1,1 +1,93 @@
 #![allow(non_snake_case, non_camel_case_types, non_upper_case_globals)]
+
+/* arkode modules (one per upstream C file) */
+pub mod arkode_impl;
+
+/* Re-export every shared module from sundials_core (workspace rule) */
+pub use sundials_core::nvector_serial;
+pub use sundials_core::sunadaptcontroller_imexgus;
+pub use sundials_core::sunadaptcontroller_mrihtol;
+pub use sundials_core::sunadaptcontroller_soderlind;
+pub use sundials_core::sunadjointcheckpointscheme_fixed;
+pub use sundials_core::sundatanode_inmem;
+pub use sundials_core::sundials_adaptcontroller;
+pub use sundials_core::sundials_adjointcheckpointscheme;
+pub use sundials_core::sundials_adjointstepper;
+pub use sundials_core::sundials_band;
+pub use sundials_core::sundials_cli;
+pub use sundials_core::sundials_context;
+pub use sundials_core::sundials_datanode;
+pub use sundials_core::sundials_dense;
+pub use sundials_core::sundials_direct;
+pub use sundials_core::sundials_domeigestimator;
+pub use sundials_core::sundials_errors;
+pub use sundials_core::sundials_futils;
+pub use sundials_core::sundials_hashmap;
+pub use sundials_core::sundials_iterative;
+pub use sundials_core::sundials_linearsolver;
+pub use sundials_core::sundials_logger;
+pub use sundials_core::sundials_math;
+pub use sundials_core::sundials_matrix;
+pub use sundials_core::sundials_memory;
+pub use sundials_core::sundials_nonlinearsolver;
+pub use sundials_core::sundials_nvector;
+pub use sundials_core::sundials_nvector_senswrapper;
+pub use sundials_core::sundials_profiler;
+pub use sundials_core::sundials_stepper;
+pub use sundials_core::sundials_system_memory;
+pub use sundials_core::sundials_types;
+pub use sundials_core::sundials_utils;
+pub use sundials_core::sundials_version;
+pub use sundials_core::sundomeigest_arnoldi;
+pub use sundials_core::sundomeigest_power;
+pub use sundials_core::sunlinsol_band;
+pub use sundials_core::sunlinsol_dense;
+pub use sundials_core::sunlinsol_pcg;
+pub use sundials_core::sunlinsol_spbcgs;
+pub use sundials_core::sunlinsol_spfgmr;
+pub use sundials_core::sunlinsol_spgmr;
+pub use sundials_core::sunlinsol_sptfqmr;
+pub use sundials_core::sunmatrix_band;
+pub use sundials_core::sunmatrix_dense;
+pub use sundials_core::sunmatrix_sparse;
+pub use sundials_core::sunnonlinsol_auto;
+pub use sundials_core::sunnonlinsol_fixedpoint;
+pub use sundials_core::sunnonlinsol_newton;
+pub use sundials_core::sunstl_vector;
+
+/* Flat prelude so examples can `use arkode_rs::*;` */
+pub mod prelude {
+    pub use crate::arkode_impl::*;
+    pub use sundials_core::nvector_serial::*;
+    pub use sundials_core::sundials_adaptcontroller::*;
+    pub use sundials_core::sundials_context::*;
+    pub use sundials_core::sundials_domeigestimator::*;
+    pub use sundials_core::sundials_errors::*;
+    pub use sundials_core::sundials_iterative::*;
+    pub use sundials_core::sundials_linearsolver::*;
+    pub use sundials_core::sundials_math::*;
+    pub use sundials_core::sundials_matrix::*;
+    pub use sundials_core::sundials_nonlinearsolver::*;
+    pub use sundials_core::sundials_nvector::*;
+    pub use sundials_core::sundials_stepper::*;
+    pub use sundials_core::sundials_types::*;
+    pub use sundials_core::sundials_utils::*;
+    pub use sundials_core::sunadaptcontroller_imexgus::*;
+    pub use sundials_core::sunadaptcontroller_mrihtol::*;
+    pub use sundials_core::sunadaptcontroller_soderlind::*;
+    pub use sundials_core::sundomeigest_arnoldi::*;
+    pub use sundials_core::sundomeigest_power::*;
+    pub use sundials_core::sunlinsol_band::*;
+    pub use sundials_core::sunlinsol_dense::*;
+    pub use sundials_core::sunlinsol_pcg::*;
+    pub use sundials_core::sunlinsol_spbcgs::*;
+    pub use sundials_core::sunlinsol_spfgmr::*;
+    pub use sundials_core::sunlinsol_spgmr::*;
+    pub use sundials_core::sunlinsol_sptfqmr::*;
+    pub use sundials_core::sunmatrix_band::*;
+    pub use sundials_core::sunmatrix_dense::*;
+    pub use sundials_core::sunmatrix_sparse::*;
+    pub use sundials_core::sunnonlinsol_auto::*;
+    pub use sundials_core::sunnonlinsol_fixedpoint::*;
+    pub use sundials_core::sunnonlinsol_newton::*;
+}
