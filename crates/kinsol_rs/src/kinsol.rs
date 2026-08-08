@@ -42,7 +42,7 @@ use std::rc::Rc;
 
 use crate::kinsol_aa::{KINFreeAA, KINInitAA};
 use crate::kinsol_impl::*;
-use crate::kinsol_orth::{KINFreeOrth, KINInitOrth};
+use crate::kinsol_orth::{kinQRAdd, KINFreeOrth, KINInitOrth};
 use sundials_core::sundials_context::SUNContext;
 use sundials_core::sundials_math::*;
 use sundials_core::sundials_nvector::*;
@@ -3239,46 +3239,29 @@ fn andersonAccBody(
         let alfa = ONE / R[0];
         N_VScale(alfa, &df0, &q0);
     } else {
-        let (current_depth, m_aa, orth_aa) = {
+        let (current_depth, m_aa) = {
             let m = kin_mem.borrow();
-            (m.kin_current_depth, m.kin_m_aa, m.kin_orth_aa)
+            (m.kin_current_depth, m.kin_m_aa)
         };
         let q_aa: Vec<N_Vector> = kin_mem.borrow().kin_q_aa.clone();
         let df = get_df_aa(kin_mem, current_depth as usize - 1);
-        let qr_func = kin_mem.borrow().kin_qr_func.expect("kin_qr_func");
-        let mut qr_data = kin_mem
-            .borrow_mut()
-            .kin_qr_data
-            .take()
-            .expect("kin_qr_data");
 
-        /* C aliases `qr_data->temp_array` with `kin_mem->kin_T_aa` for ICWY
-        (a T matrix that persists across calls and that
-        AndersonAccQRDelete also updates) and with `kin_mem->kin_cv` for
-        CGS2/DCGS2 (pure per-call scratch). `SUNQRData` owns its Vec by
-        value in Rust, so the ICWY buffer is moved in before the call and
-        copied back out after, which reproduces the shared-storage
-        semantics exactly. */
-        if orth_aa == KIN_ORTH_ICWY {
-            let t = std::mem::take(&mut kin_mem.borrow_mut().kin_T_aa);
-            if !t.is_empty() {
-                qr_data.temp_array = t;
-            }
-        }
-
-        let _ = qr_func(
+        /* C calls through `kin_mem->kin_qr_func` here and discards the
+        return value. `kinQRAdd` is that call: it owns the `temp_array`
+        aliasing contract (C aliases `qr_data->temp_array` with
+        `kin_mem->kin_T_aa` for ICWY — a T matrix that persists across
+        calls and that AndersonAccQRDelete also updates — and with
+        `kin_mem->kin_cv` for CGS2/DCGS2, pure per-call scratch; see the
+        `kinsol_orth` module notes), so that contract lives in exactly
+        one place. */
+        let _ = kinQRAdd(
+            kin_mem,
             &q_aa,
             R,
             &df,
             current_depth as i32 - 1,
             m_aa as i32,
-            &mut qr_data,
         );
-
-        if orth_aa == KIN_ORTH_ICWY {
-            kin_mem.borrow_mut().kin_T_aa = qr_data.temp_array.clone();
-        }
-        kin_mem.borrow_mut().kin_qr_data = Some(qr_data);
     }
 
     /* Adjust the depth */
