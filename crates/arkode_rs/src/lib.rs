@@ -156,4 +156,13 @@ pub mod prelude {
     pub use sundials_core::sunnonlinsol_auto::*;
     pub use sundials_core::sunnonlinsol_fixedpoint::*;
     pub use sundials_core::sunnonlinsol_newton::*;
+
+    /* Two names are defined identically by more than one upstream impl
+       header (`MSG_NLS_INIT_FAIL` in arkode_arkstep_impl.h and
+       arkode_mristep_impl.h; `SIX` in arkode_impl.h's interpolation section
+       and arkode_lsrkstep_impl.h). Each module keeps its own definition, as
+       in C; these explicit re-exports pick one so the flat prelude resolves
+       the name instead of leaving it ambiguous. Values are identical. */
+    pub use crate::arkode_arkstep::MSG_NLS_INIT_FAIL;
+    pub use crate::arkode_interp::SIX;
 }

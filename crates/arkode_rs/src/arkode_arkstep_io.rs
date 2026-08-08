@@ -45,7 +45,7 @@ use sundials_core::sundials_types::*;
 use sundials_core::sundials_utils::{sun_format_g, sunfprintf_long, sunfprintf_real, SUNFile};
 
 use crate::arkode::{
-    arkAllocVec, arkFreeVec, arkReplaceAdaptController, ARKodeCreateMRIStepInnerStepper,
+    arkAllocVec, arkFreeVec, ARKodeCreateMRIStepInnerStepper,
     ARKodeEvolve, ARKodeFree, ARKodeGetDky, ARKodePrintMem, ARKodeReset, ARKodeResFtolerance,
     ARKodeResStolerance, ARKodeResVtolerance, ARKodeResize, ARKodeSStolerances,
     ARKodeSVtolerances, ARKodeWFtolerances,
@@ -55,6 +55,7 @@ use crate::arkode_arkstep::{
     arkStep_mem_mut, MSG_ARK_MISSING_F, MSG_ARK_MISSING_FE, MSG_ARK_MISSING_FI,
 };
 use crate::arkode_arkstep_nls::arkStep_SetNlsSysFn;
+use crate::arkode_io::arkReplaceAdaptController;
 use crate::arkode_butcher::{
     ARKodeButcherTable, ARKodeButcherTable_Copy, ARKodeButcherTable_Space,
     ARKodeButcherTable_Write,
@@ -397,7 +398,7 @@ pub fn ARKStepSetTables(
         }
 
         /* copy the table in step memory */
-        let copy = ARKodeButcherTable_Copy(be);
+        let copy = ARKodeButcherTable_Copy(Some(&be));
         let copied = copy.is_some();
         arkStep_mem_mut(ark_mem).Be = copy;
         if !copied {
@@ -443,7 +444,7 @@ pub fn ARKStepSetTables(
         }
 
         /* copy the table in step memory */
-        let copy = ARKodeButcherTable_Copy(bi);
+        let copy = ARKodeButcherTable_Copy(Some(&bi));
         let copied = copy.is_some();
         arkStep_mem_mut(ark_mem).Bi = copy;
         if !copied {
@@ -487,7 +488,7 @@ pub fn ARKStepSetTables(
         }
 
         /* copy the explicit table into step memory */
-        let copy = ARKodeButcherTable_Copy(be);
+        let copy = ARKodeButcherTable_Copy(Some(&be));
         let copied = copy.is_some();
         arkStep_mem_mut(ark_mem).Be = copy;
         if !copied {
@@ -503,7 +504,7 @@ pub fn ARKStepSetTables(
         }
 
         /* copy the implicit table into step memory */
-        let copy = ARKodeButcherTable_Copy(bi);
+        let copy = ARKodeButcherTable_Copy(Some(&bi));
         let copied = copy.is_some();
         arkStep_mem_mut(ark_mem).Bi = copy;
         if !copied {
@@ -2114,7 +2115,7 @@ pub fn ARKStepSVtolerances(
     ARKodeSVtolerances(arkode_mem, reltol, abstol)
 }
 
-pub fn ARKStepWFtolerances(arkode_mem: &ARKodeMem, efun: Option<ARKEwtFn>) -> i32 {
+pub fn ARKStepWFtolerances(arkode_mem: &ARKodeMem, efun: ARKEwtFn) -> i32 {
     ARKodeWFtolerances(arkode_mem, efun)
 }
 
@@ -2126,7 +2127,7 @@ pub fn ARKStepResVtolerance(arkode_mem: &ARKodeMem, rabstol: &N_Vector) -> i32 {
     ARKodeResVtolerance(arkode_mem, rabstol)
 }
 
-pub fn ARKStepResFtolerance(arkode_mem: &ARKodeMem, rfun: Option<ARKRwtFn>) -> i32 {
+pub fn ARKStepResFtolerance(arkode_mem: &ARKodeMem, rfun: ARKRwtFn) -> i32 {
     ARKodeResFtolerance(arkode_mem, rfun)
 }
 
@@ -2719,7 +2720,7 @@ pub fn ARKStepSetAdaptivityMethod(
     imethod: i32,
     idefault: i32,
     pq: i32,
-    adapt_params: Option<&[sunrealtype]>,
+    adapt_params: Option<&[sunrealtype; 3]>,
 ) -> i32 {
     arkSetAdaptivityMethod(arkode_mem, imethod, idefault, pq, adapt_params)
 }
@@ -3107,12 +3108,12 @@ pub fn ARKStepWriteButcher(arkode_mem: &ARKodeMem, fp: &SUNFile) -> i32 {
     ));
     if explicit && Be.is_some() {
         fp.write_str("  Explicit Butcher table:\n");
-        ARKodeButcherTable_Write(Be.as_ref().expect("Be"), fp);
+        ARKodeButcherTable_Write(Be.as_ref(), fp);
     }
     fp.write_str("\n");
     if implicit && Bi.is_some() {
         fp.write_str("  Implicit Butcher table:\n");
-        ARKodeButcherTable_Write(Bi.as_ref().expect("Bi"), fp);
+        ARKodeButcherTable_Write(Bi.as_ref(), fp);
     }
     fp.write_str("\n");
 

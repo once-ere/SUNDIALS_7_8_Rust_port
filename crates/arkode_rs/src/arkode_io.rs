@@ -245,7 +245,7 @@ pub fn ARKodeSetInterpolantType(arkode_mem: &ARKodeMem, itype: i32) -> i32 {
     /* delete any existing interpolation module */
     let old_interp = arkode_mem.borrow_mut().interp.take();
     if let Some(old_interp) = old_interp {
-        arkInterpFree(arkode_mem, &old_interp);
+        arkInterpFree(arkode_mem, Some(&old_interp));
         /* `ark_mem->interp = NULL` already done by the take above */
     }
 
@@ -346,7 +346,7 @@ pub fn ARKodeSetInterpolantDegree(arkode_mem: &ARKodeMem, degree: i32) -> i32 {
     let interp = arkode_mem.borrow().interp.clone();
     if let Some(interp) = interp {
         let interp_degree = arkode_mem.borrow().interp_degree;
-        return arkInterpSetDegree(arkode_mem, &interp, interp_degree);
+        return arkInterpSetDegree(arkode_mem, Some(&interp), interp_degree);
     }
 
     ARK_SUCCESS

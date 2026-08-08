@@ -1692,7 +1692,6 @@ pub fn N_VEnableLinearCombinationVectorArray_Serial(
 mod tests {
     use super::*;
     use crate::sundials_context::{SUNContext_Create, SUNContext};
-    use crate::sundials_nvector::*;
 
     fn ctx() -> SUNContext {
         let mut c = None;

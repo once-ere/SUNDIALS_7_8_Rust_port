@@ -42,16 +42,14 @@ use crate::arkode_io::{
     ARKodeGetAccumulatedError, ARKodeResetAccumulatedError, ARKodeSetDefaults, ARKodeSetStopTime,
 };
 use crate::arkode_mristep::{
-    MRIStepInnerStepper, MRIStepInnerStepper_Create, MRIStepInnerStepper_GetContent,
-    MRIStepInnerStepper_GetForcingData, MRIStepInnerStepper_SetAccumulatedErrorGetFn,
+    MRIStepInnerStepper, MRIStepInnerStepper_Create, MRIStepInnerStepper_GetForcingData,
+    MRIStepInnerStepper_SetAccumulatedErrorGetFn,
     MRIStepInnerStepper_SetAccumulatedErrorResetFn, MRIStepInnerStepper_SetContent,
     MRIStepInnerStepper_SetEvolveFn, MRIStepInnerStepper_SetFullRhsFn,
     MRIStepInnerStepper_SetRTolFn, MRIStepInnerStepper_SetResetFn,
 };
 use crate::arkode_relaxation::{arkRelax, arkRelaxDestroy};
-use crate::arkode_root::{
-    arkPrintRootMem, arkRootCheck1, arkRootCheck2, arkRootCheck3, arkRootFree,
-};
+use crate::arkode_root::{arkPrintRootMem, arkRootCheck1, arkRootCheck2, arkRootCheck3, arkRootFree};
 
 use sundials_core::sundials_adaptcontroller::*;
 use sundials_core::sundials_context::SUNContext;
@@ -289,7 +287,7 @@ pub fn ARKodeResize(
     if let Some(interp) = interp {
         let retval = arkInterpResize(
             ark_mem,
-            &interp,
+            Some(&interp),
             resize,
             resize_data,
             lrw_diff,
@@ -1629,7 +1627,7 @@ pub fn ARKodeGetDky(arkode_mem: &ARKodeMem, t: sunrealtype, k: i32, dky: &N_Vect
 
     /* call arkInterpEvaluate to evaluate result */
     let s = (t - tcur) / h;
-    let retval = arkInterpEvaluate(ark_mem, &interp, s, k, ARK_INTERP_MAX_DEGREE, dky);
+    let retval = arkInterpEvaluate(ark_mem, Some(&interp), s, k, ARK_INTERP_MAX_DEGREE, dky);
     if retval != ARK_SUCCESS {
         arkProcessError(
             Some(ark_mem),
@@ -1695,7 +1693,7 @@ pub fn ARKodeFree(arkode_mem: &mut Option<ARKodeMem>) {
     /* free the interpolation module */
     let interp = ark_mem.borrow().interp.clone();
     if let Some(interp) = interp {
-        arkInterpFree(&ark_mem, &interp);
+        arkInterpFree(&ark_mem, Some(&interp));
         ark_mem.borrow_mut().interp = None;
     }
 
@@ -1813,7 +1811,7 @@ pub fn ARKodePrintMem(arkode_mem: &ARKodeMem, outfile: &SUNFile) {
     /* output interpolation quantities */
     let interp = ark_mem.borrow().interp.clone();
     if let Some(interp) = interp {
-        arkInterpPrintMem(&interp, outfile);
+        arkInterpPrintMem(Some(&interp), outfile);
     } else {
         outfile.write_str("interpolation = NULL\n");
     }
@@ -1860,7 +1858,7 @@ pub fn ARKodeCreateMRIStepInnerStepper(
     }
     let inner = stepper.as_ref().expect("stepper created").clone();
 
-    let retval = MRIStepInnerStepper_SetContent(&inner, Box::new(ark_mem.clone()));
+    let retval = MRIStepInnerStepper_SetContent(&inner, Some(Box::new(ark_mem.clone()) as Box<dyn Any>));
     if retval != ARK_SUCCESS {
         return retval;
     }
@@ -2789,9 +2787,9 @@ pub fn arkInitialSetup(ark_mem: &ARKodeMem, tout: sunrealtype) -> i32 {
     if interp_type != ARK_INTERP_NONE && !interp_present {
         let interp_degree = ark_mem.borrow().interp_degree;
         let interp = if interp_type == ARK_INTERP_LAGRANGE {
-            crate::arkode_interp::arkInterpCreate_Lagrange(ark_mem, interp_degree)
+            arkInterpCreate_Lagrange(ark_mem, interp_degree)
         } else {
-            crate::arkode_interp::arkInterpCreate_Hermite(ark_mem, interp_degree)
+            arkInterpCreate_Hermite(ark_mem, interp_degree)
         };
         let is_none = interp.is_none();
         ark_mem.borrow_mut().interp = interp;
@@ -2813,7 +2811,7 @@ pub fn arkInitialSetup(ark_mem: &ARKodeMem, tout: sunrealtype) -> i32 {
     if let Some(interp) = interp.as_ref() {
         /* Stepper init may have limited the interpolation degree */
         let interp_degree = ark_mem.borrow().interp_degree;
-        if crate::arkode_interp::arkInterpSetDegree(ark_mem, interp, interp_degree) != 0 {
+        if arkInterpSetDegree(ark_mem, Some(interp), interp_degree) != 0 {
             arkProcessError(
                 Some(ark_mem),
                 ARK_ILL_INPUT,
@@ -2826,7 +2824,7 @@ pub fn arkInitialSetup(ark_mem: &ARKodeMem, tout: sunrealtype) -> i32 {
         }
 
         let tcur = ark_mem.borrow().tcur;
-        if crate::arkode_interp::arkInterpInit(ark_mem, interp, tcur) != 0 {
+        if arkInterpInit(ark_mem, Some(interp), tcur) != 0 {
             arkProcessError(
                 Some(ark_mem),
                 ARK_ILL_INPUT,
@@ -3066,7 +3064,7 @@ pub fn arkInitialSetup(ark_mem: &ARKodeMem, tout: sunrealtype) -> i32 {
         .map(|r| r.nrtfn)
         .unwrap_or(0);
     if ark_mem.borrow().root_mem.is_some() && nrtfn > 0 {
-        let retval = crate::arkode_root::arkRootCheck1(ark_mem);
+        let retval = arkRootCheck1(ark_mem);
         if retval != ARK_SUCCESS {
             return retval;
         }
@@ -3157,7 +3155,7 @@ pub fn arkStopTests(
                 ark_mem.borrow_mut().fn_is_current = SUNTRUE;
             }
 
-            let retval = crate::arkode_root::arkRootCheck2(ark_mem);
+            let retval = arkRootCheck2(ark_mem);
 
             if retval == CLOSERT {
                 let tlo = ark_mem
@@ -3213,7 +3211,7 @@ pub fn arkStopTests(
                 (m.tcur, m.tretlast)
             };
             if SUNRabs(tcur - tretlast) > troundoff {
-                let retval = crate::arkode_root::arkRootCheck3(ark_mem, tout, itask);
+                let retval = arkRootCheck3(ark_mem, tout, itask);
 
                 if retval == ARK_SUCCESS {
                     /* no root found */
@@ -3714,7 +3712,7 @@ pub fn arkCompleteStep(ark_mem: &ARKodeMem, dsm: sunrealtype) -> i32 {
     let interp = ark_mem.borrow().interp.clone();
     if let Some(interp) = interp.as_ref() {
         let tcur = ark_mem.borrow().tcur;
-        let retval = crate::arkode_interp::arkInterpUpdate(ark_mem, interp, tcur);
+        let retval = arkInterpUpdate(ark_mem, Some(interp), tcur);
         if retval != ARK_SUCCESS {
             return retval;
         }
@@ -4351,9 +4349,9 @@ pub fn arkPredict_MaximumOrder(
     };
 
     /* call the interpolation module to do the work */
-    crate::arkode_interp::arkInterpEvaluate(
+    arkInterpEvaluate(
         ark_mem,
-        &interp,
+        Some(&interp),
         tau,
         0,
         ARK_INTERP_MAX_DEGREE,
@@ -4405,7 +4403,7 @@ pub fn arkPredict_VariableOrder(
     }
 
     /* call the interpolation module to do the work */
-    crate::arkode_interp::arkInterpEvaluate(ark_mem, &interp, tau, 0, ord, yguess)
+    arkInterpEvaluate(ark_mem, Some(&interp), tau, 0, ord, yguess)
 }
 
 /*---------------------------------------------------------------
@@ -4446,7 +4444,7 @@ pub fn arkPredict_CutoffOrder(ark_mem: &ARKodeMem, tau: sunrealtype, yguess: &N_
     }
 
     /* call the interpolation module to do the work */
-    crate::arkode_interp::arkInterpEvaluate(ark_mem, &interp, tau, 0, ord, yguess)
+    arkInterpEvaluate(ark_mem, Some(&interp), tau, 0, ord, yguess)
 }
 
 /*---------------------------------------------------------------
@@ -4744,7 +4742,7 @@ pub fn arkCheckTemporalError(
         (m.tn, m.h, m.ycur.clone().expect("ycur set"))
     };
     let ttmp = if dsm <= ONE { tn + h } else { tn };
-    let retval = crate::arkode_adapt::arkAdapt(ark_mem, &ycur, ttmp, h, dsm);
+    let retval = arkAdapt(ark_mem, &ycur, ttmp, h, dsm);
     if retval != ARK_SUCCESS {
         return ARK_ERR_FAILURE;
     }
@@ -5338,7 +5336,7 @@ pub fn ark_MRIStepInnerEvolve(
     let mut tscale: sunrealtype = ZERO;
     let mut forcing: Vec<N_Vector> = Vec::new();
     let mut nforcing: i32 = 0;
-    let retval = crate::arkode_mristep::MRIStepInnerStepper_GetForcingData(
+    let retval = MRIStepInnerStepper_GetForcingData(
         stepper,
         &mut tshift,
         &mut tscale,
@@ -5357,7 +5355,7 @@ pub fn ark_MRIStepInnerEvolve(
     }
 
     /* set the stop time */
-    let retval = crate::arkode_io::ARKodeSetStopTime(&ark_mem, tout);
+    let retval = ARKodeSetStopTime(&ark_mem, tout);
     if retval != ARK_SUCCESS {
         return -1;
     }
@@ -5492,7 +5490,7 @@ pub fn ark_MRIStepInnerGetAccumulatedError(
         None => return -1,
         Some(m) => m,
     };
-    let retval = crate::arkode_io::ARKodeGetAccumulatedError(&ark_mem, accum_error);
+    let retval = ARKodeGetAccumulatedError(&ark_mem, accum_error);
     if retval == ARK_SUCCESS {
         return 0;
     }
@@ -5524,7 +5522,7 @@ pub fn ark_MRIStepInnerResetAccumulatedError(
         None => return -1,
         Some(m) => m,
     };
-    let retval = crate::arkode_io::ARKodeResetAccumulatedError(&ark_mem);
+    let retval = ARKodeResetAccumulatedError(&ark_mem);
     if retval == ARK_SUCCESS {
         return 0;
     }

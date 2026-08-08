@@ -959,15 +959,16 @@ pub fn arkStep_Resize(
         (step_mem.NLS.clone(), step_mem.ownNLS)
     };
     if nls.is_some() && ownNLS {
-        /* destroy existing NLS object */
+        /* destroy existing NLS object (C clears the two fields only AFTER a
+           successful free, so an error return leaves `NLS`/`ownNLS` intact) */
+        retval = SUNNonlinSolFree(nls);
+        if retval != ARK_SUCCESS {
+            return retval;
+        }
         {
             let mut step_mem = arkStep_mem_mut(ark_mem);
             step_mem.NLS = None;
             step_mem.ownNLS = SUNFALSE;
-        }
-        retval = SUNNonlinSolFree(nls);
-        if retval != ARK_SUCCESS {
-            return retval;
         }
 
         /* create new Newton NLS object */
@@ -1048,7 +1049,7 @@ pub fn arkStep_Free(ark_mem: &ARKodeMem) {
     if let Some(Be) = Be {
         let mut Bliw: sunindextype = 0;
         let mut Blrw: sunindextype = 0;
-        ARKodeButcherTable_Space(&Be, &mut Bliw, &mut Blrw);
+        ARKodeButcherTable_Space(Some(&Be), &mut Bliw, &mut Blrw);
         drop(Be); /* C: ARKodeButcherTable_Free(step_mem->Be) */
         let mut m = ark_mem.borrow_mut();
         m.liw -= Bliw;
@@ -1058,7 +1059,7 @@ pub fn arkStep_Free(ark_mem: &ARKodeMem) {
     if let Some(Bi) = Bi {
         let mut Bliw: sunindextype = 0;
         let mut Blrw: sunindextype = 0;
-        ARKodeButcherTable_Space(&Bi, &mut Bliw, &mut Blrw);
+        ARKodeButcherTable_Space(Some(&Bi), &mut Bliw, &mut Blrw);
         drop(Bi); /* C: ARKodeButcherTable_Free(step_mem->Bi) */
         let mut m = ark_mem.borrow_mut();
         m.liw -= Bliw;
@@ -1285,11 +1286,11 @@ pub fn arkStep_PrintMem(ark_mem: &ARKodeMem, outfile: &SUNFile) {
     /* output sunrealtype quantities */
     if let Some(Be) = &Be {
         outfile.write_str("ARKStep: explicit Butcher table:\n");
-        ARKodeButcherTable_Write(Be, outfile);
+        ARKodeButcherTable_Write(Some(Be), outfile);
     }
     if let Some(Bi) = &Bi {
         outfile.write_str("ARKStep: implicit Butcher table:\n");
-        ARKodeButcherTable_Write(Bi, outfile);
+        ARKodeButcherTable_Write(Some(Bi), outfile);
     }
     outfile.write_str(&format!("ARKStep: gamma = {}\n", sun_format_g(gamma)));
     outfile.write_str(&format!("ARKStep: gammap = {}\n", sun_format_g(gammap)));
@@ -2147,14 +2148,14 @@ pub fn arkStep_FullRHS(
 
                 if explicit {
                     let Be = arkStep_mem_mut(ark_mem).Be.clone().expect("Be");
-                    if !ARKodeButcherTable_IsStifflyAccurate(&Be) {
+                    if !ARKodeButcherTable_IsStifflyAccurate(Some(&Be)) {
                         recomputeRHS = SUNTRUE;
                     }
                 }
 
                 if implicit {
                     let Bi = arkStep_mem_mut(ark_mem).Bi.clone().expect("Bi");
-                    if !ARKodeButcherTable_IsStifflyAccurate(&Bi) {
+                    if !ARKodeButcherTable_IsStifflyAccurate(Some(&Bi)) {
                         recomputeRHS = SUNTRUE;
                     }
                 }
@@ -2649,14 +2650,14 @@ pub fn arkStep_TakeStep_Z(
     stiffly_accurate = SUNTRUE;
     if explicit {
         let Be = arkStep_mem_mut(ark_mem).Be.clone().expect("Be");
-        if !ARKodeButcherTable_IsStifflyAccurate(&Be) {
+        if !ARKodeButcherTable_IsStifflyAccurate(Some(&Be)) {
             stiffly_accurate = SUNFALSE;
         }
     }
 
     if implicit {
         let Bi = arkStep_mem_mut(ark_mem).Bi.clone().expect("Bi");
-        if !ARKodeButcherTable_IsStifflyAccurate(&Bi) {
+        if !ARKodeButcherTable_IsStifflyAccurate(Some(&Bi)) {
             stiffly_accurate = SUNFALSE;
         }
     }
@@ -3044,11 +3045,8 @@ pub fn arkStep_TakeStep_Z(
         if explicit {
             let (fe, Fe_is, ci) = {
                 let s = arkStep_mem_mut(ark_mem);
-                (
-                    s.fe.expect("fe"),
-                    s.Fe[is as usize].clone(),
-                    s.Be.as_ref().expect("Be").borrow().c[is as usize],
-                )
+                let ci = s.Be.as_ref().expect("Be").borrow().c[is as usize];
+                (s.fe.expect("fe"), s.Fe[is as usize].clone(), ci)
             };
             let (tn, h) = {
                 let m = ark_mem.borrow();
@@ -3131,7 +3129,8 @@ pub fn arkStep_TakeStep_Z(
         };
         let Be_stages = {
             let s = arkStep_mem_mut(ark_mem);
-            s.Be.as_ref().expect("Be").borrow().stages
+            let stages = s.Be.as_ref().expect("Be").borrow().stages;
+            stages
         };
         let errcode = SUNAdjointCheckpointScheme_NeedsSaving(
             checkpoint_scheme,
@@ -3363,7 +3362,7 @@ pub fn arkStep_SetButcherTables(ark_mem: &ARKodeMem) -> i32 {
     let mut Bliw: sunindextype = 0;
     let mut Blrw: sunindextype = 0;
     if let Some(Be) = &Be {
-        ARKodeButcherTable_Space(Be, &mut Bliw, &mut Blrw);
+        ARKodeButcherTable_Space(Some(Be), &mut Bliw, &mut Blrw);
     }
     {
         let mut m = ark_mem.borrow_mut();
@@ -3375,7 +3374,7 @@ pub fn arkStep_SetButcherTables(ark_mem: &ARKodeMem) -> i32 {
     let mut Bliw: sunindextype = 0;
     let mut Blrw: sunindextype = 0;
     if let Some(Bi) = &Bi {
-        ARKodeButcherTable_Space(Bi, &mut Bliw, &mut Blrw);
+        ARKodeButcherTable_Space(Some(Bi), &mut Bliw, &mut Blrw);
     }
     {
         let mut m = ark_mem.borrow_mut();
@@ -3688,7 +3687,7 @@ interval are predicted using lower order polynomials than the
 "nearby" stages.
 ---------------------------------------------------------------*/
 pub fn arkStep_Predict(ark_mem: &ARKodeMem, istage: i32, yguess: &N_Vector) -> i32 {
-    let mut retval: i32;
+    let retval: i32;
     let mut tau: sunrealtype;
 
     /* access ARKodeARKStepMem structure */
@@ -3958,7 +3957,8 @@ pub fn arkStep_StageSetup(ark_mem: &ARKodeMem, implicit: sunbooleantype) -> i32 
     if implicit {
         let aii = {
             let s = arkStep_mem_mut(ark_mem);
-            s.Bi.as_ref().expect("Bi").borrow().A[i as usize][i as usize]
+            let a = s.Bi.as_ref().expect("Bi").borrow().A[i as usize][i as usize];
+            a
         };
         let mut s = arkStep_mem_mut(ark_mem);
         s.gamma = h * aii;
@@ -4126,14 +4126,14 @@ pub fn arkStep_ComputeSolutions(ark_mem: &ARKodeMem, dsmPtr: &mut sunrealtype) -
 
     if explicit {
         let Be = arkStep_mem_mut(ark_mem).Be.clone().expect("Be");
-        if !ARKodeButcherTable_IsStifflyAccurate(&Be) {
+        if !ARKodeButcherTable_IsStifflyAccurate(Some(&Be)) {
             stiffly_accurate = SUNFALSE;
         }
     }
 
     if implicit {
         let Bi = arkStep_mem_mut(ark_mem).Bi.clone().expect("Bi");
-        if !ARKodeButcherTable_IsStifflyAccurate(&Bi) {
+        if !ARKodeButcherTable_IsStifflyAccurate(Some(&Bi)) {
             stiffly_accurate = SUNFALSE;
         }
     }
@@ -4367,14 +4367,14 @@ pub fn arkStep_ComputeSolutions_MassFixed(ark_mem: &ARKodeMem, dsmPtr: &mut sunr
 
     if explicit {
         let Be = arkStep_mem_mut(ark_mem).Be.clone().expect("Be");
-        if !ARKodeButcherTable_IsStifflyAccurate(&Be) {
+        if !ARKodeButcherTable_IsStifflyAccurate(Some(&Be)) {
             stiffly_accurate = SUNFALSE;
         }
     }
 
     if implicit {
         let Bi = arkStep_mem_mut(ark_mem).Bi.clone().expect("Bi");
-        if !ARKodeButcherTable_IsStifflyAccurate(&Bi) {
+        if !ARKodeButcherTable_IsStifflyAccurate(Some(&Bi)) {
             stiffly_accurate = SUNFALSE;
         }
     }
@@ -4567,7 +4567,7 @@ pub fn arkStep_TakeStep_ERK_Adjoint(
 
     /* determine if method has fsal property */
     let fsal: sunbooleantype =
-        (SUNRabs(Be.borrow().A[0][0]) <= TINY) && ARKodeButcherTable_IsStifflyAccurate(&Be);
+        (SUNRabs(Be.borrow().A[0][0]) <= TINY) && ARKodeButcherTable_IsStifflyAccurate(Some(&Be));
 
     /* For FSAL ERK methods, Ae[s-1][s-1] == b[s-1] = 0 so F[s-1] is always zero */
     if fsal {
@@ -5151,7 +5151,7 @@ pub fn ARKStepCreateAdjointStepper(
         let B = Be.as_ref().expect("Be").borrow();
         (B.q, B.p)
     };
-    retval = ARKStepSetTables(&arkode_mem_adj, Be_q, Be_p, Bi, Be);
+    retval = ARKStepSetTables(&arkode_mem_adj, Be_q, Be_p, Bi.as_ref(), Be.as_ref());
     if retval != 0 {
         arkProcessError(
             Some(ark_mem),
@@ -5178,7 +5178,7 @@ pub fn ARKStepCreateAdjointStepper(
     }
 
     let checkpoint_scheme = ark_mem.borrow().checkpoint_scheme.clone();
-    retval = ARKodeSetAdjointCheckpointScheme(&arkode_mem_adj, checkpoint_scheme.clone());
+    retval = ARKodeSetAdjointCheckpointScheme(&arkode_mem_adj, checkpoint_scheme.as_ref());
     if retval != 0 {
         arkProcessError(
             Some(ark_mem),

@@ -24,6 +24,13 @@
 //! replaced after the Set* call) cannot occur — the current `user_data` is
 //! always passed (accepted deviation class 6, ARCHITECTURE.md).
 //!
+//! `mt_data` is the ONE exception: C never assigns `ark_mem->user_data` to
+//! it (`ARKodeSetMassLinearSolver` sets it to NULL, `ARKodeSetMassTimes`
+//! stores the caller's `mtimes_data` verbatim, and `arkLSSetMassUserData`
+//! deliberately leaves it alone — `arkode_ls.c:445/:1824/:2300`). So for
+//! this field `None` is C's NULL and is passed through to
+//! `mtimes`/`mtsetup` as-is; it never falls back to `user_data`.
+//!
 //! The `jcur` seam: `step_getgammas` hands out a clone of the stepper's
 //! shared [`ARKJcurPtr`] cell, and `arkLsSetup` receives the SAME cell as
 //! `jcurPtr`. A user/BANDPRE/BBDPRE `psetup` reached re-entrantly through
@@ -373,9 +380,9 @@ pub struct ARKLsMassMemRec {
     /* Mass matrix times vector setup and product routines, data.
     C never re-points `mt_data` at `user_data` (`arkLSSetMassUserData`
     deliberately leaves it alone), so `Some(box)` is the caller's own
-    token; `None` follows the module-wide convention and passes
-    `ark_mem.user_data` (deviation class 6 — C would keep passing the
-    attach-time pointer). */
+    token and `None` is C's NULL — unlike the other data-token fields this
+    one is passed to the callbacks unchanged and never substitutes
+    `ark_mem.user_data`. */
     pub mtsetup: Option<ARKLsMassTimesSetupFn>,
     pub mtimes: Option<ARKLsMassTimesVecFn>,
     pub mt_data: Option<Box<dyn Any>>,
@@ -2283,6 +2290,12 @@ pub fn ARKodeSetMassPreconditioner(
 /*---------------------------------------------------------------
   ARKodeSetMassTimes specifies the user-supplied mass
   matrix-vector product setup and multiply routines.
+
+  `mtimes_data` is stored verbatim (arkode_ls.c:1824) and handed to
+  `mtimes`/`mtsetup` unchanged: `None` here means those callbacks receive
+  `None`, exactly as C hands them NULL. It is NOT re-pointed at the
+  integrator's `user_data` by a later `ARKodeSetUserData` — to share state
+  with the RHS callback, clone an `Rc` handle into both boxes.
   ---------------------------------------------------------------*/
 pub fn ARKodeSetMassTimes(
     arkode_mem: &ARKodeMem,
@@ -3028,18 +3041,10 @@ pub fn arkLsMTimes(arkode_mem: &ARKodeMem, v: &N_Vector, z: &N_Vector) -> i32 {
     if let Some(mtimes) = mtimes {
         /* call user-supplied mtimes routine, increment counter and return */
         let tcur = ark_mem.borrow().tcur;
-        let use_field = arkls_mass_mem_mut(ark_mem).mt_data.is_some();
-        let mut mt_data = if use_field {
-            arkls_mass_mem_mut(ark_mem).mt_data.take()
-        } else {
-            ark_mem.borrow_mut().user_data.take()
-        };
+        /* `mt_data` is passed exactly as stored (NULL included) */
+        let mut mt_data = arkls_mass_mem_mut(ark_mem).mt_data.take();
         let mretval = mtimes(v, z, tcur, &mut mt_data);
-        if use_field {
-            arkls_mass_mem_mut(ark_mem).mt_data = mt_data;
-        } else {
-            ark_mem.borrow_mut().user_data = mt_data;
-        }
+        arkls_mass_mem_mut(ark_mem).mt_data = mt_data;
         if mretval == 0 {
             arkls_mass_mem_mut(ark_mem).nmtimes += 1;
         } else {
@@ -4725,18 +4730,10 @@ pub fn arkLsMassSetup(
     /* call user-provided mtsetup routine if applicable */
     if call_mtsetup {
         let mtsetup = mtsetup.expect("mtsetup");
-        let use_field = arkls_mass_mem_mut(ark_mem).mt_data.is_some();
-        let mut mt_data = if use_field {
-            arkls_mass_mem_mut(ark_mem).mt_data.take()
-        } else {
-            ark_mem.borrow_mut().user_data.take()
-        };
+        /* `mt_data` is passed exactly as stored (NULL included) */
+        let mut mt_data = arkls_mass_mem_mut(ark_mem).mt_data.take();
         let last_flag = mtsetup(t, &mut mt_data);
-        if use_field {
-            arkls_mass_mem_mut(ark_mem).mt_data = mt_data;
-        } else {
-            ark_mem.borrow_mut().user_data = mt_data;
-        }
+        arkls_mass_mem_mut(ark_mem).mt_data = mt_data;
         {
             let mut ls = arkls_mass_mem_mut(ark_mem);
             ls.last_flag = last_flag;

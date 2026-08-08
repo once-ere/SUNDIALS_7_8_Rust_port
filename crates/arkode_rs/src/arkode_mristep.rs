@@ -3872,7 +3872,27 @@ pub fn mriStep_TakeStepMRISR(
         impl_corr = SUNFALSE;
         if implicit_rhs {
             /* determine whether implicit RHS correction will require an implicit solve */
-            let g_ss = { MRIC.borrow().G[0][stage as usize][stage as usize] };
+            /* `MRIStepCoupling_Alloc` gives each G matrix `stages+1` ROWS but
+               only `stages` COLUMNS (arkode_mri_tables.c:181-203), so on the
+               embedding iteration (`stage == stages`) upstream's
+               `G[0][stage][stage]` (arkode_mristep.c:2592) reads one element
+               past the end of a calloc'd row. The embedding row has no
+               diagonal entry by construction -- every in-bounds use of that
+               row is `G[0][stage][j]` for `j < stage` -- so the value the
+               calloc'd storage yields, and the one upstream relies on, is
+               ZERO (i.e. `impl_corr` false, and the `gamma` update below is
+               then unreachable). Reproduce that deterministically instead of
+               panicking; see ARCHITECTURE.md deviation class 5, named
+               exception. */
+            let g_ss = {
+                let C = MRIC.borrow();
+                let row = &C.G[0][stage as usize];
+                if (stage as usize) < row.len() {
+                    row[stage as usize]
+                } else {
+                    ZERO
+                }
+            };
             impl_corr = SUNRabs(g_ss) > tol;
 
             /* perform implicit solve for correction */
@@ -4231,6 +4251,10 @@ pub fn mriStep_TakeStepMERK(
     };
 
     /* initial time for step */
+    /* dead store in the C source too (arkode_mristep.c:2919): `t0` is
+     * first read only after the re-assignment inside the stage loop.
+     * Kept for fidelity. */
+    #[allow(unused_assignments)]
     let mut t0 = ark_mem.borrow().tn;
 
     /* initialize the current stage index */
@@ -6869,21 +6893,22 @@ pub fn mriStep_SetInnerForcing(
             let mric_stages = mric.borrow().stages;
 
             /* check if there are enough reusable arrays for fused operations */
-            let (nfusedopvecs, allocated) = {
+            let (nfusedopvecs, have_cvals, have_Xvecs) = {
                 let step_mem = mriStep_mem_mut(ark_mem);
-                /* `Xvecs` is N_Vector handle scratch and stays empty in this port
-                (call sites rebuild it as a local), so C's `Xvecs != NULL` test
-                is taken from `cvals`, which C allocates and frees in lockstep
-                with it -- keeping the lrw/liw accounting identical. */
-                (step_mem.nfusedopvecs, !step_mem.cvals.is_empty())
+                /* empty `Vec` == C `NULL` for both workspace arrays */
+                (
+                    step_mem.nfusedopvecs,
+                    !step_mem.cvals.is_empty(),
+                    !step_mem.Xvecs.is_empty(),
+                )
             };
             if (nfusedopvecs - nvecs) < (2 * mric_stages + 2) {
                 /* free current work space */
-                if allocated {
+                if have_cvals {
                     mriStep_mem_mut(ark_mem).cvals = Vec::new();
                     ark_mem.borrow_mut().lrw -= nfusedopvecs as i64;
                 }
-                if allocated {
+                if have_Xvecs {
                     mriStep_mem_mut(ark_mem).Xvecs = Vec::new();
                     ark_mem.borrow_mut().liw -= nfusedopvecs as i64;
                 }
@@ -6898,7 +6923,7 @@ pub fn mriStep_SetInnerForcing(
                 ark_mem.borrow_mut().lrw += new_nfusedopvecs as i64;
                 {
                     let mut step_mem = mriStep_mem_mut(ark_mem);
-                    step_mem.Xvecs = Vec::new();
+                    step_mem.Xvecs = vec![None; new_nfusedopvecs as usize];
                 }
                 ark_mem.borrow_mut().liw += new_nfusedopvecs as i64;
             }

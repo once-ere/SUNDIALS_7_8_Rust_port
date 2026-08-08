@@ -25,6 +25,7 @@ use crate::arkode_ls::*;
 use crate::arkode_mri_tables::*;
 use crate::arkode_mristep::*;
 use crate::arkode_mristep_controller::SUNAdaptController_MRIStep;
+use crate::arkode_root::ARKodeRootInit;
 
 use sundials_core::sundials_adaptcontroller::{
     SUNAdaptController, SUNAdaptController_GetType, SUN_ADAPTCONTROLLER_MRI_H_TOL,
@@ -99,7 +100,7 @@ pub fn MRIStepSetCoupling(arkode_mem: &ARKodeMem, MRIC: &MRIStepCoupling) -> i32
     }
 
     /* copy the coupling structure in step memory */
-    let copy = MRIStepCoupling_Copy(MRIC);
+    let copy = MRIStepCoupling_Copy(Some(MRIC));
     let copy_failed = copy.is_none();
     mriStep_mem_mut(ark_mem).MRIC = copy;
     if copy_failed {
@@ -1409,7 +1410,7 @@ pub fn MRIStepSVtolerances(
     ARKodeSVtolerances(arkode_mem, reltol, abstol)
 }
 
-pub fn MRIStepWFtolerances(arkode_mem: &ARKodeMem, efun: Option<ARKEwtFn>) -> i32 {
+pub fn MRIStepWFtolerances(arkode_mem: &ARKodeMem, efun: ARKEwtFn) -> i32 {
     ARKodeWFtolerances(arkode_mem, efun)
 }
 

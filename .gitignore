@@ -2,6 +2,9 @@
 /logs
 .claude/
 
-# runtime artifacts written by examples into the workspace root
-*.csv
-*_ref.txt
+# Runtime artifacts examples write into their CWD (stats CSVs, solution
+# trajectories). Root-anchored so real repo data files keep tracking —
+# e.g. crates/sundials_core/src/sundials_utils_cvec.txt, the printf
+# reference vectors.
+/*.csv
+/*.txt

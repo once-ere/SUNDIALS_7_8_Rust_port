@@ -132,7 +132,7 @@ pub fn ERKStepSetTable(arkode_mem: &ARKodeMem, B: &ARKodeButcherTable) -> i32 {
     }
 
     /* copy the table into step memory */
-    let newB = ARKodeButcherTable_Copy(B);
+    let newB = ARKodeButcherTable_Copy(Some(B));
     if newB.is_none() {
         erkStep_mem_mut(ark_mem).B = None;
         arkProcessError(
@@ -805,7 +805,7 @@ pub fn ERKStepSetAdaptivityMethod(
     imethod: i32,
     idefault: i32,
     pq: i32,
-    adapt_params: Option<&[sunrealtype]>,
+    adapt_params: Option<&[sunrealtype; 3]>,
 ) -> i32 {
     arkSetAdaptivityMethod(arkode_mem, imethod, idefault, pq, adapt_params)
 }

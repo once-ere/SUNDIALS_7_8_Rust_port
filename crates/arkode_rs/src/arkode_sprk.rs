@@ -592,11 +592,12 @@ pub fn ARKodeSPRKTable_Write(sprk_table: &ARKodeSPRKTable, outfile: &SUNFile) {
 
     let _ = ARKodeSPRKTable_ToButcher(sprk_table, &mut a, &mut b);
 
-    /* C passes the (possibly NULL) tables straight through; a NULL here
-       could only come from an allocation failure, which cannot happen
-       in Rust -> deterministic panic. */
-    ARKodeButcherTable_Write(a.as_ref().expect("explicit Butcher table"), outfile);
-    ARKodeButcherTable_Write(b.as_ref().expect("implicit Butcher table"), outfile);
+    /* C passes the (possibly NULL) tables straight through and
+       ARKodeButcherTable_Write returns silently on NULL; the port forwards
+       the `Option` unchanged so a failed `_ToButcher` prints nothing here
+       exactly as in C. */
+    ARKodeButcherTable_Write(a.as_ref(), outfile);
+    ARKodeButcherTable_Write(b.as_ref(), outfile);
 
     /* C `ARKodeButcherTable_Free(a); ARKodeButcherTable_Free(b);` -- the
        frozen contract (§5) renders the Butcher `_Free` as `drop`. */

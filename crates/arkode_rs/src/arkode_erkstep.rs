@@ -28,15 +28,18 @@
 //!   `SUNLogExtraDebug*` call compiles away and is omitted here.
 //!   `arkProcessError(..., ARK_WARNING, ...)` still reaches the logger.
 //!
-//! DEFERRED (see the crate integration notes): the discrete-adjoint cluster
-//! `erkStep_TakeStep_Adjoint`, `erkStep_fe_Adj`, `erkStep_SUNStepperReInit`
-//! and `ERKStepCreateAdjointStepper` (upstream lines 1043-1943) is not
-//! translated here because it is built on `N_VGetSubvector_ManyVector`, and
-//! `nvector_manyvector` is not part of `sundials_core` yet. Nothing else in
-//! this module depends on it: `ark_mem.do_adjoint` can only ever be set by
+//! DEFERRED (ARCHITECTURE.md accepted deviation class 12): the
+//! discrete-adjoint cluster `erkStep_TakeStep_Adjoint`, `erkStep_fe_Adj`,
+//! `erkStep_SUNStepperReInit` and `ERKStepCreateAdjointStepper` (upstream
+//! lines 1043-1943) is not translated here. Nothing else in this module
+//! depends on it: `ark_mem.do_adjoint` can only ever be set by
 //! `ERKStepCreateAdjointStepper`, so the `do_adjoint` branch of
 //! `erkStep_Init` is unreachable for an ERKStep memory (see the comment
 //! there), and no reference example exercises the ERKStep adjoint path.
+//! The original blocker (`N_VGetSubvector_ManyVector`) is gone —
+//! `sundials_core::nvector_manyvector` now exists and the ARKStep adjoint
+//! cluster uses it — so completing this is translation work only, and must
+//! restore the `do_adjoint` branch in `erkStep_Init` in the same change.
 
 use std::any::Any;
 use std::cell::RefMut;
@@ -990,7 +993,7 @@ pub fn erkStep_FullRHS(
             /* determine if RHS function needs to be recomputed */
             if !ark_mem.borrow().fn_is_current {
                 let B = erkStep_mem_mut(ark_mem).B.clone().expect("Butcher table set");
-                let mut recomputeRHS = !ARKodeButcherTable_IsStifflyAccurate(&B);
+                let mut recomputeRHS = !ARKodeButcherTable_IsStifflyAccurate(Some(&B));
 
                 /* First Same As Last methods are not FSAL when relaxation is enabled */
                 if ark_mem.borrow().relax_enabled {
@@ -1159,7 +1162,7 @@ pub fn erkStep_TakeStep(ark_mem: &ARKodeMem, dsmPtr: &mut sunrealtype, nflagPtr:
 
     /* determine if method has fsal property */
     let B = erkStep_mem_mut(ark_mem).B.clone().expect("Butcher table set");
-    let fsal = ARKodeButcherTable_IsStifflyAccurate(&B);
+    let fsal = ARKodeButcherTable_IsStifflyAccurate(Some(&B));
 
     /* local shortcuts for fused vector operations: `cvals` and `Xvecs` live
        in step_mem and are reached through erkStep_mem_mut */
@@ -1761,7 +1764,7 @@ pub fn erkStep_ComputeSolutions(ark_mem: &ARKodeMem, dsmPtr: &mut sunrealtype) -
             step_mem.B.clone().expect("Butcher table set"),
         )
     };
-    let fsal = ARKodeButcherTable_IsStifflyAccurate(&B);
+    let fsal = ARKodeButcherTable_IsStifflyAccurate(Some(&B));
 
     /* Compute time step solution. For FSAL methods, ycur already contains the new
        solution. */

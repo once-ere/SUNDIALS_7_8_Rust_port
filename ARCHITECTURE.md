@@ -138,6 +138,22 @@ be applied CONSISTENTLY in later phases:
    maps to `wrapping_sub` (never a panicking `-=`).
 5. **C UB → deterministic panic.** NULL deref / out-of-bounds /
    double-free in C map to Rust panics at the same site.
+   **Named exception (Phase 7, ARKODE MRISR embedding stage).**
+   `MRIStepCoupling_Alloc` gives every `G` matrix `stages+1` ROWS but only
+   `stages` COLUMNS (`src/arkode/arkode_mri_tables.c:181-203`), so on the
+   embedding iteration of `mriStep_TakeStepMRISR` (`stage == stages`,
+   taken whenever `!fixedstep || AccumErrorType != ARK_ACCUMERROR_NONE`)
+   upstream's `SUNRabs(step_mem->MRIC->G[0][stage][stage])`
+   (`src/arkode/arkode_mristep.c:2592`) reads one element past the end of a
+   `calloc`'d row. Unlike the rest of class 5 this IS on a valid path — the
+   default adaptive ImEx MRI tables (`ARKODE_IMEX_MRI_SR21/32/43`) select
+   it — so a panic there would abort runs the C reference completes. The
+   embedding row has no diagonal entry by construction (every in-bounds use
+   of that row is `G[0][stage][j]` for `j < stage`), and zeroed `calloc`
+   storage is what upstream relies on, so `arkode_mristep.rs` reads ZERO
+   for that one out-of-range column: `impl_corr` is false on the embedding
+   stage and the dependent `gamma` update is then unreachable. Do NOT
+   generalize this to other out-of-bounds sites.
 6. **`user_data` pointer-snapshot sites (Phase 2).** C code that
    snapshots the raw `user_data` pointer and reuses it later
    (CVODE `cv_e_data = cv_user_data` in `cvInitialSetup`; CVLS
@@ -213,6 +229,12 @@ be applied CONSISTENTLY in later phases:
    alternative (printing garbage) is not expressible in safe Rust. Only
    reachable when the quadrature RHS / quadrature-sensitivity RHS fails
    unrecoverably on the very first step; no reference example does.
+   **Phase 7 adds one ARKODE site**: `arkStopTests` uses
+   `MSG_ARK_RHSFUNC_FAILED` (`src/arkode/arkode.c:2380`) with no vararg for
+   the embedded `MSG_TIME`; the port supplies `ark_mem->tcur`, the value
+   every sibling call site passes to the same message (e.g.
+   `arkHandleFailure`, `src/arkode/arkode.c:2872`). Reachable only when
+   `step_fullrhs` fails after roots were found in the previous step.
 11. **Owning callback tokens (Phase 5/6).** C stores a NON-owning
    `CVodeMem`/`IDAMem` pointer as the DQ-Jacobian, Jacobian-times and
    `SUNLinSolSetATimes`/`SUNLinSolSetPreconditioner` token
@@ -225,3 +247,32 @@ be applied CONSISTENTLY in later phases:
    every reference example frees the linear solver after the integrator.
    Do NOT "fix" it by detaching the token inside `*LsFree`: that would add
    a call C never makes.
+12. **Deferred discrete-adjoint cluster in ERKStep (Phase 7).**
+   `erkStep_TakeStep_Adjoint`, `erkStep_fe_Adj`, `erkStep_SUNStepperReInit`
+   and the public `ERKStepCreateAdjointStepper`
+   (`src/arkode/arkode_erkstep.c:1043-1943`) are NOT translated, so
+   `erkStep_Init` installs `erkStep_TakeStep` unconditionally where C reads
+   `ark_mem->do_adjoint ? erkStep_TakeStep_Adjoint : erkStep_TakeStep`
+   (`:518`). The flag is only ever set by `ERKStepCreateAdjointStepper`
+   (`:1827`), so on an ERKStep memory the branch is unreachable and no
+   reference example exercises it. This is a tracked public-API gap, not a
+   behavioral divergence: the ARKStep adjoint cluster IS ported, and
+   `sundials_core::nvector_manyvector` (the original blocker) now exists,
+   so the remaining work is translation only. Adding it must restore the
+   `do_adjoint` branch in `erkStep_Init` in the same change.
+13. **Rootfinding state moved into locals for the Illinois search
+   (Phase 7).** `arkRootfind` (`crates/arkode_rs/src/arkode_root.rs`)
+   `mem::take`s all six rootfinding arrays (`glo`, `ghi`, `grout`,
+   `iroots`, `rootdir`, `gactive`) out of `ark_mem.root_mem` for the
+   duration of the search and writes them back at the single exit — the
+   locked move-state-into-locals pattern (see "Established porting
+   patterns"), applied here because the user `g` callback and
+   `ARKodeGetDky` run inside that window. In C the arrays stay live in
+   `rootmem`, so a `g` that re-entrantly calls `ARKodeGetRootInfo`,
+   `ARKodeSetRootDirection` or `arkPrintRootMem` reads defined-but-stale
+   data; in Rust those APIs see empty `Vec`s and index-panic or print
+   nothing (`nrtfn` is not taken and stays nonzero). No upstream ARKODE
+   example queries root state from inside `g`, and all arithmetic
+   (alpha doubling/halving, the secant `tmid`, the fracint/fracsub inward
+   adjustment, the imax/maxfrac selection) plus the fields written on
+   every C return path are identical.
