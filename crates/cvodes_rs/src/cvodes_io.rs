@@ -16,9 +16,11 @@
 //! caller's out-param. Callers must hand the box back (via `CVodeSetUserData`
 //! or a second swap) before the integrator next invokes a user callback.
 //!
-//! `CVodeSetSensParams` stores `p` BY VALUE (`cv_p: Vec<sunrealtype>` in the
-//! frozen contract) where C stores the user's pointer — see the module note
-//! on that function.
+//! `CVodeSetSensParams` stores the caller's parameter array as a SHARED
+//! handle (`cv_p: Option<SensParams>` = `Option<Rc<RefCell<Vec<…>>>>`),
+//! mirroring C's stored pointer, so the internal DQ routines' in-place
+//! perturbations are visible to the user callbacks — see the note on that
+//! function.
 
 use std::any::Any;
 
@@ -1031,14 +1033,18 @@ pub fn CVodeSetSensMaxNonlinIters(cvode_mem: &CVodeMem, maxcorS: i32) -> i32 {
 
 /// C stores the caller's `p` POINTER in `cv_mem->cv_p`, so the internal DQ
 /// sensitivity RHS perturbs the user's own parameter array in place and the
-/// user's `f` (reading the same memory through `user_data`) observes it.
-/// The frozen contract types `cv_p` as `Vec<sunrealtype>`, which cannot
-/// alias a caller-owned slice, so this port COPIES `p` into the mem. See the
-/// integration note: any DQ-sensitivity example whose `f` reads parameters
-/// from `user_data` needs the perturbation routed back to that data.
+/// user's `f` (reading the same memory through `user_data`) observes it —
+/// that aliasing IS the DQ mechanism. The port reproduces it with the
+/// `SensParams` shared handle (`Rc<RefCell<Vec<sunrealtype>>>`): pass a
+/// CLONE of the very handle the user data holds, and the perturbations
+/// reach the callback exactly as in C. `None` is C's `NULL` (legal only
+/// when the sensitivity RHS is user-supplied).
+///
+/// `pbar` and `plist` stay borrowed slices: C copies them element-wise into
+/// `cv_mem`'s own arrays and never writes back, so an owned copy is faithful.
 pub fn CVodeSetSensParams(
     cvode_mem: &CVodeMem,
-    p: Option<&[sunrealtype]>,
+    p: Option<SensParams>,
     pbar: Option<&[sunrealtype]>,
     plist: Option<&[i32]>,
 ) -> i32 {
@@ -1062,10 +1068,7 @@ pub fn CVodeSetSensParams(
 
     /* Parameters */
 
-    cvode_mem.borrow_mut().cv_p = match p {
-        Some(p) => p.to_vec(),
-        None => Vec::new(),
-    };
+    cvode_mem.borrow_mut().cv_p = p;
 
     /* pbar */
 

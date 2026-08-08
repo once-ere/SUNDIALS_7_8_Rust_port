@@ -158,3 +158,25 @@ be applied CONSISTENTLY in later phases:
    mid-evaluation would take effect one call later than in C. This is
    the locked move-state-into-locals pattern; observable by no valid
    example.
+8. **Shared sensitivity parameter array (`SensParams`, Phase 3).** Not a
+   divergence but the pattern that AVOIDS one: `CVodeSetSensParams` stores
+   the caller's raw pointer in C (`cv_mem->cv_p = p;`) and the internal
+   difference-quotient routines (`cvSensRhs1InternalDQ`,
+   `cvQuadSensRhs1InternalDQ`) perturb `cv_p[which]` IN PLACE around each
+   call to the user's `f`/`fQ` — the callback, reading the same memory
+   through `user_data`, sees the perturbed parameter, and that aliasing IS
+   the DQ mechanism. The port reproduces it with the handle model:
+   `pub type SensParams = Rc<RefCell<Vec<sunrealtype>>>` (`cvodes_impl`),
+   `cv_p: Option<SensParams>` (`None` = C `NULL`), and
+   `CVodeSetSensParams(cvode_mem, p: Option<SensParams>, pbar, plist)`.
+   **Example authors: keep the parameter array in your user data as a
+   `SensParams` and hand `CVodeSetSensParams` a CLONE of that same handle**
+   — an owned `Vec` copy silently yields zero sensitivities. Callbacks read
+   it as `data.p.borrow()[i]` and must never hold that borrow across a
+   solver call. `pbar`/`plist` stay borrowed slices: C copies them
+   element-wise into `cv_mem`'s own arrays and never writes back. Solver
+   internals write the perturbation through `cv_p_set`/`cv_p_get`
+   (`cvodes.rs`), which borrow the cell for a single statement, never
+   across the callback. Faithful to C, the DQ routines restore `psave`
+   only on the success path: a nonzero return from `f`/`fQ` leaves the
+   perturbed value in the shared array exactly as the C code does.

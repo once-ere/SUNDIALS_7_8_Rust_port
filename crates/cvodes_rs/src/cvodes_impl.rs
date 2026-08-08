@@ -412,6 +412,26 @@ pub struct CVodeProjMemRec {
 pub type CVodeProjMem = Box<CVodeProjMemRec>;
 
 /* =================================================================
+ * Sensitivity parameter array (C `sunrealtype* cv_p`)
+ * =================================================================*/
+
+/// Shared handle on the problem parameter array `p` of `f(t,y,p)`.
+///
+/// `CVodeSetSensParams` stores the caller's POINTER in `cv_mem->cv_p`
+/// (`cvodes_io.c`: `cv_mem->cv_p = p;`), and the internal difference-quotient
+/// sensitivity routines perturb `cv_p[which]` IN PLACE around each call to the
+/// user's `f` / `fQ`. The user callback, reading the same memory through
+/// `user_data`, therefore sees the perturbed parameter — that aliasing IS the
+/// DQ mechanism. The port reproduces the shared pointer with the workspace
+/// handle model: the caller keeps a clone of this `Rc` inside its user data
+/// and hands an identical clone to `CVodeSetSensParams`.
+///
+/// Borrow discipline (same rule as every other RefCell in the port): never
+/// hold a borrow of this cell across a user callback — write the perturbed
+/// value, drop the borrow, call, then re-borrow to restore.
+pub type SensParams = Rc<RefCell<Vec<sunrealtype>>>;
+
+/* =================================================================
  * Main integrator memory block
  * =================================================================*/
 
@@ -467,7 +487,9 @@ pub struct CVodeMemRec {
     pub cv_fSDQ: sunbooleantype,          /* SUNTRUE if using internal DQ functions */
     pub cv_ifS: i32,                      /* ifS = ALLSENS or ONESENS               */
 
-    pub cv_p: Vec<sunrealtype>,    /* parameters in f(t,y,p)                     */
+    pub cv_p: Option<SensParams>,  /* parameters in f(t,y,p) (SHARED with the
+                                   caller, as C shares the pointer; None = C
+                                   NULL)                                    */
     pub cv_pbar: Vec<sunrealtype>, /* scale factors for parameters               */
     pub cv_plist: Vec<i32>,        /* list of sensitivities                      */
     pub cv_DQtype: i32,            /* central/forward finite differences         */
@@ -898,7 +920,7 @@ impl CVodeMemRec {
             cv_fS_data: None,
             cv_fSDQ: SUNFALSE,
             cv_ifS: 0,
-            cv_p: Vec::new(),
+            cv_p: None,
             cv_pbar: Vec::new(),
             cv_plist: Vec::new(),
             cv_DQtype: 0,

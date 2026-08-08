@@ -282,7 +282,7 @@ pub fn CVodeCreate(lmm: i32, sunctx: &SUNContext) -> Option<CVodeMem> {
     cv_mem.cv_ifS = CV_ONESENS;
     cv_mem.cv_DQtype = CV_CENTERED;
     cv_mem.cv_DQrhomax = ZERO;
-    cv_mem.cv_p = Vec::new();
+    cv_mem.cv_p = None;
     cv_mem.cv_pbar = Vec::new();
     cv_mem.cv_plist = Vec::new();
     cv_mem.cv_errconS = SUNFALSE;
@@ -5659,7 +5659,7 @@ fn cvInitialSetup(cv_mem: &CVodeMem, tout: sunrealtype) -> i32 {
         problem parameters */
         let (fSDQ, p_is_null) = {
             let m = cv_mem.borrow();
-            (m.cv_fSDQ, m.cv_p.is_empty())
+            (m.cv_fSDQ, m.cv_p.is_none())
         };
         if fSDQ && p_is_null {
             cvProcessError(
@@ -5714,7 +5714,7 @@ fn cvInitialSetup(cv_mem: &CVodeMem, tout: sunrealtype) -> i32 {
             }
 
             /* Test if we have the problem parameters */
-            if cv_mem.borrow().cv_p.is_empty() {
+            if cv_mem.borrow().cv_p.is_none() {
                 cvProcessError(
                     Some(cv_mem),
                     CV_ILL_INPUT,
@@ -11535,6 +11535,30 @@ pub fn cvSensRhs1Wrapper(
  */
 
 /*
+ * `cv_mem->cv_p` is the caller's own parameter array (C stores the
+ * POINTER; the port stores a clone of the caller's `SensParams` handle —
+ * see `cvodes_impl::SensParams`), so the perturbations below are visible
+ * to the user's `f`/`fQ` through their `user_data`, exactly as in C.
+ *
+ * Both accessors borrow the parameter cell for the duration of one
+ * statement only — never across the user callback that follows.
+ */
+
+/// C: `psave = cv_mem->cv_p[which];`
+fn cv_p_get(cv_mem: &CVodeMem, which: i32) -> sunrealtype {
+    let p = cv_mem.borrow().cv_p.clone().expect("cv_p set");
+    let psave = p.borrow()[which as usize];
+
+    psave
+}
+
+/// C: `cv_mem->cv_p[which] = value;`
+fn cv_p_set(cv_mem: &CVodeMem, which: i32, value: sunrealtype) {
+    let p = cv_mem.borrow().cv_p.clone().expect("cv_p set");
+    p.borrow_mut()[which as usize] = value;
+}
+
+/*
  * cvSensRhsInternalDQ   - internal CVSensRhsFn
  *
  * cvSensRhsInternalDQ computes right hand side of all sensitivity equations
@@ -11632,7 +11656,7 @@ pub fn cvSensRhs1InternalDQ(
 
     which = cv_mem.borrow().cv_plist[is as usize];
 
-    psave = cv_mem.borrow().cv_p[which as usize];
+    psave = cv_p_get(cv_mem, which);
 
     Deltap = pbari * delta;
     rDeltap = ONE / Deltap;
@@ -11677,7 +11701,7 @@ pub fn cvSensRhs1InternalDQ(
             let r2Delta = HALF / Delta;
 
             N_VLinearSum(ONE, y, Delta, yS, ytemp);
-            cv_mem.borrow_mut().cv_p[which as usize] = psave + Delta;
+            cv_p_set(cv_mem, which, psave + Delta);
 
             retval = cv_call_f(cv_mem, t, ytemp, ySdot);
             nfel += 1;
@@ -11686,7 +11710,7 @@ pub fn cvSensRhs1InternalDQ(
             }
 
             N_VLinearSum(ONE, y, -Delta, yS, ytemp);
-            cv_mem.borrow_mut().cv_p[which as usize] = psave - Delta;
+            cv_p_set(cv_mem, which, psave - Delta);
 
             retval = cv_call_f(cv_mem, t, ytemp, ftemp);
             nfel += 1;
@@ -11719,14 +11743,14 @@ pub fn cvSensRhs1InternalDQ(
 
             N_VLinearSum(r2Deltay, ySdot, -r2Deltay, ftemp, ySdot);
 
-            cv_mem.borrow_mut().cv_p[which as usize] = psave + Deltap;
+            cv_p_set(cv_mem, which, psave + Deltap);
             retval = cv_call_f(cv_mem, t, y, ytemp);
             nfel += 1;
             if retval != 0 {
                 return retval;
             }
 
-            cv_mem.borrow_mut().cv_p[which as usize] = psave - Deltap;
+            cv_p_set(cv_mem, which, psave - Deltap);
             retval = cv_call_f(cv_mem, t, y, ftemp);
             nfel += 1;
             if retval != 0 {
@@ -11752,7 +11776,7 @@ pub fn cvSensRhs1InternalDQ(
             let rDelta = ONE / Delta;
 
             N_VLinearSum(ONE, y, Delta, yS, ytemp);
-            cv_mem.borrow_mut().cv_p[which as usize] = psave + Delta;
+            cv_p_set(cv_mem, which, psave + Delta);
 
             retval = cv_call_f(cv_mem, t, ytemp, ySdot);
             nfel += 1;
@@ -11774,7 +11798,7 @@ pub fn cvSensRhs1InternalDQ(
 
             N_VLinearSum(rDeltay, ySdot, -rDeltay, ydot, ySdot);
 
-            cv_mem.borrow_mut().cv_p[which as usize] = psave + Deltap;
+            cv_p_set(cv_mem, which, psave + Deltap);
             retval = cv_call_f(cv_mem, t, y, ytemp);
             nfel += 1;
             if retval != 0 {
@@ -11798,7 +11822,7 @@ pub fn cvSensRhs1InternalDQ(
         _ => {}
     }
 
-    cv_mem.borrow_mut().cv_p[which as usize] = psave;
+    cv_p_set(cv_mem, which, psave);
 
     /* Increment counter nfeS */
     cv_mem.borrow_mut().cv_nfeS += nfel as i64;
@@ -11893,7 +11917,7 @@ pub(crate) fn cvQuadSensRhs1InternalDQ(
 
     which = cv_mem.borrow().cv_plist[is as usize];
 
-    psave = cv_mem.borrow().cv_p[which as usize];
+    psave = cv_p_get(cv_mem, which);
 
     Deltap = pbari * delta;
     let ewt = cv_mem.borrow().cv_ewt.clone().unwrap();
@@ -11914,7 +11938,7 @@ pub(crate) fn cvQuadSensRhs1InternalDQ(
             let r2Delta = HALF / Delta;
 
             N_VLinearSum(ONE, y, Delta, yS, tmp);
-            cv_mem.borrow_mut().cv_p[which as usize] = psave + Delta;
+            cv_p_set(cv_mem, which, psave + Delta);
 
             retval = cv_call_fQ(cv_mem, t, tmp, yQSdot);
             nfel += 1;
@@ -11923,7 +11947,7 @@ pub(crate) fn cvQuadSensRhs1InternalDQ(
             }
 
             N_VLinearSum(ONE, y, -Delta, yS, tmp);
-            cv_mem.borrow_mut().cv_p[which as usize] = psave - Delta;
+            cv_p_set(cv_mem, which, psave - Delta);
 
             retval = cv_call_fQ(cv_mem, t, tmp, tmpQ);
             nfel += 1;
@@ -11939,7 +11963,7 @@ pub(crate) fn cvQuadSensRhs1InternalDQ(
             let rDelta = ONE / Delta;
 
             N_VLinearSum(ONE, y, Delta, yS, tmp);
-            cv_mem.borrow_mut().cv_p[which as usize] = psave + Delta;
+            cv_p_set(cv_mem, which, psave + Delta);
 
             retval = cv_call_fQ(cv_mem, t, tmp, yQSdot);
             nfel += 1;
@@ -11953,10 +11977,178 @@ pub(crate) fn cvQuadSensRhs1InternalDQ(
         _ => {}
     }
 
-    cv_mem.borrow_mut().cv_p[which as usize] = psave;
+    cv_p_set(cv_mem, which, psave);
 
     /* Increment counter nfQeS */
     cv_mem.borrow_mut().cv_nfQeS += nfel as i64;
 
     0
+}
+
+/*
+ * =================================================================
+ * Regression tests
+ * =================================================================
+ */
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::cvodes_io::{CVodeSetSensParams, CVodeSetUserData};
+    use crate::cvodes_ls::CVodeSetLinearSolver;
+    use sundials_core::nvector_serial::N_VNew_Serial;
+    use sundials_core::sundials_context::SUNContext_Create;
+    use sundials_core::sunlinsol_dense::SUNLinSol_Dense;
+    use sundials_core::sunmatrix_dense::SUNDenseMatrix;
+
+    /* -----------------------------------------------------------------
+     * Internal-DQ forward sensitivity relies on ALIASING: C stores the
+     * caller's `p` POINTER in `cv_mem->cv_p` and `cvSensRhs1InternalDQ`
+     * perturbs `cv_p[which]` in place around each call to the user's `f`,
+     * which reads the very same array through its `user_data`. The port
+     * shares the array as a `SensParams` handle; this test is the
+     * executable proof that the perturbation reaches the callback.
+     *
+     * Problem:  y' = -p*y,  y(0) = 1,  p = 2
+     *   exact:  y(t)     = exp(-p t)
+     *           dy/dp(t) = -t exp(-p t)
+     * With a private copy of `p` the callback would never see the
+     * perturbation, so `df/dp` would be identically zero and the computed
+     * sensitivity would stay exactly 0 for all time.
+     * -----------------------------------------------------------------*/
+
+    const P0: sunrealtype = 2.0;
+    const TEND: sunrealtype = 1.0;
+
+    struct SensTestData {
+        /* the shared parameter array — the solver holds a clone of this
+        very handle (C: the same `sunrealtype*`) */
+        p: SensParams,
+        /* extreme parameter values observed by the RHS callback */
+        pmin: sunrealtype,
+        pmax: sunrealtype,
+    }
+
+    fn sens_test_f(
+        _t: sunrealtype,
+        y: &N_Vector,
+        ydot: &N_Vector,
+        user_data: &mut Option<Box<dyn Any>>,
+    ) -> i32 {
+        let data = user_data
+            .as_mut()
+            .and_then(|b| b.downcast_mut::<SensTestData>())
+            .expect("user_data is SensTestData");
+
+        /* read the parameter exactly as a C callback would read data->p[0];
+        the borrow ends with this statement */
+        let p = data.p.borrow()[0];
+
+        if p < data.pmin {
+            data.pmin = p;
+        }
+        if p > data.pmax {
+            data.pmax = p;
+        }
+
+        let ydata = N_VGetArrayPointer(y).expect("N_VGetArrayPointer");
+        let mut dydata = N_VGetArrayPointer(ydot).expect("N_VGetArrayPointer");
+        dydata[0] = -p * ydata[0];
+
+        0
+    }
+
+    #[test]
+    fn internal_dq_sensitivity_sees_perturbed_parameters() {
+        let mut sunctx: Option<SUNContext> = None;
+        assert_eq!(SUNContext_Create(SUN_COMM_NULL, &mut sunctx), 0);
+        let sunctx = sunctx.expect("SUNContext_Create");
+
+        /* the parameter array the user owns and the solver shares */
+        let p: SensParams = Rc::new(RefCell::new(vec![P0]));
+
+        let y = N_VNew_Serial(1, &sunctx).expect("N_VNew_Serial");
+        N_VGetArrayPointer(&y).expect("N_VGetArrayPointer")[0] = ONE;
+
+        let cvode_mem = CVodeCreate(CV_BDF, &sunctx).expect("CVodeCreate");
+
+        assert_eq!(CVodeInit(&cvode_mem, sens_test_f, ZERO, &y), CV_SUCCESS);
+        assert_eq!(CVodeSStolerances(&cvode_mem, 1.0e-8, 1.0e-10), CV_SUCCESS);
+
+        /* the user data holds a CLONE of the same handle */
+        let data = SensTestData {
+            p: p.clone(),
+            pmin: P0,
+            pmax: P0,
+        };
+        assert_eq!(
+            CVodeSetUserData(&cvode_mem, Some(Box::new(data))),
+            CV_SUCCESS
+        );
+
+        let A = SUNDenseMatrix(1, 1, &sunctx).expect("SUNDenseMatrix");
+        let LS = SUNLinSol_Dense(&y, &A, &sunctx).expect("SUNLinSol_Dense");
+        assert_eq!(CVodeSetLinearSolver(&cvode_mem, &LS, Some(&A)), CV_SUCCESS);
+
+        /* one sensitivity, computed by the INTERNAL DQ routine (fS1 = None) */
+        let yS = N_VCloneVectorArray(1, &y).expect("N_VCloneVectorArray");
+        N_VConst(ZERO, &yS[0]);
+        assert_eq!(
+            CVodeSensInit1(&cvode_mem, 1, CV_SIMULTANEOUS, None, &yS),
+            CV_SUCCESS
+        );
+        assert_eq!(CVodeSensEEtolerances(&cvode_mem), CV_SUCCESS);
+
+        /* C: CVodeSetSensParams(cvode_mem, data->p, pbar, NULL) */
+        let pbar = [P0];
+        assert_eq!(
+            CVodeSetSensParams(&cvode_mem, Some(p.clone()), Some(&pbar[..]), None),
+            CV_SUCCESS
+        );
+
+        let mut t = ZERO;
+        let flag = CVode(&cvode_mem, TEND, &y, &mut t, CV_NORMAL);
+        assert_eq!(flag, CV_SUCCESS, "CVode failed with flag {flag}");
+        assert_eq!(t, TEND);
+
+        /* state: y(TEND) = exp(-p*TEND) */
+        let yend = N_VGetArrayPointer(&y).expect("N_VGetArrayPointer")[0];
+        let y_exact = (-P0 * TEND).exp();
+        assert!(
+            SUNRabs(yend - y_exact) <= 1.0e-6 * y_exact,
+            "state wrong: got {yend}, expected {y_exact}"
+        );
+
+        /* sensitivity: dy/dp(TEND) = -TEND*exp(-p*TEND) */
+        let mut tS = ZERO;
+        assert_eq!(CVodeGetSens(&cvode_mem, &mut tS, &yS), CV_SUCCESS);
+        let s = N_VGetArrayPointer(&yS[0]).expect("N_VGetArrayPointer")[0];
+        let s_exact = -TEND * (-P0 * TEND).exp();
+
+        /* the defect signature: with an unshared copy of `p` this is 0 */
+        assert!(s != ZERO, "sensitivity is identically zero — the DQ perturbation never reached the RHS callback");
+        assert!(
+            SUNRabs(s - s_exact) <= 1.0e-4 * SUNRabs(s_exact),
+            "sensitivity wrong: got {s}, expected {s_exact}"
+        );
+
+        /* direct proof of the aliasing: the callback saw p perturbed both
+        ways (CV_CENTERED is the default DQtype) */
+        let mut user_data: Option<Box<dyn Any>> = None;
+        std::mem::swap(&mut cvode_mem.borrow_mut().cv_user_data, &mut user_data);
+        let data = user_data
+            .as_ref()
+            .and_then(|b| b.downcast_ref::<SensTestData>())
+            .expect("user_data is SensTestData");
+        assert!(
+            data.pmax > P0 && data.pmin < P0,
+            "RHS never observed a perturbed parameter (saw [{}, {}], p = {P0})",
+            data.pmin,
+            data.pmax
+        );
+
+        /* and the array the caller still owns was restored exactly */
+        assert_eq!(p.borrow()[0], P0);
+    }
 }
