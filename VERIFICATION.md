@@ -27,8 +27,9 @@ against the read-only upstream tree, `CMAKE_BUILD_TYPE=Release`,
 `CMAKE_C_COMPILER=clang` (Apple clang 21.0.0, arm64),
 `CMAKE_C_FLAGS="-O3 -DNDEBUG -ffp-contract=off"`,
 `SUNDIALS_LOGGING_LEVEL=2`, `SUNDIALS_ENABLE_ERROR_CHECKS=OFF`,
-`SUNDIALS_ENABLE_PROFILING=OFF`, `SUNDIALS_ENABLE_MONITORING=OFF` — i.e.
-the upstream defaults for a Release build.
+`SUNDIALS_BUILD_WITH_PROFILING=OFF`, `SUNDIALS_BUILD_WITH_MONITORING=ON`,
+`BUILD_SHARED_LIBS=OFF`, serial only — i.e. the upstream defaults for a
+Release build.
 
 | crate | example | args | reference .out | status |
 |---|---|---|---|---|
@@ -131,11 +132,11 @@ the upstream defaults for a Release build.
 | ida_rs | idaHeat2D_klu | — | idaHeat2D_klu.out | excluded(klu) |
 | ida_rs | idaRoberts_klu | — | idaRoberts_klu.out | excluded(klu) |
 | ida_rs | idaRoberts_sps | — | idaRoberts_sps.out | excluded(superlu) |
-| idas_rs | idasAkzoNob_ASAi_dns | — | idasAkzoNob_ASAi_dns.out | exception: ref trailing whitespace stripped; values identical |
+| idas_rs | idasAkzoNob_ASAi_dns | — | idasAkzoNob_ASAi_dns.out | exception: ref trailing-whitespace-stripped; port == local pristine C, byte-for-byte |
 | idas_rs | idasAkzoNob_dns | — | idasAkzoNob_dns.out | IDENTICAL |
 | idas_rs | idasAnalytic_mels | — | idasAnalytic_mels.out | IDENTICAL |
 | idas_rs | idasAnalytic_mels | idas.init_step 1e-5 | idasAnalytic_mels_idas.init_step_1e-5.out | IDENTICAL |
-| idas_rs | idasFoodWeb_bnd | — | idasFoodWeb_bnd.out | OPEN(last-digit: hused col, t=0.7/1.0) |
+| idas_rs | idasFoodWeb_bnd | — | idasFoodWeb_bnd.out | ref-libm(1-ulp Apple sin in WebRates; port == local pristine C, byte-for-byte) |
 | idas_rs | idasHeat2D_bnd | — | idasHeat2D_bnd.out | IDENTICAL |
 | idas_rs | idasHeat2D_kry | — | idasHeat2D_kry.out | IDENTICAL |
 | idas_rs | idasHessian_ASA_FSA | — | idasHessian_ASA_FSA.out | IDENTICAL |
@@ -145,8 +146,8 @@ the upstream defaults for a Release build.
 | idas_rs | idasRoberts_ASAi_dns | — | idasRoberts_ASAi_dns.out | IDENTICAL |
 | idas_rs | idasRoberts_FSA_dns | -sensi stg t | idasRoberts_FSA_dns_-sensi_stg_t.out | IDENTICAL |
 | idas_rs | idasRoberts_dns | — | idasRoberts_dns.out | IDENTICAL |
-| idas_rs | idasSlCrank_dns | — | idasSlCrank_dns.out | OPEN(nre/nni off by 1, G @ digit 11) |
-| idas_rs | idasSlCrank_FSA_dns | — | idasSlCrank_FSA_dns.out | OPEN(nst 263 vs 233; dG/dp digit 5) |
+| idas_rs | idasSlCrank_dns | — | idasSlCrank_dns.out | ref-libm(sin/cos in ressc; counters == local pristine C; G: Apple sin vs `__sincos_stret`) |
+| idas_rs | idasSlCrank_FSA_dns | — | idasSlCrank_FSA_dns.out | ref-libm(sin/cos in ressc; port == local pristine C, byte-for-byte) |
 | idas_rs | idasRoberts_ASAi_klu | — | idasRoberts_ASAi_klu.out | excluded(klu) |
 | idas_rs | idasRoberts_FSA_klu | -sensi stg t | idasRoberts_FSA_klu_-sensi_stg_t.out | excluded(klu) |
 | idas_rs | idasRoberts_klu | — | idasRoberts_klu.out | excluded(klu) |
@@ -349,17 +350,48 @@ the upstream defaults for a Release build.
   `cvVdp_auto_nls` before the port. All three are byte-IDENTICAL with it.
 - **kinRoboKin_dns**: the only kinsol variant that calls `KINPrintAllStats`
   in `SUN_OUTPUTFORMAT_TABLE`. All 16 stat lines differ by exactly one space
-  before the `=`: the shipped `.out` puts `=` at column 29 (name field padded
+  before the `=`: the shipped `.out` puts `=` at column 30 (name field padded
   to 28), while `src/sundials/sundials_utils.h:31` defines
   `SUN_TABLE_WIDTH 29` and `sunfprintf_long` formats `"%-*s = %ld\n"`, giving
-  column 30. Every printed value is byte-identical (verified: 0
+  column 31. Every printed value is byte-identical (verified: 0
   non-whitespace diffs over all 46 lines). The shipped 7.8.0 reference tree
-  is self-inconsistent on this point — `ark_kepler.out` has `=` at column 29
-  while `ark_kepler_--stepper_ERK_--step-mode_adapt.out` has it at column 30
+  is self-inconsistent on this point — `ark_kepler.out` has `=` at column 30
+  while `ark_kepler_--stepper_ERK_--step-mode_adapt.out` has it at column 31
   for the same `Current time` field, and every cvode/cvodes/ida/idas
-  reference uses column 30 — so a subset of `.out` files predates the
+  reference uses column 31 — so a subset of `.out` files predates the
   `SUN_TABLE_WIDTH` 28 -> 29 change. The port follows the shipped header;
   matching the stale reference would require contradicting it.
+  Same staleness, same verdict, for the companion
+  `kinRoboKin_dns_stats.csv` (not diffed by `tools/verify_examples.sh`, so
+  it is not a gate — recorded here for completeness): the CSV branch of
+  `sunfprintf_real` is `fprintf(fp, "%s," SUN_FORMAT_E, name, value)` and
+  `include/sundials/sundials_types.h:113` defines
+  `SUN_FORMAT_E "% ." SUN_STRING(DBL_DIG) "e"` = `"% .15e"`, so the port
+  emits `Nonlinear fn norm, 2.292156129751106e-09` /
+  `LS iters per NLS iter, 0.000000000000000e+00`. The shipped reference has
+  `,2.292156129751106e-09` / `,0` — no space flag and `%g`-style values, i.e.
+  it predates the `SUN_FORMAT_G -> SUN_FORMAT_E` change in that branch.
+  Every reference `*_stats.csv` in the tree (cvode, cvodes, ida, idas,
+  kinsol) shows the same staleness.
+  **Evidence closed 2026-08-07 (debug phase):** three independent measurements.
+  (a) *Whitespace-only.* `diff` of the shipped `.out` against the port with
+  `tr -s ' '` applied symmetrically is **empty** — zero non-whitespace
+  differences over all 46 lines, so `nni = 6`, `nfe = 7`, `nbcf = 0`,
+  `nbktrk = 0`, `fnorm = 2.29215612975111e-09`, `stepl = 9.17738154134788e-05`
+  and `nje = 6` are byte-identical; only the label field width differs.
+  (b) *Column measurement.* `awk '{print index($0,"=")}'` over the 16 stat
+  lines gives 30 on every reference line and 31 on every port line;
+  `SUN_TABLE_WIDTH 29` + `"%-*s = %ld\n"` forces 31 arithmetically.
+  (c) *Pristine C agrees with the port, not the reference.* The upstream
+  `kinRoboKin_dns` built locally (config above) also emits column 31 on all
+  16 lines. Its values differ from both port and reference only in the last
+  2 digits of two derived reals (`Nonlinear fn norm` 2.29215612975114e-09,
+  `Step length` 9.17738154136761e-05) — the port is the side that matches the
+  shipped values exactly. Changing `SUN_TABLE_WIDTH` to 28 in
+  `crates/sundials_core/src/sundials_utils.rs` was considered and rejected:
+  it would contradict the shipped C header and regress the ~220 reference
+  stat lines across cvode/cvodes/ida/idas/arkode that already verify at
+  width 29.
 - **idasAkzoNob_ASAi_dns**: 3 diff lines, zero value differences. (a) The
   `G:` line: the C source is
   `printf("G:          %24.16f \n", Ith(q, 1));` — note the space before
@@ -371,28 +403,54 @@ the upstream defaults for a Release build.
   byte-identical `G:` printf and its shipped `idasAkzoNob_dns.out` line 37
   DOES retain the trailing space (that variant is IDENTICAL). Port output
   matches the C source character-for-character.
+  **Evidence closed 2026-08-07 (debug phase):** the pristine upstream
+  `idasAkzoNob_ASAi_dns` built locally (config above), unmodified, is
+  **byte-identical to the Rust port** (0 diff lines) and reproduces exactly
+  the same two hunks against the shipped `.out` (`8c8` trailing space on the
+  `G:` line, `17a18` final blank line — confirmed with `cat -A`). The shipped
+  reference is unreproducible from its own source by any build. Do **not**
+  "fix" this by deleting the space in
+  `print!("G:          {} \n", ...)` (`idasAkzoNob_ASAi_dns.rs:233`) or the
+  second `\n` at line 505: either edit would make the port contradict
+  `idasAkzoNob_ASAi_dns.c:218` / `:447` and break the byte-identity it has
+  with pristine C.
+- **idasFoodWeb_bnd** (2026-08-07, debug phase — was OPEN, now `ref-libm`).
+  Identical in every respect to the `idaFoodWeb_bnd` entry above: 4 diff
+  lines, all in the `hused` column (`IDAGetLastStep`, `%12.4e`), ref
+  `6.2655e-01` vs port `6.2656e-01` at t = 7.0e-1 and t = 1.0e+0; the whole
+  trajectory table, `nst = 239`, order `k = 1`, and all final statistics are
+  byte-identical. The IDAS example is a verbatim copy of the IDA one, so the
+  closed causal chain recorded under `idaFoodWeb_bnd` (1-ulp Apple-vs-glibc
+  `sin` at the single mesh argument `FOURPI*15/19` inside `WebRates`, proven
+  by reproducing the shipped `.out` byte-for-byte from pristine C with that
+  one return value corrected) transfers unchanged. Measured directly here as
+  well, not merely inherited: the pristine upstream `idasFoodWeb_bnd` built
+  locally (config above) is **byte-identical to the Rust port** (0 diff
+  lines). `sin` is called by the example itself, not through a SUNDIALS
+  wrapper — there is no `SUNRsin`, so unlike the `pow` fix below there is no
+  port-owned call site to route through, and no single `sin` can satisfy all
+  shipped references simultaneously (see the diurnal note).
 
-## OPEN divergences handed to the debug phase (2026-08-07)
+## OPEN divergences handed to the debug phase (2026-08-07) — ALL CLOSED
 
-Three idas_rs variants run to completion but do not match. None is a
-formatting or example-setup issue (every one of them is byte-identical up
-to the first solver-visible quantity), so per §6 they are recorded, not
-guessed at.
+Three idas_rs variants ran to completion without matching their references.
+All three were root-caused in the debug phase and reclassified; **no idas_rs
+or kinsol_rs variant is OPEN any more**, and no source change was warranted
+for any of them.
 
-> **Update 2026-08-07 (cvodes+ida debug phase):** the first of the three,
-> `idasFoodWeb_bnd`, is **root-caused and no longer open** — see the
-> `idaFoodWeb_bnd` entry under *Documented exceptions* above. It is a
-> `ref-libm` case: one 1-ulp Apple-vs-glibc `sin` difference at the single
-> mesh argument `FOURPI*15/19` inside `WebRates`, proven by reproducing the
-> shipped `.out` byte-for-byte from the pristine C build with that one
-> value corrected. `idas_rs`'s stdout is byte-identical to `ida_rs`'s apart
-> from the program-name banner, and `ida_rs`'s is byte-identical to the
-> pristine upstream C build, so the proof transfers unchanged. The
-> idas_rs table row is left for the idas owner to restatus; there is
-> nothing to fix in `ida.rs` or `idas.rs`. The remaining two entries
-> (`idasSlCrank_dns`, `idasSlCrank_FSA_dns`) are untouched by this phase.
+| variant | was | now | closed by |
+|---|---|---|---|
+| idasFoodWeb_bnd | OPEN(hused col) | `ref-libm` | 1-ulp Apple `sin` at `FOURPI*15/19`; port == pristine C |
+| idasSlCrank_dns | OPEN(nre/nni off by 1) | `ref-libm` | counters are C's own; `G` is `sin` vs `__sincos_stret` |
+| idasSlCrank_FSA_dns | OPEN(nst 263 vs 233) | `ref-libm` | port == pristine C on all 47 lines |
 
-- **idasFoodWeb_bnd** — 4 diff lines. The entire trajectory table matches:
+The original evidence is preserved below for audit; each entry now carries
+its closing note. The `ref-libm` proofs live under *Documented exceptions*
+(idasFoodWeb_bnd) and in the *SlCrank-family* section at the end of this
+file.
+
+- **idasFoodWeb_bnd** — CLOSED, see *Documented exceptions*. 4 diff lines.
+  The entire trajectory table matches:
   all `c_bl`/`c_tr` species values, `nst = 239` and order `k = 1` are
   byte-identical at every output time, and `hused` matches at
   t = 1e-8 … 4e-1. Only the last column (`hused`, `IDAGetLastStep`, `%12.4e`)
@@ -409,7 +467,11 @@ guessed at.
   to each other apart from the program name in the banner. Unlike
   idasSlCrank_dns, this one **is** in the shared IDA core (present in ida_rs
   and idas_rs alike), so fixing it in `ida.rs` fixes both.
-- **idasSlCrank_dns** — 6 diff lines, no sensitivities involved. All 26
+- **idasSlCrank_dns** — CLOSED as `ref-libm`; the "one nonlinear iteration
+  fewer" hypothesis below was **disproved** — the pristine local C build
+  reports the port's `nre = 1065` / `nni = 675`, so it is the reference
+  platform that took the extra iteration. See the SlCrank-family section.
+  Original record: 6 diff lines, no sensitivities involved. All 26
   trajectory rows (q, dq, lambda, nst, k, h) are byte-identical through
   t = 10.0, and `nst = 251`, `nje = 39`, `netf = 1`, `ncfn = 20`,
   `nsf = 0` all match. Only `nre` (1066 -> 1065) and `nni` (676 -> 675) are
@@ -425,7 +487,11 @@ guessed at.
   divergence is therefore **IDAS-specific and not inherited from the shared
   IDA algorithm**; the debug phase should look at what `idas.rs`/`idas_ic.rs`
   do differently from `ida.rs`/`ida_ic.rs`, not at the base integrator.
-- **idasSlCrank_FSA_dns** — 22 diff lines, the largest divergence.
+- **idasSlCrank_FSA_dns** — CLOSED as `ref-libm`; the `IDASetSensParams`
+  copy-vs-share suspicion below was **disproved** as the cause — the port is
+  byte-identical to the pristine local C build on all 47 lines, including
+  every one of these 22 divergent values. See the SlCrank-family section.
+  Original record: 22 diff lines, the largest divergence.
   `nst` 233 -> 263, `nre` 1180 -> 1203, `nje` 46 -> 44, `nni` 720 -> 763,
   `ncfn` 26 -> 23, `nsf` 1 -> 2; `G` differs at digit 8 and the four
   `dG/dp` blocks differ in the 5th significant digit of the second
@@ -528,3 +594,71 @@ counts the harness reports:
 `cvsDiurnal_FSA_kry` is therefore no longer classified by family: it now
 rests on the same direct evidence as the rest, and no cvodes variant in
 this family depends on a chained argument any more.
+
+## SlCrank-family reference-libm exception (2026-08-07)
+
+`idasSlCrank_dns` and `idasSlCrank_FSA_dns` evaluate `sin`/`cos` of the two
+angle states inside the residual (`ressc`, `force`), i.e. inside the
+integration feedback loop — structurally the same position as the diurnal
+family's `sin`/`exp`. Both are `ref-libm`, established with the same proof
+standard and the same local pristine-C reference build described at the top
+of this file.
+
+1. **idasSlCrank_FSA_dns — port == local pristine C, byte-for-byte (all 47
+   lines).** The pristine C binary reproduces the port's output exactly,
+   including every one of the 22 lines that differ from the shipped `.out`
+   (`nst` 263, `nre` 1203, `nje` 44, `nni` 763, `ncfn` 23, `nsf` 2,
+   `G = 3.3366106657340313`, and all four `dG/dp` blocks). Upstream C on
+   this machine simply does not reproduce its own shipped `.out`; nothing in
+   the port is implicated.
+2. **idasSlCrank_dns — the "off-by-one" counters are C's own.** The shipped
+   `.out` reports `nre = 1066` / `nni = 676`; the pristine local C binary
+   reports `nre = 1065` / `nni = 675`, exactly like the port. (Printed `nre`
+   is `ida_nre + nreDQ` with `nreDQ = nje*NEQ = 39*10 = 390` on both sides,
+   so core `ida_nre == nni` on both sides — the reference platform genuinely
+   took one more Newton iteration; no counter is incremented on the wrong
+   side of anything, and `IDACalcIC` is not even reachable here because the
+   example never calls it.) 46 of the 47 lines are byte-identical between
+   port and local C; only `G` differs (port 3.3366160663381925 vs local C
+   3.3366160663378475, rel. 1.0e-13).
+3. **That last line is Apple `sin` vs `__sincos_stret`, not port arithmetic.**
+   On this platform Apple libm's standalone `sin(x)` and the sin component of
+   `__sincos(x)` differ by 1 ulp for some arguments — e.g.
+   x = 0x3fe769c41eac1611: `sin` -> 0x3fe561209ec1e3cf,
+   `__sincos` -> 0x3fe561209ec1e3d0. clang merges the C example's adjacent
+   `sin(q)`/`cos(q)` pairs into one `__sincos_stret` call (Darwin
+   SimplifyLibCalls), so C sees `...d0`; rustc lowers `f64::sin`/`f64::cos`
+   to `llvm.sin.f64`/`llvm.cos.f64` and the merge fires only at some sites,
+   so the port sees `...cf` at the `ressc`/`force` sites. Confirmed by symbol
+   table: the C binary's undefined trig symbols are `___sincos_stret` alone,
+   the port binary's are `___sincos_stret`, `_sin` **and** `_cos`. Traced:
+   port and C are bit-identical for 73 steps; at step 74 (no lsetup) the 2nd
+   Newton residual gets identical `yy`/`yp` but `rval[7] = -s2 - a*s1`
+   differs by 5.55e-17 — exactly the 1-ulp `sin(q)` gap, amplified by the
+   cancellation in `rval[7]` and by the ill-conditioned algebraic block.
+   Controlled proof: forcing plain `sin`/`cos` on BOTH sides (C rebuilt with
+   `-fno-builtin-sin -fno-builtin-cos -fno-builtin-sincos`; port with
+   `black_box` on the arguments — diagnostic only, not committed) makes the
+   two binaries byte-identical on all 47 lines, `G = 3.3366160663317697` in
+   both. The port's `ressc`/`force` are exact arithmetic-order transcriptions
+   of the C, and no Rust source construct can select a libm entry point
+   (FFI is forbidden by CLAUDE.md §2).
+
+Acceptance for these two variants is therefore byte-identity against the
+locally-built pristine upstream C binary — satisfied outright for the FSA
+variant, and satisfied on 46 of 47 lines for the plain variant, with the
+remaining line explained by the `sin`/`__sincos_stret` entry-point artifact
+(item 3).
+
+**Note for future IDAS sensitivity work** (not a divergence cause today).
+`idasSlCrank_FSA_dns` calls `IDASensInit(..., fS = None, ...)`, i.e. the
+internal difference-quotient sensitivity residual, whose mechanism in C is
+that `IDA_mem->ida_p` *aliases* the caller's array so the DQ perturbation is
+observed by a user `res` reading that same memory. This was the prime suspect
+for the 22-line divergence and is **not** the cause: the example already
+reproduces C's aliasing observably, which is precisely why it is byte-exact
+with C. As of the concurrent Phase 6 work `IDASetSensParams` takes
+`Option<SensParams>` (`Rc<RefCell<Vec<sunrealtype>>>`, ARCHITECTURE §8) and
+shares the handle as CVODES does, so the earlier copy-in behaviour is gone;
+`idasSlCrank_FSA_dns` and `idasRoberts_FSA_dns` were re-verified after that
+change with no status movement.

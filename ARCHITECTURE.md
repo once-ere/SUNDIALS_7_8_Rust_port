@@ -180,3 +180,48 @@ be applied CONSISTENTLY in later phases:
    across the callback. Faithful to C, the DQ routines restore `psave`
    only on the success path: a nonzero return from `f`/`fQ` leaves the
    perturbed value in the shared array exactly as the C code does.
+   **IDAS (Phase 6) applies the identical contract**: `SensParams` in
+   `idas_impl`, `ida_p: Option<SensParams>`,
+   `IDASetSensParams(ida_mem, p: Option<SensParams>, pbar, plist)`, and
+   `ida_p_set`/`ida_p_get` in `idas.rs` for `IDASensRes1DQ` and
+   `IDAQuadSensRhs1InternalDQ`. The `ida_p == NULL` tests in `IDASolve`
+   and `IDAInitialSetup` are `ida_p.is_none()`.
+9. **Rust source coordinates in logger WARNING lines (Phase 4).** Every
+   `*ProcessError(mem, code, __LINE__, __func__, __FILE__, …)` call site
+   maps to `line!() as i32` / `file!()`, so the `file:line` field that
+   `sunCombineFileAndLine` embeds carries the Rust path, e.g.
+   `[WARNING][rank 0][crates/kinsol_rs/src/kinsol_cli.rs:362][kinSetFromCommandLine]`
+   where C prints `[…/src/kinsol/kinsol_cli.c:175][kinSetFromCommandLine]`.
+   `[ERROR]` lines go to `stderr` (not captured by the reference `.out`
+   files), but at the reference logging level 2 the `*_WARNING` branch of
+   `*ProcessError` queues through `SUNLogger` to **stdout**, so this field
+   IS output-observable. No reference example variant reaches a warning
+   path today (verified for kinsol: the only upstream CLI variant is
+   `kinRoberts_fp kinsol.m_aa 1`, which is handled and byte-identical).
+   Before a variant that trips one is accepted, `tools/verify_examples.sh`
+   must strip the `[<file>:<line>]` field symmetrically from both sides in
+   `noise_filter()`; the func name, level, rank and message text all match
+   C character-for-character and stay diffed.
+10. **Missing-vararg substitution (Phase 6).** A few upstream
+   `*ProcessError` call sites pass a `MSG_*` format string containing
+   `MSG_TIME` (`%g`) with NO vararg for it, so release C prints an
+   indeterminate value: IDAS `IDAQuadSetup` uses `MSG_QRHSFUNC_FAILED`
+   (`src/idas/idas.c:5181`) and `MSG_QSRHSFUNC_FAILED` (`:5205`) this way.
+   The port supplies `ida_tn` — the value every sibling call site passes to
+   the same message. This is NOT class 5 (C UB -> deterministic *panic*);
+   it is C UB -> deterministic *substituted value*, chosen because the
+   alternative (printing garbage) is not expressible in safe Rust. Only
+   reachable when the quadrature RHS / quadrature-sensitivity RHS fails
+   unrecoverably on the very first step; no reference example does.
+11. **Owning callback tokens (Phase 5/6).** C stores a NON-owning
+   `CVodeMem`/`IDAMem` pointer as the DQ-Jacobian, Jacobian-times and
+   `SUNLinSolSetATimes`/`SUNLinSolSetPreconditioner` token
+   (`idas_ls.c:236/:253/:364`, same in `cvode_ls.c`/`ida_ls.c`). Under the
+   handle model an `Rc` clone IS the C pointer copy, so those tokens own a
+   reference. `*LsFree` clears `*_lmem`, breaking the mem<->lmem cycle, but
+   the SUNLinearSolver's `A_data`/`P_data` keeps the solver mem alive: the
+   mem and its N_Vectors are reclaimed at `SUNLinSolFree` rather than at
+   `*Free`. Resource-lifetime only — no arithmetic or output effect, and
+   every reference example frees the linear solver after the integrator.
+   Do NOT "fix" it by detaching the token inside `*LsFree`: that would add
+   a call C never makes.

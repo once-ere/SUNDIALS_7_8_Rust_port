@@ -184,6 +184,26 @@ single correctly-rounded `sin` value. No solver or example code changed, so
 `cargo build --workspace` stays warning-free and the cvodes/ida verification
 sweeps reproduce the same statuses. Evidence per variant: VERIFICATION.md.
 
+## Phases 4+6 diff-debug pass (2026-08-07)
+
+Every non-IDENTICAL kinsol_rs and idas_rs variant was root-caused against the
+same locally built pristine upstream-C binary. Result: **4 divergent variants,
+0 port defects, 0 source changes.**
+
+| variant | diff | verdict |
+|---|---|---|
+| kinRoboKin_dns | 32 lines | stale ref (`SUN_TABLE_WIDTH` 28 -> 29); whitespace-only, `tr -s ' '` diff empty; port and local C both emit `=` at column 31 |
+| idasAkzoNob_ASAi_dns | 3 lines | ref trailing-whitespace-stripped; port == local C byte-for-byte |
+| idasFoodWeb_bnd | 4 lines | `ref-libm` (1-ulp Apple `sin` at `FOURPI*15/19`); port == local C byte-for-byte |
+| idasSlCrank_dns | 6 lines | `ref-libm`; the off-by-one `nre`/`nni` are C's own (local C = 1065/675 like the port); `G` is `sin` vs `__sincos_stret` |
+| idasSlCrank_FSA_dns | 22 lines | `ref-libm`; port == local C byte-for-byte on all 47 lines |
+
+No solver or example code changed in this pass, so `cargo build --workspace`
+stays warning-free and both verification sweeps reproduce the same statuses
+(19/22 kinsol IDENTICAL + 2 excluded; 12/22 idas IDENTICAL + 6 excluded).
+**No idas_rs or kinsol_rs variant is OPEN any more.** Evidence per variant:
+VERIFICATION.md.
+
 ## Example programs (one line per ported program; variants tracked in VERIFICATION.md)
 
 - [ ] arkode_rs example ark_KrylovDemo_prec — todo
@@ -272,10 +292,10 @@ sweeps reproduce the same statuses. Evidence per variant: VERIFICATION.md.
 - [x] ida_rs example idaKrylovDemo_ls — verified IDENTICAL (3 variants)
 - [x] ida_rs example idaRoberts_dns — verified IDENTICAL
 - [x] ida_rs example idaSlCrank_dns — verified IDENTICAL (clears the idas_rs cross-check: idasSlCrank_dns is IDAS-specific)
-- [x] idas_rs example idasAkzoNob_ASAi_dns — verified (exception: ref trailing whitespace; values identical)
+- [x] idas_rs example idasAkzoNob_ASAi_dns — verified (exception: ref trailing whitespace stripped; port == local pristine C byte-for-byte)
 - [x] idas_rs example idasAkzoNob_dns — verified IDENTICAL
 - [x] idas_rs example idasAnalytic_mels — verified IDENTICAL (2 variants)
-- [x] idas_rs example idasFoodWeb_bnd — OPEN->root-caused (same ref-libm sin as ida_rs idaFoodWeb_bnd; restatus left to the idas owner)
+- [x] idas_rs example idasFoodWeb_bnd — verified (ref-libm: same 1-ulp Apple sin at FOURPI*15/19 as ida_rs idaFoodWeb_bnd; port == local pristine C byte-for-byte)
 - [x] idas_rs example idasHeat2D_bnd — verified IDENTICAL
 - [x] idas_rs example idasHeat2D_kry — verified IDENTICAL
 - [x] idas_rs example idasHessian_ASA_FSA — verified IDENTICAL
@@ -283,8 +303,8 @@ sweeps reproduce the same statuses. Evidence per variant: VERIFICATION.md.
 - [x] idas_rs example idasRoberts_ASAi_dns — verified IDENTICAL
 - [x] idas_rs example idasRoberts_FSA_dns — verified IDENTICAL
 - [x] idas_rs example idasRoberts_dns — verified IDENTICAL
-- [x] idas_rs example idasSlCrank_FSA_dns — OPEN (nst 263 vs 233; dG/dp digit 5)
-- [x] idas_rs example idasSlCrank_dns — OPEN (nre/nni off by 1; G digit 11)
+- [x] idas_rs example idasSlCrank_FSA_dns — verified (ref-libm: sin/cos in ressc; port == local pristine C byte-for-byte on all 47 lines)
+- [x] idas_rs example idasSlCrank_dns — verified (ref-libm: counters == local pristine C, the shipped nre/nni are the reference platform's; G is Apple sin vs __sincos_stret)
 - [x] kinsol_rs example kinAnalytic_fp — verified IDENTICAL (11 variants)
 - [x] kinsol_rs example kinFerTron_dns — verified IDENTICAL
 - [x] kinsol_rs example kinFoodWeb_kry — verified IDENTICAL
@@ -293,4 +313,4 @@ sweeps reproduce the same statuses. Evidence per variant: VERIFICATION.md.
 - [x] kinsol_rs example kinLaplace_picard_bnd — verified IDENTICAL
 - [x] kinsol_rs example kinLaplace_picard_kry — verified IDENTICAL
 - [x] kinsol_rs example kinRoberts_fp — verified IDENTICAL (2 variants)
-- [x] kinsol_rs example kinRoboKin_dns — verified (exception: stale ref SUN_TABLE_WIDTH 28; values identical)
+- [x] kinsol_rs example kinRoboKin_dns — verified (exception: stale ref SUN_TABLE_WIDTH 28; whitespace-only, every printed value byte-identical to the shipped ref)
