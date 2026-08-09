@@ -47,8 +47,8 @@ fn main() {
     let T0: sunrealtype = 0.0; /* initial time */
     let Tf: sunrealtype = 1.0; /* final time */
     let Nt: i32 = 10; /* total number of output times */
-    let rtol: sunrealtype = 1.e-6; /* relative tolerance */
-    let atol: sunrealtype = 1.e-10; /* absolute tolerance */
+    let rtol: sunrealtype = 1.0e-6; /* relative tolerance */
+    let atol: sunrealtype = 1.0e-10; /* absolute tolerance */
     let N: sunindextype = 201; /* spatial mesh size */
     let k: sunrealtype = 0.5; /* heat conductivity */
 

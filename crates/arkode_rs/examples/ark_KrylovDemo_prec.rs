@@ -140,7 +140,7 @@ fn main() {
     let mut t: sunrealtype = 0.0;
     let mut tout: sunrealtype;
     let mut nrmfactor: i32 = 0; /* LS norm conversion factor flag */
-    let nrmfac: sunrealtype; /* LS norm conversion factor      */
+    let mut nrmfac: sunrealtype; /* LS norm conversion factor      */
 
     let argv: Vec<String> = std::env::args().collect();
     let argc = argv.len();

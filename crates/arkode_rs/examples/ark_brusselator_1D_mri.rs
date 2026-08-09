@@ -669,8 +669,8 @@ fn SetIC(y: &N_Vector, user_data: &UserData) -> i32 {
     let b = udata.b;
     let dx = udata.dx;
 
-    let x: sunrealtype;
-    let p: sunrealtype;
+    let mut x: sunrealtype;
+    let mut p: sunrealtype;
     let mut i: sunindextype;
 
     /* Access data array from NVector y */

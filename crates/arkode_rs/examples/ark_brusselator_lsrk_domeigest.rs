@@ -122,7 +122,6 @@ fn main() {
     let abstol: sunrealtype = 1.0e-10;
 
     /* general problem variables */
-    let flag; /* reusable error-checking flag */
 
     /* Dominant Eigenvalue Estimator (DEE) pointers and variables */
     let max_iters: sunindextype = 100; /* max number of power iterations (PI)*/
@@ -329,7 +328,7 @@ fn main() {
 
     /* Print final statistics */
     print!("\nFinal Statistics:\n");
-    flag = ARKodePrintAllStats(&ark, &SUNFile::Stdout, SUNOutputFormat::SUN_OUTPUTFORMAT_TABLE);
+    let flag = ARKodePrintAllStats(&ark, &SUNFile::Stdout, SUNOutputFormat::SUN_OUTPUTFORMAT_TABLE);
     if check_flag(flag, "ARKodePrintAllStats") != 0 {
         std::process::exit(1);
     }

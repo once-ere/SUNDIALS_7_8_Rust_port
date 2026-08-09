@@ -204,42 +204,69 @@ stays warning-free and both verification sweeps reproduce the same statuses
 **No idas_rs or kinsol_rs variant is OPEN any more.** Evidence per variant:
 VERIFICATION.md.
 
+## Phase 7 example sweep (2026-08-09)
+
+All 34 `examples/arkode/C_serial/*.c` programs are ported — no holes; one
+`[[example]]` entry per program in `crates/arkode_rs/Cargo.toml`. The crate
+and its 34 examples build **warning-free** (`cargo build --release --examples
+-p arkode_rs`, verified after `cargo clean --release -p arkode_rs` so no
+cached diagnostics are hidden), and `cargo build --workspace` stays clean.
+
+Six examples needed build fixes, all example-side guesses, all minimal, and
+**no library change was required**: `1.e-6`/`1.e-10` written without the
+mantissa digit (`ark_heat1D`); a missing
+`use arkode_rs::sundials_futils::SUNFileClose` (`ark_robertson`); local
+`let ZERO`/`let ONE` shadowing the crate constants of the same value, which
+Rust rejects as refutable patterns (`ark_robertson`,
+`ark_robertson_constraints`); missing `mut` (`ark_brusselator_1D_mri`,
+`ark_KrylovDemo_prec`); and one bare `flag = …` assignment made a shadowing
+`let` to match every other call site in its file
+(`ark_brusselator_lsrk_domeigest`).
+
+All 78 reference variants were preflighted individually under `timeout 120`
+before the harness ran — none hangs, crashes or exceeds 10 s. Harness result:
+**43 IDENTICAL, 12 stale-ref (whitespace-only), 23 OPEN, 0 FAIL.** No OPEN
+variant diverges in a header or setup line, so none is an example formatting
+defect; the substantive finding is an LSRK step-sequence divergence in which
+the printed trajectory is byte-identical but the statistics block is not.
+Evidence per variant: VERIFICATION.md.
+
 ## Example programs (one line per ported program; variants tracked in VERIFICATION.md)
 
-- [ ] arkode_rs example ark_KrylovDemo_prec — todo
-- [ ] arkode_rs example ark_advection_diffusion_reaction_splitting — todo
-- [ ] arkode_rs example ark_analytic — todo
-- [ ] arkode_rs example ark_analytic_lsrk — todo
-- [ ] arkode_rs example ark_analytic_lsrk_domeigest — todo
-- [ ] arkode_rs example ark_analytic_lsrk_varjac — todo
-- [ ] arkode_rs example ark_analytic_mels — todo
-- [ ] arkode_rs example ark_analytic_nonlin — todo
-- [ ] arkode_rs example ark_analytic_partitioned — todo
-- [ ] arkode_rs example ark_analytic_ssprk — todo
-- [ ] arkode_rs example ark_brusselator — todo
-- [ ] arkode_rs example ark_brusselator1D — todo
-- [ ] arkode_rs example ark_brusselator1D_imexmri — todo
-- [ ] arkode_rs example ark_brusselator_1D_mri — todo
-- [ ] arkode_rs example ark_brusselator_fp — todo
-- [ ] arkode_rs example ark_brusselator_lsrk_domeigest — todo
-- [ ] arkode_rs example ark_brusselator_lsrk_externaldomeigest — todo
-- [ ] arkode_rs example ark_brusselator_mri — todo
-- [ ] arkode_rs example ark_conserved_exp_entropy_ark — todo
-- [ ] arkode_rs example ark_conserved_exp_entropy_erk — todo
-- [ ] arkode_rs example ark_damped_harmonic_symplectic — todo
-- [ ] arkode_rs example ark_dissipated_exp_entropy — todo
-- [ ] arkode_rs example ark_harmonic_symplectic — todo
-- [ ] arkode_rs example ark_heat1D — todo
-- [ ] arkode_rs example ark_heat1D_adapt — todo
-- [ ] arkode_rs example ark_kepler — todo
-- [ ] arkode_rs example ark_kpr_mri — todo
-- [ ] arkode_rs example ark_lotka_volterra_ASA — todo
-- [ ] arkode_rs example ark_onewaycouple_mri — todo
-- [ ] arkode_rs example ark_reaction_diffusion_mri — todo
-- [ ] arkode_rs example ark_robertson — todo
-- [ ] arkode_rs example ark_robertson_constraints — todo
-- [ ] arkode_rs example ark_robertson_root — todo
-- [ ] arkode_rs example ark_twowaycouple_mri — todo
+- [x] arkode_rs example ark_KrylovDemo_prec — verified
+- [x] arkode_rs example ark_advection_diffusion_reaction_splitting — verified
+- [x] arkode_rs example ark_analytic — verified
+- [ ] arkode_rs example ark_analytic_lsrk — ported, builds+runs; 1/1 variants OPEN
+- [ ] arkode_rs example ark_analytic_lsrk_domeigest — ported, builds+runs; 2/2 variants OPEN
+- [ ] arkode_rs example ark_analytic_lsrk_varjac — ported, builds+runs; 1/1 variants OPEN
+- [x] arkode_rs example ark_analytic_mels — verified
+- [x] arkode_rs example ark_analytic_nonlin — verified
+- [x] arkode_rs example ark_analytic_partitioned — verified (5/5 variants stale-ref: whitespace-only)
+- [ ] arkode_rs example ark_analytic_ssprk — ported, builds+runs; 1/1 variants OPEN
+- [x] arkode_rs example ark_brusselator — verified
+- [x] arkode_rs example ark_brusselator1D — verified
+- [x] arkode_rs example ark_brusselator1D_imexmri — verified
+- [x] arkode_rs example ark_brusselator_1D_mri — verified
+- [x] arkode_rs example ark_brusselator_fp — verified
+- [ ] arkode_rs example ark_brusselator_lsrk_domeigest — ported, builds+runs; 1/1 variants OPEN
+- [ ] arkode_rs example ark_brusselator_lsrk_externaldomeigest — ported, builds+runs; 1/1 variants OPEN
+- [x] arkode_rs example ark_brusselator_mri — verified
+- [ ] arkode_rs example ark_conserved_exp_entropy_ark — ported, builds+runs; 2/2 variants OPEN
+- [ ] arkode_rs example ark_conserved_exp_entropy_erk — ported, builds+runs; 1/1 variants OPEN
+- [x] arkode_rs example ark_damped_harmonic_symplectic — verified (1/1 variants stale-ref: whitespace-only)
+- [ ] arkode_rs example ark_dissipated_exp_entropy — ported, builds+runs; 2/2 variants OPEN
+- [x] arkode_rs example ark_harmonic_symplectic — verified (1/1 variants stale-ref: whitespace-only)
+- [x] arkode_rs example ark_heat1D — verified
+- [x] arkode_rs example ark_heat1D_adapt — verified
+- [ ] arkode_rs example ark_kepler — ported, builds+runs; 6/13 variants OPEN, 4 stale-ref, 3 IDENTICAL
+- [ ] arkode_rs example ark_kpr_mri — ported, builds+runs; 4/15 variants OPEN, 11 IDENTICAL
+- [x] arkode_rs example ark_lotka_volterra_ASA — verified
+- [x] arkode_rs example ark_onewaycouple_mri — verified
+- [x] arkode_rs example ark_reaction_diffusion_mri — verified (1/1 variants stale-ref: whitespace-only)
+- [ ] arkode_rs example ark_robertson — ported, builds+runs; 1/1 variants OPEN
+- [x] arkode_rs example ark_robertson_constraints — verified
+- [x] arkode_rs example ark_robertson_root — verified
+- [x] arkode_rs example ark_twowaycouple_mri — verified
 - [x] cvode_rs example cvAdvDiff_bnd — verified
 - [x] cvode_rs example cvAdvDiff_bndL — verified
 - [x] cvode_rs example cvAnalytic_mels — verified

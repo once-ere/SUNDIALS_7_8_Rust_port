@@ -154,84 +154,84 @@ Release build.
 | idas_rs | idasRoberts_ASAi_sps | — | idasRoberts_ASAi_sps.out | excluded(superlu) |
 | idas_rs | idasRoberts_FSA_sps | -sensi stg t | idasRoberts_FSA_sps_-sensi_stg_t.out | excluded(superlu) |
 | idas_rs | idasRoberts_sps | — | idasRoberts_sps.out | excluded(superlu) |
-| arkode_rs | ark_analytic | — | ark_analytic.out | todo |
-| arkode_rs | ark_analytic | arkode.scalar_tolerances 1e-6 1e-8 arkode.table_names ARKODE_ESDIRK547L2SA_7_4_5 ARKODE_ERK_NONE | ark_analytic_arkode.scalar_tolerances_1e-6_1e-8_arkode.table_names_ARKODE_ESDIRK547L2SA_7_4_5_ARKODE_ERK_NONE.out | todo |
-| arkode_rs | ark_advection_diffusion_reaction_splitting | — | ark_advection_diffusion_reaction_splitting.out | todo |
-| arkode_rs | ark_analytic_lsrk | — | ark_analytic_lsrk.out | todo |
-| arkode_rs | ark_analytic_lsrk_varjac | — | ark_analytic_lsrk_varjac.out | todo |
-| arkode_rs | ark_analytic_lsrk_domeigest | — | ark_analytic_lsrk_domeigest.out | todo |
-| arkode_rs | ark_analytic_lsrk_domeigest | arkid.dom_eig_est_init_preprocess_iters 1 sundomeigestimator.max_iters 1 | ark_analytic_lsrk_domeigest_arkid.dom_eig_est_init_preprocess_iters_1_sundomeigestimator.max_iters_1.out | todo |
-| arkode_rs | ark_analytic_mels | — | ark_analytic_mels.out | todo |
-| arkode_rs | ark_analytic_nonlin | — | ark_analytic_nonlin.out | todo |
-| arkode_rs | ark_analytic_partitioned | forcing | ark_analytic_partitioned_forcing.out | todo |
-| arkode_rs | ark_analytic_partitioned | splitting | ark_analytic_partitioned_splitting.out | todo |
-| arkode_rs | ark_analytic_partitioned | splitting ARKODE_SPLITTING_BEST_2_2_2 | ark_analytic_partitioned_splitting_ARKODE_SPLITTING_BEST_2_2_2.out | todo |
-| arkode_rs | ark_analytic_partitioned | splitting ARKODE_SPLITTING_RUTH_3_3_2 | ark_analytic_partitioned_splitting_ARKODE_SPLITTING_RUTH_3_3_2.out | todo |
-| arkode_rs | ark_analytic_partitioned | splitting ARKODE_SPLITTING_YOSHIDA_8_6_2 | ark_analytic_partitioned_splitting_ARKODE_SPLITTING_YOSHIDA_8_6_2.out | todo |
-| arkode_rs | ark_analytic_ssprk | — | ark_analytic_ssprk.out | todo |
-| arkode_rs | ark_brusselator_1D_mri | — | ark_brusselator_1D_mri.out | todo |
-| arkode_rs | ark_brusselator_fp | — | ark_brusselator_fp.out | todo |
-| arkode_rs | ark_brusselator_lsrk_domeigest | — | ark_brusselator_lsrk_domeigest.out | todo |
-| arkode_rs | ark_brusselator_lsrk_externaldomeigest | — | ark_brusselator_lsrk_externaldomeigest.out | todo |
-| arkode_rs | ark_brusselator_mri | — | ark_brusselator_mri.out | todo |
-| arkode_rs | ark_brusselator | — | ark_brusselator.out | todo |
-| arkode_rs | ark_brusselator1D_imexmri | 0 0.001 | ark_brusselator1D_imexmri_0_0.001.out | todo |
-| arkode_rs | ark_brusselator1D_imexmri | 2 0.001 | ark_brusselator1D_imexmri_2_0.001.out | todo |
-| arkode_rs | ark_brusselator1D_imexmri | 3 0.001 | ark_brusselator1D_imexmri_3_0.001.out | todo |
-| arkode_rs | ark_brusselator1D_imexmri | 4 0.001 | ark_brusselator1D_imexmri_4_0.001.out | todo |
-| arkode_rs | ark_brusselator1D_imexmri | 5 0.001 | ark_brusselator1D_imexmri_5_0.001.out | todo |
-| arkode_rs | ark_brusselator1D_imexmri | 6 0.001 | ark_brusselator1D_imexmri_6_0.001.out | todo |
-| arkode_rs | ark_brusselator1D_imexmri | 7 0.001 | ark_brusselator1D_imexmri_7_0.001.out | todo |
-| arkode_rs | ark_brusselator1D | — | ark_brusselator1D.out | todo |
-| arkode_rs | ark_conserved_exp_entropy_ark | 1 0 | ark_conserved_exp_entropy_ark_1_0.out | todo |
-| arkode_rs | ark_conserved_exp_entropy_ark | 1 1 | ark_conserved_exp_entropy_ark_1_1.out | todo |
-| arkode_rs | ark_conserved_exp_entropy_erk | 1 | ark_conserved_exp_entropy_erk_1.out | todo |
-| arkode_rs | ark_damped_harmonic_symplectic | — | ark_damped_harmonic_symplectic.out | todo |
-| arkode_rs | ark_dissipated_exp_entropy | 1 0 | ark_dissipated_exp_entropy_1_0.out | todo |
-| arkode_rs | ark_dissipated_exp_entropy | 1 1 | ark_dissipated_exp_entropy_1_1.out | todo |
-| arkode_rs | ark_harmonic_symplectic | — | ark_harmonic_symplectic.out | todo |
-| arkode_rs | ark_heat1D_adapt | — | ark_heat1D_adapt.out | todo |
-| arkode_rs | ark_heat1D | — | ark_heat1D.out | todo |
-| arkode_rs | ark_kepler | --stepper ERK --step-mode adapt | ark_kepler_--stepper_ERK_--step-mode_adapt.out | todo |
-| arkode_rs | ark_kepler | --stepper ERK --step-mode fixed --count-orbits | ark_kepler_--stepper_ERK_--step-mode_fixed_--count-orbits.out | todo |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --count-orbits --use-compensated-sums | ark_kepler_--stepper_SPRK_--step-mode_fixed_--count-orbits_--use-compensated-sums.out | todo |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_EULER_1_1 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_EULER_1_1_--tf_50_--check-order_--nout_1.out | todo |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_LEAPFROG_2_2 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_LEAPFROG_2_2_--tf_50_--check-order_--nout_1.out | todo |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_MCLACHLAN_2_2 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_MCLACHLAN_2_2_--tf_50_--check-order_--nout_1.out | todo |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_MCLACHLAN_3_3 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_MCLACHLAN_3_3_--tf_50_--check-order_--nout_1.out | todo |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_MCLACHLAN_4_4 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_MCLACHLAN_4_4_--tf_50_--check-order_--nout_1.out | todo |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_MCLACHLAN_5_6 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_MCLACHLAN_5_6_--tf_50_--check-order_--nout_1.out | todo |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_PSEUDO_LEAPFROG_2_2 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_PSEUDO_LEAPFROG_2_2_--tf_50_--check-order_--nout_1.out | todo |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_RUTH_3_3 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_RUTH_3_3_--tf_50_--check-order_--nout_1.out | todo |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_YOSHIDA_6_8 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_YOSHIDA_6_8_--tf_50_--check-order_--nout_1.out | todo |
-| arkode_rs | ark_kepler | — | ark_kepler.out | todo |
-| arkode_rs | ark_kpr_mri | 0 1 0.005 | ark_kpr_mri_0_1_0.005.out | todo |
-| arkode_rs | ark_kpr_mri | 1 0 0.01 | ark_kpr_mri_1_0_0.01.out | todo |
-| arkode_rs | ark_kpr_mri | 1 1 0.002 | ark_kpr_mri_1_1_0.002.out | todo |
-| arkode_rs | ark_kpr_mri | 2 4 0.002 | ark_kpr_mri_2_4_0.002.out | todo |
-| arkode_rs | ark_kpr_mri | 3 2 0.001 | ark_kpr_mri_3_2_0.001.out | todo |
-| arkode_rs | ark_kpr_mri | 4 3 0.001 | ark_kpr_mri_4_3_0.001.out | todo |
-| arkode_rs | ark_kpr_mri | 5 4 0.001 | ark_kpr_mri_5_4_0.001.out | todo |
-| arkode_rs | ark_kpr_mri | 6 5 0.001 | ark_kpr_mri_6_5_0.001.out | todo |
-| arkode_rs | ark_kpr_mri | 7 2 0.002 | ark_kpr_mri_7_2_0.002.out | todo |
-| arkode_rs | ark_kpr_mri | 8 3 0.001 -100 100 0.5 1 | ark_kpr_mri_8_3_0.001_-100_100_0.5_1.out | todo |
-| arkode_rs | ark_kpr_mri | 9 3 0.001 -100 100 0.5 1 | ark_kpr_mri_9_3_0.001_-100_100_0.5_1.out | todo |
-| arkode_rs | ark_kpr_mri | 10 4 0.001 -100 100 0.5 1 | ark_kpr_mri_10_4_0.001_-100_100_0.5_1.out | todo |
-| arkode_rs | ark_kpr_mri | 11 2 0.001 | ark_kpr_mri_11_2_0.001.out | todo |
-| arkode_rs | ark_kpr_mri | 12 3 0.005 | ark_kpr_mri_12_3_0.005.out | todo |
-| arkode_rs | ark_kpr_mri | 13 4 0.01 | ark_kpr_mri_13_4_0.01.out | todo |
-| arkode_rs | ark_KrylovDemo_prec | — | ark_KrylovDemo_prec.out | todo |
-| arkode_rs | ark_KrylovDemo_prec | 1 | ark_KrylovDemo_prec_1.out | todo |
-| arkode_rs | ark_KrylovDemo_prec | 2 | ark_KrylovDemo_prec_2.out | todo |
-| arkode_rs | ark_lotka_volterra_ASA | --check-freq 1 | ark_lotka_volterra_ASA_--check-freq_1.out | todo |
-| arkode_rs | ark_lotka_volterra_ASA | --check-freq 5 | ark_lotka_volterra_ASA_--check-freq_5.out | todo |
-| arkode_rs | ark_onewaycouple_mri | — | ark_onewaycouple_mri.out | todo |
-| arkode_rs | ark_reaction_diffusion_mri | — | ark_reaction_diffusion_mri.out | todo |
-| arkode_rs | ark_robertson_constraints | — | ark_robertson_constraints.out | todo |
-| arkode_rs | ark_robertson_root | — | ark_robertson_root.out | todo |
-| arkode_rs | ark_robertson | — | ark_robertson.out | todo |
-| arkode_rs | ark_twowaycouple_mri | — | ark_twowaycouple_mri.out | todo |
-| arkode_rs | ark_brusselator_fp | 1 | ark_brusselator_fp_1.out | todo |
+| arkode_rs | ark_analytic | — | ark_analytic.out | IDENTICAL |
+| arkode_rs | ark_analytic | arkode.scalar_tolerances 1e-6 1e-8 arkode.table_names ARKODE_ESDIRK547L2SA_7_4_5 ARKODE_ERK_NONE | ark_analytic_arkode.scalar_tolerances_1e-6_1e-8_arkode.table_names_ARKODE_ESDIRK547L2SA_7_4_5_ARKODE_ERK_NONE.out | IDENTICAL |
+| arkode_rs | ark_advection_diffusion_reaction_splitting | — | ark_advection_diffusion_reaction_splitting.out | IDENTICAL |
+| arkode_rs | ark_analytic_lsrk | — | ark_analytic_lsrk.out | OPEN(counters differ; max rel dev 2e-01 on O(1) values; roundoff 7e-14 abs on near-zero conserved qty) |
+| arkode_rs | ark_analytic_lsrk_varjac | — | ark_analytic_lsrk_varjac.out | OPEN(counters differ; max rel dev 6e-02 on O(1) values; roundoff 2e-13 abs on near-zero conserved qty) |
+| arkode_rs | ark_analytic_lsrk_domeigest | — | ark_analytic_lsrk_domeigest.out | OPEN(counters differ; max rel dev 1e-01 on O(1) values; roundoff 4e-13 abs on near-zero conserved qty) |
+| arkode_rs | ark_analytic_lsrk_domeigest | arkid.dom_eig_est_init_preprocess_iters 1 sundomeigestimator.max_iters 1 | ark_analytic_lsrk_domeigest_arkid.dom_eig_est_init_preprocess_iters_1_sundomeigestimator.max_iters_1.out | OPEN(counters differ; max rel dev 1e-01 on O(1) values; roundoff 4e-13 abs on near-zero conserved qty) |
+| arkode_rs | ark_analytic_mels | — | ark_analytic_mels.out | IDENTICAL |
+| arkode_rs | ark_analytic_nonlin | — | ark_analytic_nonlin.out | IDENTICAL |
+| arkode_rs | ark_analytic_partitioned | forcing | ark_analytic_partitioned_forcing.out | stale-ref(whitespace-only; `tr -s " "` identical) |
+| arkode_rs | ark_analytic_partitioned | splitting | ark_analytic_partitioned_splitting.out | stale-ref(whitespace-only; `tr -s " "` identical) |
+| arkode_rs | ark_analytic_partitioned | splitting ARKODE_SPLITTING_BEST_2_2_2 | ark_analytic_partitioned_splitting_ARKODE_SPLITTING_BEST_2_2_2.out | stale-ref(whitespace-only; `tr -s " "` identical) |
+| arkode_rs | ark_analytic_partitioned | splitting ARKODE_SPLITTING_RUTH_3_3_2 | ark_analytic_partitioned_splitting_ARKODE_SPLITTING_RUTH_3_3_2.out | stale-ref(whitespace-only; `tr -s " "` identical) |
+| arkode_rs | ark_analytic_partitioned | splitting ARKODE_SPLITTING_YOSHIDA_8_6_2 | ark_analytic_partitioned_splitting_ARKODE_SPLITTING_YOSHIDA_8_6_2.out | stale-ref(whitespace-only; `tr -s " "` identical) |
+| arkode_rs | ark_analytic_ssprk | — | ark_analytic_ssprk.out | OPEN(no counter change; max rel dev 9e-09 on O(1) values) |
+| arkode_rs | ark_brusselator_1D_mri | — | ark_brusselator_1D_mri.out | IDENTICAL |
+| arkode_rs | ark_brusselator_fp | — | ark_brusselator_fp.out | IDENTICAL |
+| arkode_rs | ark_brusselator_lsrk_domeigest | — | ark_brusselator_lsrk_domeigest.out | OPEN(no counter change; max rel dev 1e-08 on O(1) values) |
+| arkode_rs | ark_brusselator_lsrk_externaldomeigest | — | ark_brusselator_lsrk_externaldomeigest.out | OPEN(no counter change; max rel dev 1e-08 on O(1) values) |
+| arkode_rs | ark_brusselator_mri | — | ark_brusselator_mri.out | IDENTICAL |
+| arkode_rs | ark_brusselator | — | ark_brusselator.out | IDENTICAL |
+| arkode_rs | ark_brusselator1D_imexmri | 0 0.001 | ark_brusselator1D_imexmri_0_0.001.out | IDENTICAL |
+| arkode_rs | ark_brusselator1D_imexmri | 2 0.001 | ark_brusselator1D_imexmri_2_0.001.out | IDENTICAL |
+| arkode_rs | ark_brusselator1D_imexmri | 3 0.001 | ark_brusselator1D_imexmri_3_0.001.out | IDENTICAL |
+| arkode_rs | ark_brusselator1D_imexmri | 4 0.001 | ark_brusselator1D_imexmri_4_0.001.out | IDENTICAL |
+| arkode_rs | ark_brusselator1D_imexmri | 5 0.001 | ark_brusselator1D_imexmri_5_0.001.out | IDENTICAL |
+| arkode_rs | ark_brusselator1D_imexmri | 6 0.001 | ark_brusselator1D_imexmri_6_0.001.out | IDENTICAL |
+| arkode_rs | ark_brusselator1D_imexmri | 7 0.001 | ark_brusselator1D_imexmri_7_0.001.out | IDENTICAL |
+| arkode_rs | ark_brusselator1D | — | ark_brusselator1D.out | IDENTICAL |
+| arkode_rs | ark_conserved_exp_entropy_ark | 1 0 | ark_conserved_exp_entropy_ark_1_0.out | OPEN(counters differ; max rel dev 6e-03 on O(1) values; roundoff 2e-14 abs on near-zero conserved qty) |
+| arkode_rs | ark_conserved_exp_entropy_ark | 1 1 | ark_conserved_exp_entropy_ark_1_1.out | OPEN(counters differ; max rel dev 4e-03 on O(1) values; roundoff 1e-14 abs on near-zero conserved qty; ref lacks final blank line (C prints it unconditionally)) |
+| arkode_rs | ark_conserved_exp_entropy_erk | 1 | ark_conserved_exp_entropy_erk_1.out | OPEN(counters differ; max rel dev 6e-03 on O(1) values; roundoff 2e-14 abs on near-zero conserved qty) |
+| arkode_rs | ark_damped_harmonic_symplectic | — | ark_damped_harmonic_symplectic.out | stale-ref(whitespace-only; `tr -s " "` identical) |
+| arkode_rs | ark_dissipated_exp_entropy | 1 0 | ark_dissipated_exp_entropy_1_0.out | OPEN(no counter change; max rel dev 5e-07 on O(1) values; roundoff 5e-15 abs on near-zero conserved qty) |
+| arkode_rs | ark_dissipated_exp_entropy | 1 1 | ark_dissipated_exp_entropy_1_1.out | OPEN(counters differ; max rel dev 6e-04 on O(1) values; ref lacks final blank line (C prints it unconditionally)) |
+| arkode_rs | ark_harmonic_symplectic | — | ark_harmonic_symplectic.out | stale-ref(whitespace-only; `tr -s " "` identical) |
+| arkode_rs | ark_heat1D_adapt | — | ark_heat1D_adapt.out | IDENTICAL |
+| arkode_rs | ark_heat1D | — | ark_heat1D.out | IDENTICAL |
+| arkode_rs | ark_kepler | --stepper ERK --step-mode adapt | ark_kepler_--stepper_ERK_--step-mode_adapt.out | OPEN(no counter change; max rel dev 1e-11 on O(1) values) |
+| arkode_rs | ark_kepler | --stepper ERK --step-mode fixed --count-orbits | ark_kepler_--stepper_ERK_--step-mode_fixed_--count-orbits.out | stale-ref(whitespace-only; `tr -s " "` identical) |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --count-orbits --use-compensated-sums | ark_kepler_--stepper_SPRK_--step-mode_fixed_--count-orbits_--use-compensated-sums.out | OPEN(counters differ; max rel dev 1e-03 on O(1) values; roundoff 2e-12 abs on near-zero conserved qty) |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_EULER_1_1 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_EULER_1_1_--tf_50_--check-order_--nout_1.out | stale-ref(whitespace-only; `tr -s " "` identical) |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_LEAPFROG_2_2 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_LEAPFROG_2_2_--tf_50_--check-order_--nout_1.out | IDENTICAL |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_MCLACHLAN_2_2 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_MCLACHLAN_2_2_--tf_50_--check-order_--nout_1.out | OPEN(no counter change; max rel dev 1e-08 on O(1) values; roundoff 9e-16 abs on near-zero conserved qty) |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_MCLACHLAN_3_3 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_MCLACHLAN_3_3_--tf_50_--check-order_--nout_1.out | IDENTICAL |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_MCLACHLAN_4_4 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_MCLACHLAN_4_4_--tf_50_--check-order_--nout_1.out | IDENTICAL |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_MCLACHLAN_5_6 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_MCLACHLAN_5_6_--tf_50_--check-order_--nout_1.out | OPEN(no counter change; max rel dev 2e-02 on O(1) values; roundoff 1e-14 abs on near-zero conserved qty) |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_PSEUDO_LEAPFROG_2_2 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_PSEUDO_LEAPFROG_2_2_--tf_50_--check-order_--nout_1.out | OPEN(no counter change; max rel dev 2e-07 on O(1) values; roundoff 2e-14 abs on near-zero conserved qty) |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_RUTH_3_3 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_RUTH_3_3_--tf_50_--check-order_--nout_1.out | stale-ref(whitespace-only; `tr -s " "` identical) |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_YOSHIDA_6_8 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_YOSHIDA_6_8_--tf_50_--check-order_--nout_1.out | OPEN(no counter change; roundoff 7e-15 abs on near-zero conserved qty) |
+| arkode_rs | ark_kepler | — | ark_kepler.out | stale-ref(whitespace-only; `tr -s " "` identical) |
+| arkode_rs | ark_kpr_mri | 0 1 0.005 | ark_kpr_mri_0_1_0.005.out | OPEN(no counter change; roundoff 1e-15 abs on near-zero conserved qty) |
+| arkode_rs | ark_kpr_mri | 1 0 0.01 | ark_kpr_mri_1_0_0.01.out | IDENTICAL |
+| arkode_rs | ark_kpr_mri | 1 1 0.002 | ark_kpr_mri_1_1_0.002.out | IDENTICAL |
+| arkode_rs | ark_kpr_mri | 2 4 0.002 | ark_kpr_mri_2_4_0.002.out | IDENTICAL |
+| arkode_rs | ark_kpr_mri | 3 2 0.001 | ark_kpr_mri_3_2_0.001.out | IDENTICAL |
+| arkode_rs | ark_kpr_mri | 4 3 0.001 | ark_kpr_mri_4_3_0.001.out | IDENTICAL |
+| arkode_rs | ark_kpr_mri | 5 4 0.001 | ark_kpr_mri_5_4_0.001.out | OPEN(no counter change; roundoff 1e-13 abs on near-zero conserved qty) |
+| arkode_rs | ark_kpr_mri | 6 5 0.001 | ark_kpr_mri_6_5_0.001.out | OPEN(no counter change; roundoff 1e-15 abs on near-zero conserved qty) |
+| arkode_rs | ark_kpr_mri | 7 2 0.002 | ark_kpr_mri_7_2_0.002.out | IDENTICAL |
+| arkode_rs | ark_kpr_mri | 8 3 0.001 -100 100 0.5 1 | ark_kpr_mri_8_3_0.001_-100_100_0.5_1.out | IDENTICAL |
+| arkode_rs | ark_kpr_mri | 9 3 0.001 -100 100 0.5 1 | ark_kpr_mri_9_3_0.001_-100_100_0.5_1.out | IDENTICAL |
+| arkode_rs | ark_kpr_mri | 10 4 0.001 -100 100 0.5 1 | ark_kpr_mri_10_4_0.001_-100_100_0.5_1.out | OPEN(no counter change; roundoff 1e-14 abs on near-zero conserved qty) |
+| arkode_rs | ark_kpr_mri | 11 2 0.001 | ark_kpr_mri_11_2_0.001.out | IDENTICAL |
+| arkode_rs | ark_kpr_mri | 12 3 0.005 | ark_kpr_mri_12_3_0.005.out | IDENTICAL |
+| arkode_rs | ark_kpr_mri | 13 4 0.01 | ark_kpr_mri_13_4_0.01.out | IDENTICAL |
+| arkode_rs | ark_KrylovDemo_prec | — | ark_KrylovDemo_prec.out | IDENTICAL |
+| arkode_rs | ark_KrylovDemo_prec | 1 | ark_KrylovDemo_prec_1.out | IDENTICAL |
+| arkode_rs | ark_KrylovDemo_prec | 2 | ark_KrylovDemo_prec_2.out | IDENTICAL |
+| arkode_rs | ark_lotka_volterra_ASA | --check-freq 1 | ark_lotka_volterra_ASA_--check-freq_1.out | IDENTICAL |
+| arkode_rs | ark_lotka_volterra_ASA | --check-freq 5 | ark_lotka_volterra_ASA_--check-freq_5.out | IDENTICAL |
+| arkode_rs | ark_onewaycouple_mri | — | ark_onewaycouple_mri.out | IDENTICAL |
+| arkode_rs | ark_reaction_diffusion_mri | — | ark_reaction_diffusion_mri.out | stale-ref(whitespace-only; `tr -s " "` identical) |
+| arkode_rs | ark_robertson_constraints | — | ark_robertson_constraints.out | IDENTICAL |
+| arkode_rs | ark_robertson_root | — | ark_robertson_root.out | IDENTICAL |
+| arkode_rs | ark_robertson | — | ark_robertson.out | OPEN(counters differ; max rel dev 7e-01 on O(1) values; roundoff 8e-15 abs on near-zero conserved qty) |
+| arkode_rs | ark_twowaycouple_mri | — | ark_twowaycouple_mri.out | IDENTICAL |
+| arkode_rs | ark_brusselator_fp | 1 | ark_brusselator_fp_1.out | IDENTICAL |
 
 ## Documented exceptions
 
@@ -662,3 +662,73 @@ with C. As of the concurrent Phase 6 work `IDASetSensParams` takes
 shares the handle as CVODES does, so the earlier copy-in behaviour is gone;
 `idasSlCrank_FSA_dns` and `idasRoberts_FSA_dns` were re-verified after that
 change with no status movement.
+
+## ARKODE — first verification sweep (2026-08-09, Phase 7)
+
+78 reference variants, the largest suite in the port. **43 IDENTICAL,
+12 `stale-ref`, 23 `OPEN`, 0 FAIL.** Every example builds warning-free and
+every variant runs to completion: all 78 were preflighted individually under
+`timeout 120` before the harness ran and none hangs, crashes or exceeds 10 s
+(the harness itself applies no timeout, so a hang would have stalled it).
+
+### `stale-ref` class — whitespace-only (12 variants)
+
+`ark_analytic_partitioned` (all 5 argv variants),
+`ark_damped_harmonic_symplectic`, `ark_harmonic_symplectic`,
+`ark_reaction_diffusion_mri`, and `ark_kepler` (bare, `ERK fixed
+--count-orbits`, `SPRK … ARKODE_SPRK_EULER_1_1 …`, `SPRK …
+ARKODE_SPRK_RUTH_3_3 …`). Confirmed mechanically: piping **both** sides
+through `tr -s " "` yields a zero-line diff for all 12. Column widths in the
+shipped `.out` disagree with the current source's format strings; the port
+matches the source. Same class as `cvRoberts_dns_negsol` /
+`cvsRoberts_dnsL` (b).
+
+### Reference trailing-blank-line trim (2 variants, diagnosed)
+
+`ark_conserved_exp_entropy_ark 1 1` and `ark_dissipated_exp_entropy 1 1`
+each produce one line *more* than their reference: the port emits a final
+blank line, the reference stops at `Total Relaxation NLS iters`. This is
+reference-side and is **proved from the C source** —
+`ark_conserved_exp_entropy_ark.c:403` and
+`ark_dissipated_exp_entropy.c:377` are an unconditional `printf("\n");`
+after the relaxation block. Decisive corroboration: the sibling `1 0`
+variants of the *same two programs* ship references that **do** end in
+`\n\n`, exactly as the port emits. One argv value cannot change that code
+path, so the `1 1` references were trimmed. These variants remain `OPEN`
+only because they also carry the numeric drift below.
+
+### `OPEN` class — numeric divergence (23 variants), handed to the debug phase
+
+No variant diverges in a header, banner or echoed-parameter line: the first
+differing line is in a data table or the statistics block in every case, so
+none of these is a formatting or setup defect in the example. Not diagnosed
+further here and **not** tuned away. Three distinct sub-classes:
+
+1. **LSRK step-sequence divergence — the substantive finding.**
+   `ark_analytic_lsrk`, `ark_analytic_lsrk_varjac`,
+   `ark_analytic_lsrk_domeigest` (both argv variants). The printed solution
+   trajectory is **byte-identical** — every `t`/`u` row matches — and the
+   divergence is confined to the statistics block: e.g. `ark_analytic_lsrk`
+   Steps 1120→1122, Step attempts 1124→1125, Stability limited steps
+   232→228, Error test fails 4→3, Max. num. of stages used 199→200, Current
+   time 10.0040469322476→10.0016353506963. The port's final accuracy is
+   *better* (1.52101e-13 → 8.65974e-14). This points at the LSRK dominant-
+   eigenvalue / stage-count path rather than at the RHS or the controller
+   output, and is the one class worth a real investigation.
+2. **Roundoff on near-zero conserved quantities.** `ark_kpr_mri` (4 of 15
+   argv variants), most `ark_kepler --check-order` variants, and the
+   entropy examples. Large *relative* deviations (up to 1.6) sit entirely on
+   quantities that are mathematically zero — entropy error, `H(p,q)-H0`,
+   `L(p,q)-L0`, per-step error columns — whose absolute magnitude is
+   1e-16…1e-12. Catastrophic cancellation, not trajectory error.
+3. **Stiff-trajectory drift.** `ark_robertson` — header and the `t=0` row
+   are byte-identical; from the first integrated row the tiny `v` component
+   drifts ~3e-4 relative (8.33264e-12 → 8.33521e-12) at `t=1e9` with
+   `v` sitting on the absolute-tolerance floor, and step counters follow.
+   `ark_dissipated_exp_entropy` and the relaxation counters of the
+   `conserved`/`dissipated` `1 1` variants (e.g. Relaxation Fn evals
+   2087→2084) are the same shape.
+
+Per-variant evidence (counters-differ flag, max relative deviation on O(1)
+values, and roundoff magnitude on near-zero quantities) is recorded in the
+status cell of each `OPEN` row above.
