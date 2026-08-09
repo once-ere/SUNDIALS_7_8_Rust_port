@@ -25,7 +25,7 @@ Verified first-hand on 2026-08-09:
 * `cargo test --workspace --lib` → **25 passed, 0 failed**
   (23 `sundials_core`, 1 `cvodes_rs`, 1 `idas_rs`).
 * `tools/verify_examples.sh all` → **76 IDENTICAL / 25 documented exceptions /
-  20 excluded** across the 121 runnable variants of the five swept crates.
+  20 excluded** across the 121 variants of the five swept crates.
   Reproduces the statuses recorded in `VERIFICATION.md` exactly; no
   regressions.
 * `grep unsafe` over `crates/*/src` and `crates/*/examples` → 0.

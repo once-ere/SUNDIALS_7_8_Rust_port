@@ -246,10 +246,10 @@ cross-checks that no shipped `.out` file is unclaimed.
 | `arkode_rs` |  78 |  — |  — | — | **no** |
 | **total**   | **199** | **76** | **25** | **20** | |
 
-Of the 121 runnable variants in the five swept crates, **76 are byte-identical
-to the shipped reference output and the remaining 25 are the documented
-reference-side exceptions of §6 — zero are unexplained**, and zero are port
-defects. Every one of the 25 was root-caused against a locally built pristine
+Of the 101 variants actually run in the five swept crates (121 minus the 20
+KLU/SuperLU exclusions), **76 are byte-identical to the shipped reference
+output and the remaining 25 are the documented reference-side exceptions of §6
+— zero are unexplained**, and zero are port defects. Every one of the 25 was root-caused against a locally built pristine
 upstream C binary; see `VERIFICATION.md` for the per-variant evidence.
 
 **arkode_rs is the honest gap.** The library is fully ported (34 modules) and
