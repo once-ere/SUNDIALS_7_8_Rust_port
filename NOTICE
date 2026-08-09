@@ -1,0 +1,34 @@
+# Third-party notices
+
+This workspace is a derivative work. Two upstream licences apply.
+
+## SUNDIALS — BSD-3-Clause
+
+Everything under `crates/` is a line-by-line translation of SUNDIALS 7.8.0
+(https://github.com/LLNL/sundials), Copyright (c) Lawrence Livermore National
+Security and the SUNDIALS contributors. The full text is in `LICENSE`, copied
+verbatim from the upstream tree.
+
+Structure, names, constants, algorithms, control flow and message text are
+reproduced deliberately — fidelity to the C is the point of the port — so the
+translated sources are covered by the SUNDIALS licence and its attribution
+requirements travel with them.
+
+## ARM optimized-routines `pow` — MIT
+
+`crates/sundials_core/src/sundials_math.rs` contains a pure-Rust port of the
+double-precision `pow` from ARM optimized-routines, taken via musl's
+`src/math/pow.c`, `pow_data.c` and `exp_data.c`:
+
+    Copyright (c) 2018, Arm Limited.
+    SPDX-License-Identifier: MIT
+
+It replaces the platform `f64::powf` because the reference outputs this port is
+verified against were generated against glibc >= 2.28, which uses that same
+algorithm. Platform libm implementations disagree with it by one ulp on rare
+arguments, and inside the step-size heuristics a one-ulp difference forks the
+whole trajectory: substituting this implementation turned three examples from
+failing to byte-identical. See `VERIFICATION.md`.
+
+The attribution and algorithm provenance are also recorded in a block comment
+at the implementation site.

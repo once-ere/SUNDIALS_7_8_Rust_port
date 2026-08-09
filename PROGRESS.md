@@ -166,10 +166,10 @@ unblocks idasRoberts_FSA_dns and idasHessian_ASA_FSA (both now IDENTICAL).
 - [x] src/arkode/arkode_sprkstep_io.c — building
 - [x] src/arkode/arkode_sunstepper.c — building
 - [x] src/arkode/arkode_user_controller.c — building
-- [ ] src/arkode/arkode_butcher_dirk.def — todo
-- [ ] src/arkode/arkode_butcher_erk.def — todo
-- [ ] src/arkode/arkode_mri_tables.def — todo
-- [ ] src/arkode/arkode_splittingstep_coefficients.def — todo
+- [x] src/arkode/arkode_butcher_dirk.def — committed (tables folded into the including module)
+- [x] src/arkode/arkode_butcher_erk.def — committed (tables folded into the including module)
+- [x] src/arkode/arkode_mri_tables.def — committed (tables folded into the including module)
+- [x] src/arkode/arkode_splittingstep_coefficients.def — committed (tables folded into the including module)
 
 ## Phases 3+5 diff-debug pass (2026-08-07)
 
@@ -240,24 +240,24 @@ VERIFICATION.md.
 - [ ] arkode_rs example ark_robertson_constraints — todo
 - [ ] arkode_rs example ark_robertson_root — todo
 - [ ] arkode_rs example ark_twowaycouple_mri — todo
-- [ ] cvode_rs example cvAdvDiff_bnd — todo
-- [ ] cvode_rs example cvAdvDiff_bndL — todo
-- [ ] cvode_rs example cvAnalytic_mels — todo
-- [ ] cvode_rs example cvDirectDemo_ls — todo
-- [ ] cvode_rs example cvDisc_dns — todo
-- [ ] cvode_rs example cvDiurnal_kry — todo
-- [ ] cvode_rs example cvDiurnal_kry_bp — todo
-- [ ] cvode_rs example cvKrylovDemo_ls — todo
-- [ ] cvode_rs example cvKrylovDemo_prec — todo
-- [ ] cvode_rs example cvParticle_dns — todo
-- [ ] cvode_rs example cvPendulum_dns — todo
-- [ ] cvode_rs example cvRoberts_dns — todo
-- [ ] cvode_rs example cvRoberts_dnsL — todo
-- [ ] cvode_rs example cvRoberts_dns_constraints — todo
-- [ ] cvode_rs example cvRoberts_dns_negsol — todo
-- [ ] cvode_rs example cvRoberts_dns_uw — todo
-- [ ] cvode_rs example cvRocket_dns — todo
-- [ ] cvode_rs example cvVdp_auto_nls — todo
+- [x] cvode_rs example cvAdvDiff_bnd — verified
+- [x] cvode_rs example cvAdvDiff_bndL — verified
+- [x] cvode_rs example cvAnalytic_mels — verified
+- [x] cvode_rs example cvDirectDemo_ls — verified
+- [x] cvode_rs example cvDisc_dns — verified
+- [x] cvode_rs example cvDiurnal_kry — verified
+- [x] cvode_rs example cvDiurnal_kry_bp — verified
+- [x] cvode_rs example cvKrylovDemo_ls — verified
+- [x] cvode_rs example cvKrylovDemo_prec — verified
+- [x] cvode_rs example cvParticle_dns — verified
+- [x] cvode_rs example cvPendulum_dns — verified
+- [x] cvode_rs example cvRoberts_dns — verified
+- [x] cvode_rs example cvRoberts_dnsL — verified
+- [x] cvode_rs example cvRoberts_dns_constraints — verified
+- [x] cvode_rs example cvRoberts_dns_negsol — verified
+- [x] cvode_rs example cvRoberts_dns_uw — verified
+- [x] cvode_rs example cvRocket_dns — verified
+- [x] cvode_rs example cvVdp_auto_nls — verified
 - [x] cvodes_rs example cvsAdvDiff_ASAi_bnd — verified IDENTICAL
 - [x] cvodes_rs example cvsAdvDiff_FSA_non — verified IDENTICAL (2 variants)
 - [x] cvodes_rs example cvsAdvDiff_bnd — verified IDENTICAL
