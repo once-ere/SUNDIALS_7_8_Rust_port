@@ -224,49 +224,78 @@ Rust rejects as refutable patterns (`ark_robertson`,
 (`ark_brusselator_lsrk_domeigest`).
 
 All 78 reference variants were preflighted individually under `timeout 120`
-before the harness ran — none hangs, crashes or exceeds 10 s. Harness result:
-**43 IDENTICAL, 12 stale-ref (whitespace-only), 23 OPEN, 0 FAIL.** No OPEN
-variant diverges in a header or setup line, so none is an example formatting
-defect; the substantive finding is an LSRK step-sequence divergence in which
-the printed trajectory is byte-identical but the statistics block is not.
-Evidence per variant: VERIFICATION.md.
+before the harness ran — none hangs, crashes or exceeds 10 s. The first
+harness result was **43 IDENTICAL, 12 stale-ref (whitespace-only), 23 OPEN,
+0 FAIL**; no OPEN variant diverged in a header or setup line, so none was an
+example formatting defect.
+
+## Phase 7 debug phase — all 23 OPEN arkode variants closed (2026-08-09)
+
+Final arkode state: **51 IDENTICAL, 13 stale-ref, 14 ref-libm, 0 OPEN,
+0 FAIL.** One library change, one line:
+`crates/sundials_core/src/sundials_math.rs` `pow_exp_inline` now closes with
+`scale.mul_add(tmp, scale)` instead of `scale + scale * tmp`. glibc builds
+`sysdeps/x86_64/fpu/multiarch/e_pow-fma.c` with `-ffp-contract=fast`, so
+that last operation before the result is rounded is a single fused
+multiply-add in the libm the references were generated against; unfused it
+lands on the wrong side of the rounding boundary on near-midpoint results.
+Localised from `ark_robertson`, where port and a pristine local C build are
+bit-identical through step `nst = 31` and then differ by 1 ulp in `eta`
+alone (exact value 0.0011 ulp from the midpoint). Effect on the full
+199-variant gate: **8 arkode variants newly IDENTICAL** (`ark_robertson`
+228 diff lines -> 0, `ark_kepler --stepper ERK --step-mode adapt` 68 -> 0,
+four `ark_kepler` SPRK method variants, both `ark_brusselator_lsrk_*`), one
+more reduced to whitespace-only, and **zero regressions** anywhere.
+
+The remaining 27 are documented reference-side classes, not port defects:
+13 `stale-ref` (SUN_TABLE_WIDTH 28 vs 29 — `tr -s " "` diff empty, `=` at
+column 30 in the reference and 31 in the port, the proven `kinRoboKin_dns`
+precedent) and 14 `ref-libm` (each closed against a pristine upstream C
+build made locally in the reference config; for the kpr_mri, ssprk and
+three of the five relaxation variants the port is byte-identical to that C
+build while both differ from the shipped `.out`).
+
+Cumulative gate `tools/verify_examples.sh all` (logs/summary-all.txt):
+**199 variants — 127 IDENTICAL, 52 documented divergence, 20 excluded
+(KLU/SuperLU), 0 FAIL, 0 regressions.** Evidence per variant:
+VERIFICATION.md.
 
 ## Example programs (one line per ported program; variants tracked in VERIFICATION.md)
 
-- [x] arkode_rs example ark_KrylovDemo_prec — verified
-- [x] arkode_rs example ark_advection_diffusion_reaction_splitting — verified
-- [x] arkode_rs example ark_analytic — verified
-- [ ] arkode_rs example ark_analytic_lsrk — ported, builds+runs; 1/1 variants OPEN
-- [ ] arkode_rs example ark_analytic_lsrk_domeigest — ported, builds+runs; 2/2 variants OPEN
-- [ ] arkode_rs example ark_analytic_lsrk_varjac — ported, builds+runs; 1/1 variants OPEN
-- [x] arkode_rs example ark_analytic_mels — verified
-- [x] arkode_rs example ark_analytic_nonlin — verified
-- [x] arkode_rs example ark_analytic_partitioned — verified (5/5 variants stale-ref: whitespace-only)
-- [ ] arkode_rs example ark_analytic_ssprk — ported, builds+runs; 1/1 variants OPEN
-- [x] arkode_rs example ark_brusselator — verified
-- [x] arkode_rs example ark_brusselator1D — verified
-- [x] arkode_rs example ark_brusselator1D_imexmri — verified
-- [x] arkode_rs example ark_brusselator_1D_mri — verified
-- [x] arkode_rs example ark_brusselator_fp — verified
-- [ ] arkode_rs example ark_brusselator_lsrk_domeigest — ported, builds+runs; 1/1 variants OPEN
-- [ ] arkode_rs example ark_brusselator_lsrk_externaldomeigest — ported, builds+runs; 1/1 variants OPEN
-- [x] arkode_rs example ark_brusselator_mri — verified
-- [ ] arkode_rs example ark_conserved_exp_entropy_ark — ported, builds+runs; 2/2 variants OPEN
-- [ ] arkode_rs example ark_conserved_exp_entropy_erk — ported, builds+runs; 1/1 variants OPEN
-- [x] arkode_rs example ark_damped_harmonic_symplectic — verified (1/1 variants stale-ref: whitespace-only)
-- [ ] arkode_rs example ark_dissipated_exp_entropy — ported, builds+runs; 2/2 variants OPEN
-- [x] arkode_rs example ark_harmonic_symplectic — verified (1/1 variants stale-ref: whitespace-only)
-- [x] arkode_rs example ark_heat1D — verified
-- [x] arkode_rs example ark_heat1D_adapt — verified
-- [ ] arkode_rs example ark_kepler — ported, builds+runs; 6/13 variants OPEN, 4 stale-ref, 3 IDENTICAL
-- [ ] arkode_rs example ark_kpr_mri — ported, builds+runs; 4/15 variants OPEN, 11 IDENTICAL
-- [x] arkode_rs example ark_lotka_volterra_ASA — verified
-- [x] arkode_rs example ark_onewaycouple_mri — verified
-- [x] arkode_rs example ark_reaction_diffusion_mri — verified (1/1 variants stale-ref: whitespace-only)
-- [ ] arkode_rs example ark_robertson — ported, builds+runs; 1/1 variants OPEN
-- [x] arkode_rs example ark_robertson_constraints — verified
-- [x] arkode_rs example ark_robertson_root — verified
-- [x] arkode_rs example ark_twowaycouple_mri — verified
+- [x] arkode_rs example ark_KrylovDemo_prec — verified IDENTICAL (3 variants)
+- [x] arkode_rs example ark_advection_diffusion_reaction_splitting — verified IDENTICAL
+- [x] arkode_rs example ark_analytic — verified IDENTICAL (2 variants)
+- [x] arkode_rs example ark_analytic_lsrk — verified — 1/1 ref-libm (Soderlind pow near-tie; shipped ref not reproducible from its own source)
+- [x] arkode_rs example ark_analytic_lsrk_domeigest — verified — 2/2 ref-libm (same Soderlind pow near-tie)
+- [x] arkode_rs example ark_analytic_lsrk_varjac — verified — 1/1 ref-libm (same Soderlind pow near-tie)
+- [x] arkode_rs example ark_analytic_mels — verified IDENTICAL
+- [x] arkode_rs example ark_analytic_nonlin — verified IDENTICAL
+- [x] arkode_rs example ark_analytic_partitioned — verified — 5/5 stale-ref (SUN_TABLE_WIDTH 28 vs 29; values byte-identical)
+- [x] arkode_rs example ark_analytic_ssprk — verified — 1/1 ref-libm (atan/exp in RHS; port == pristine local C)
+- [x] arkode_rs example ark_brusselator — verified IDENTICAL
+- [x] arkode_rs example ark_brusselator1D — verified IDENTICAL
+- [x] arkode_rs example ark_brusselator1D_imexmri — verified IDENTICAL (7 variants)
+- [x] arkode_rs example ark_brusselator_1D_mri — verified IDENTICAL
+- [x] arkode_rs example ark_brusselator_fp — verified IDENTICAL (2 variants)
+- [x] arkode_rs example ark_brusselator_lsrk_domeigest — verified IDENTICAL (was OPEN; closed by the pow_exp_inline FMA fix)
+- [x] arkode_rs example ark_brusselator_lsrk_externaldomeigest — verified IDENTICAL (was OPEN; closed by the pow_exp_inline FMA fix)
+- [x] arkode_rs example ark_brusselator_mri — verified IDENTICAL
+- [x] arkode_rs example ark_conserved_exp_entropy_ark — verified — 2/2 ref-libm (exp/log in the adaptivity loop; port == pristine local C)
+- [x] arkode_rs example ark_conserved_exp_entropy_erk — verified — 1/1 ref-libm (port == pristine local C, byte-for-byte)
+- [x] arkode_rs example ark_damped_harmonic_symplectic — verified — 1/1 stale-ref (SUN_TABLE_WIDTH 28 vs 29)
+- [x] arkode_rs example ark_dissipated_exp_entropy — verified — 2/2 ref-libm (exp/log in the adaptivity loop; port == pristine local C)
+- [x] arkode_rs example ark_harmonic_symplectic — verified — 1/1 stale-ref (SUN_TABLE_WIDTH 28 vs 29)
+- [x] arkode_rs example ark_heat1D — verified IDENTICAL
+- [x] arkode_rs example ark_heat1D_adapt — verified IDENTICAL
+- [x] arkode_rs example ark_kepler — verified — 13 variants: 8 IDENTICAL (5 closed by the pow FMA fix), 5 stale-ref (SUN_TABLE_WIDTH)
+- [x] arkode_rs example ark_kpr_mri — verified — 15 variants: 11 IDENTICAL, 4 ref-libm (cos/sin in ff/fs; port == pristine local C incl. the 17-digit solution file)
+- [x] arkode_rs example ark_lotka_volterra_ASA — verified IDENTICAL (2 variants)
+- [x] arkode_rs example ark_onewaycouple_mri — verified IDENTICAL
+- [x] arkode_rs example ark_reaction_diffusion_mri — verified — 1/1 stale-ref (SUN_TABLE_WIDTH 28 vs 29)
+- [x] arkode_rs example ark_robertson — verified IDENTICAL (was OPEN, 228 diff lines; closed by the pow_exp_inline FMA fix)
+- [x] arkode_rs example ark_robertson_constraints — verified IDENTICAL
+- [x] arkode_rs example ark_robertson_root — verified IDENTICAL
+- [x] arkode_rs example ark_twowaycouple_mri — verified IDENTICAL
 - [x] cvode_rs example cvAdvDiff_bnd — verified
 - [x] cvode_rs example cvAdvDiff_bndL — verified
 - [x] cvode_rs example cvAnalytic_mels — verified

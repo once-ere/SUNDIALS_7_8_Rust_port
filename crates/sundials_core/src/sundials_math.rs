@@ -580,7 +580,13 @@ fn pow_exp_inline(x: f64, xtail: f64, sign_bias: u32) -> f64 {
     let scale = f64::from_bits(sbits);
     /* Note: tmp == 0 or |tmp| > 2^-200 and scale > 2^-739, so there
        is no spurious underflow here even without fma. */
-    scale + scale * tmp
+    /* glibc's x86-64 `e_pow-fma.c` is built with `-mfma -mavx2
+       -ffp-contract=fast`, so this final `scale + scale * tmp` — the last
+       operation before the result is rounded — is emitted as a single fused
+       multiply-add. It must be fused here too or the returned double lands
+       on the wrong side of a rounding boundary whenever the exact result is
+       within a fraction of an ulp of the midpoint. */
+    scale.mul_add(tmp, scale)
 }
 
 /// C `checkint`: 0 if not an integer, 1 if odd, 2 if even; `iy` is the

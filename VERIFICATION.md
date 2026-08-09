@@ -157,22 +157,22 @@ Release build.
 | arkode_rs | ark_analytic | — | ark_analytic.out | IDENTICAL |
 | arkode_rs | ark_analytic | arkode.scalar_tolerances 1e-6 1e-8 arkode.table_names ARKODE_ESDIRK547L2SA_7_4_5 ARKODE_ERK_NONE | ark_analytic_arkode.scalar_tolerances_1e-6_1e-8_arkode.table_names_ARKODE_ESDIRK547L2SA_7_4_5_ARKODE_ERK_NONE.out | IDENTICAL |
 | arkode_rs | ark_advection_diffusion_reaction_splitting | — | ark_advection_diffusion_reaction_splitting.out | IDENTICAL |
-| arkode_rs | ark_analytic_lsrk | — | ark_analytic_lsrk.out | OPEN(counters differ; max rel dev 2e-01 on O(1) values; roundoff 7e-14 abs on near-zero conserved qty) |
-| arkode_rs | ark_analytic_lsrk_varjac | — | ark_analytic_lsrk_varjac.out | OPEN(counters differ; max rel dev 6e-02 on O(1) values; roundoff 2e-13 abs on near-zero conserved qty) |
-| arkode_rs | ark_analytic_lsrk_domeigest | — | ark_analytic_lsrk_domeigest.out | OPEN(counters differ; max rel dev 1e-01 on O(1) values; roundoff 4e-13 abs on near-zero conserved qty) |
-| arkode_rs | ark_analytic_lsrk_domeigest | arkid.dom_eig_est_init_preprocess_iters 1 sundomeigestimator.max_iters 1 | ark_analytic_lsrk_domeigest_arkid.dom_eig_est_init_preprocess_iters_1_sundomeigestimator.max_iters_1.out | OPEN(counters differ; max rel dev 1e-01 on O(1) values; roundoff 4e-13 abs on near-zero conserved qty) |
+| arkode_rs | ark_analytic_lsrk | — | ark_analytic_lsrk.out | ref-libm(Soderlind `pow` near-tie; shipped ref is not reproducible from its own source — a pristine local C build diverges from it by the same amount as the port) |
+| arkode_rs | ark_analytic_lsrk_varjac | — | ark_analytic_lsrk_varjac.out | ref-libm(Soderlind `pow` near-tie; shipped ref is not reproducible from its own source — a pristine local C build diverges from it by the same amount as the port) |
+| arkode_rs | ark_analytic_lsrk_domeigest | — | ark_analytic_lsrk_domeigest.out | ref-libm(Soderlind `pow` near-tie; shipped ref is not reproducible from its own source — a pristine local C build diverges from it by the same amount as the port) |
+| arkode_rs | ark_analytic_lsrk_domeigest | arkid.dom_eig_est_init_preprocess_iters 1 sundomeigestimator.max_iters 1 | ark_analytic_lsrk_domeigest_arkid.dom_eig_est_init_preprocess_iters_1_sundomeigestimator.max_iters_1.out | ref-libm(Soderlind `pow` near-tie; shipped ref is not reproducible from its own source — a pristine local C build diverges from it by the same amount as the port) |
 | arkode_rs | ark_analytic_mels | — | ark_analytic_mels.out | IDENTICAL |
 | arkode_rs | ark_analytic_nonlin | — | ark_analytic_nonlin.out | IDENTICAL |
-| arkode_rs | ark_analytic_partitioned | forcing | ark_analytic_partitioned_forcing.out | stale-ref(whitespace-only; `tr -s " "` identical) |
-| arkode_rs | ark_analytic_partitioned | splitting | ark_analytic_partitioned_splitting.out | stale-ref(whitespace-only; `tr -s " "` identical) |
-| arkode_rs | ark_analytic_partitioned | splitting ARKODE_SPLITTING_BEST_2_2_2 | ark_analytic_partitioned_splitting_ARKODE_SPLITTING_BEST_2_2_2.out | stale-ref(whitespace-only; `tr -s " "` identical) |
-| arkode_rs | ark_analytic_partitioned | splitting ARKODE_SPLITTING_RUTH_3_3_2 | ark_analytic_partitioned_splitting_ARKODE_SPLITTING_RUTH_3_3_2.out | stale-ref(whitespace-only; `tr -s " "` identical) |
-| arkode_rs | ark_analytic_partitioned | splitting ARKODE_SPLITTING_YOSHIDA_8_6_2 | ark_analytic_partitioned_splitting_ARKODE_SPLITTING_YOSHIDA_8_6_2.out | stale-ref(whitespace-only; `tr -s " "` identical) |
-| arkode_rs | ark_analytic_ssprk | — | ark_analytic_ssprk.out | OPEN(no counter change; max rel dev 9e-09 on O(1) values) |
+| arkode_rs | ark_analytic_partitioned | forcing | ark_analytic_partitioned_forcing.out | stale-ref(SUN_TABLE_WIDTH 28 vs 29; whitespace-only — `tr -s " "` diff is empty, every value byte-identical; kinRoboKin_dns precedent) |
+| arkode_rs | ark_analytic_partitioned | splitting | ark_analytic_partitioned_splitting.out | stale-ref(SUN_TABLE_WIDTH 28 vs 29; whitespace-only — `tr -s " "` diff is empty, every value byte-identical; kinRoboKin_dns precedent) |
+| arkode_rs | ark_analytic_partitioned | splitting ARKODE_SPLITTING_BEST_2_2_2 | ark_analytic_partitioned_splitting_ARKODE_SPLITTING_BEST_2_2_2.out | stale-ref(SUN_TABLE_WIDTH 28 vs 29; whitespace-only — `tr -s " "` diff is empty, every value byte-identical; kinRoboKin_dns precedent) |
+| arkode_rs | ark_analytic_partitioned | splitting ARKODE_SPLITTING_RUTH_3_3_2 | ark_analytic_partitioned_splitting_ARKODE_SPLITTING_RUTH_3_3_2.out | stale-ref(SUN_TABLE_WIDTH 28 vs 29; whitespace-only — `tr -s " "` diff is empty, every value byte-identical; kinRoboKin_dns precedent) |
+| arkode_rs | ark_analytic_partitioned | splitting ARKODE_SPLITTING_YOSHIDA_8_6_2 | ark_analytic_partitioned_splitting_ARKODE_SPLITTING_YOSHIDA_8_6_2.out | stale-ref(SUN_TABLE_WIDTH 28 vs 29; whitespace-only — `tr -s " "` diff is empty, every value byte-identical; kinRoboKin_dns precedent) |
+| arkode_rs | ark_analytic_ssprk | — | ark_analytic_ssprk.out | ref-libm(`atan`/`exp` in the RHS inside an adaptive loop; port == local pristine C, byte-for-byte) |
 | arkode_rs | ark_brusselator_1D_mri | — | ark_brusselator_1D_mri.out | IDENTICAL |
 | arkode_rs | ark_brusselator_fp | — | ark_brusselator_fp.out | IDENTICAL |
-| arkode_rs | ark_brusselator_lsrk_domeigest | — | ark_brusselator_lsrk_domeigest.out | OPEN(no counter change; max rel dev 1e-08 on O(1) values) |
-| arkode_rs | ark_brusselator_lsrk_externaldomeigest | — | ark_brusselator_lsrk_externaldomeigest.out | OPEN(no counter change; max rel dev 1e-08 on O(1) values) |
+| arkode_rs | ark_brusselator_lsrk_domeigest | — | ark_brusselator_lsrk_domeigest.out | IDENTICAL |
+| arkode_rs | ark_brusselator_lsrk_externaldomeigest | — | ark_brusselator_lsrk_externaldomeigest.out | IDENTICAL |
 | arkode_rs | ark_brusselator_mri | — | ark_brusselator_mri.out | IDENTICAL |
 | arkode_rs | ark_brusselator | — | ark_brusselator.out | IDENTICAL |
 | arkode_rs | ark_brusselator1D_imexmri | 0 0.001 | ark_brusselator1D_imexmri_0_0.001.out | IDENTICAL |
@@ -183,40 +183,40 @@ Release build.
 | arkode_rs | ark_brusselator1D_imexmri | 6 0.001 | ark_brusselator1D_imexmri_6_0.001.out | IDENTICAL |
 | arkode_rs | ark_brusselator1D_imexmri | 7 0.001 | ark_brusselator1D_imexmri_7_0.001.out | IDENTICAL |
 | arkode_rs | ark_brusselator1D | — | ark_brusselator1D.out | IDENTICAL |
-| arkode_rs | ark_conserved_exp_entropy_ark | 1 0 | ark_conserved_exp_entropy_ark_1_0.out | OPEN(counters differ; max rel dev 6e-03 on O(1) values; roundoff 2e-14 abs on near-zero conserved qty) |
-| arkode_rs | ark_conserved_exp_entropy_ark | 1 1 | ark_conserved_exp_entropy_ark_1_1.out | OPEN(counters differ; max rel dev 4e-03 on O(1) values; roundoff 1e-14 abs on near-zero conserved qty; ref lacks final blank line (C prints it unconditionally)) |
-| arkode_rs | ark_conserved_exp_entropy_erk | 1 | ark_conserved_exp_entropy_erk_1.out | OPEN(counters differ; max rel dev 6e-03 on O(1) values; roundoff 2e-14 abs on near-zero conserved qty) |
-| arkode_rs | ark_damped_harmonic_symplectic | — | ark_damped_harmonic_symplectic.out | stale-ref(whitespace-only; `tr -s " "` identical) |
-| arkode_rs | ark_dissipated_exp_entropy | 1 0 | ark_dissipated_exp_entropy_1_0.out | OPEN(no counter change; max rel dev 5e-07 on O(1) values; roundoff 5e-15 abs on near-zero conserved qty) |
-| arkode_rs | ark_dissipated_exp_entropy | 1 1 | ark_dissipated_exp_entropy_1_1.out | OPEN(counters differ; max rel dev 6e-04 on O(1) values; ref lacks final blank line (C prints it unconditionally)) |
-| arkode_rs | ark_harmonic_symplectic | — | ark_harmonic_symplectic.out | stale-ref(whitespace-only; `tr -s " "` identical) |
+| arkode_rs | ark_conserved_exp_entropy_ark | 1 0 | ark_conserved_exp_entropy_ark_1_0.out | ref-libm(`exp`/`log` entropy+RHS inside the adaptivity loop; port == local pristine C once the deliberate pow_glibc substitution is neutralised) |
+| arkode_rs | ark_conserved_exp_entropy_ark | 1 1 | ark_conserved_exp_entropy_ark_1_1.out | ref-libm(`exp`/`log` entropy+RHS inside the adaptivity loop; port == local pristine C, byte-for-byte) + ref lacks the final blank line the source prints unconditionally |
+| arkode_rs | ark_conserved_exp_entropy_erk | 1 | ark_conserved_exp_entropy_erk_1.out | ref-libm(`exp`/`log` entropy+RHS inside the adaptivity loop; port == local pristine C, byte-for-byte) |
+| arkode_rs | ark_damped_harmonic_symplectic | — | ark_damped_harmonic_symplectic.out | stale-ref(SUN_TABLE_WIDTH 28 vs 29; whitespace-only — `tr -s " "` diff is empty, every value byte-identical; kinRoboKin_dns precedent) |
+| arkode_rs | ark_dissipated_exp_entropy | 1 0 | ark_dissipated_exp_entropy_1_0.out | ref-libm(`exp`/`log` entropy+RHS inside the adaptivity loop; port == local pristine C once the deliberate pow_glibc substitution is neutralised) |
+| arkode_rs | ark_dissipated_exp_entropy | 1 1 | ark_dissipated_exp_entropy_1_1.out | ref-libm(`exp`/`log` entropy+RHS inside the adaptivity loop; port == local pristine C, byte-for-byte) + ref lacks the final blank line the source prints unconditionally |
+| arkode_rs | ark_harmonic_symplectic | — | ark_harmonic_symplectic.out | stale-ref(SUN_TABLE_WIDTH 28 vs 29; whitespace-only — `tr -s " "` diff is empty, every value byte-identical; kinRoboKin_dns precedent) |
 | arkode_rs | ark_heat1D_adapt | — | ark_heat1D_adapt.out | IDENTICAL |
 | arkode_rs | ark_heat1D | — | ark_heat1D.out | IDENTICAL |
-| arkode_rs | ark_kepler | --stepper ERK --step-mode adapt | ark_kepler_--stepper_ERK_--step-mode_adapt.out | OPEN(no counter change; max rel dev 1e-11 on O(1) values) |
-| arkode_rs | ark_kepler | --stepper ERK --step-mode fixed --count-orbits | ark_kepler_--stepper_ERK_--step-mode_fixed_--count-orbits.out | stale-ref(whitespace-only; `tr -s " "` identical) |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --count-orbits --use-compensated-sums | ark_kepler_--stepper_SPRK_--step-mode_fixed_--count-orbits_--use-compensated-sums.out | OPEN(counters differ; max rel dev 1e-03 on O(1) values; roundoff 2e-12 abs on near-zero conserved qty) |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_EULER_1_1 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_EULER_1_1_--tf_50_--check-order_--nout_1.out | stale-ref(whitespace-only; `tr -s " "` identical) |
+| arkode_rs | ark_kepler | --stepper ERK --step-mode adapt | ark_kepler_--stepper_ERK_--step-mode_adapt.out | IDENTICAL |
+| arkode_rs | ark_kepler | --stepper ERK --step-mode fixed --count-orbits | ark_kepler_--stepper_ERK_--step-mode_fixed_--count-orbits.out | stale-ref(SUN_TABLE_WIDTH 28 vs 29; whitespace-only — `tr -s " "` diff is empty, every value byte-identical; kinRoboKin_dns precedent) |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --count-orbits --use-compensated-sums | ark_kepler_--stepper_SPRK_--step-mode_fixed_--count-orbits_--use-compensated-sums.out | stale-ref(SUN_TABLE_WIDTH 28 vs 29; whitespace-only — `tr -s " "` diff is empty, every value byte-identical; kinRoboKin_dns precedent) |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_EULER_1_1 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_EULER_1_1_--tf_50_--check-order_--nout_1.out | stale-ref(SUN_TABLE_WIDTH 28 vs 29; whitespace-only — `tr -s " "` diff is empty, every value byte-identical; kinRoboKin_dns precedent) |
 | arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_LEAPFROG_2_2 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_LEAPFROG_2_2_--tf_50_--check-order_--nout_1.out | IDENTICAL |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_MCLACHLAN_2_2 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_MCLACHLAN_2_2_--tf_50_--check-order_--nout_1.out | OPEN(no counter change; max rel dev 1e-08 on O(1) values; roundoff 9e-16 abs on near-zero conserved qty) |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_MCLACHLAN_2_2 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_MCLACHLAN_2_2_--tf_50_--check-order_--nout_1.out | IDENTICAL |
 | arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_MCLACHLAN_3_3 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_MCLACHLAN_3_3_--tf_50_--check-order_--nout_1.out | IDENTICAL |
 | arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_MCLACHLAN_4_4 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_MCLACHLAN_4_4_--tf_50_--check-order_--nout_1.out | IDENTICAL |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_MCLACHLAN_5_6 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_MCLACHLAN_5_6_--tf_50_--check-order_--nout_1.out | OPEN(no counter change; max rel dev 2e-02 on O(1) values; roundoff 1e-14 abs on near-zero conserved qty) |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_PSEUDO_LEAPFROG_2_2 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_PSEUDO_LEAPFROG_2_2_--tf_50_--check-order_--nout_1.out | OPEN(no counter change; max rel dev 2e-07 on O(1) values; roundoff 2e-14 abs on near-zero conserved qty) |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_RUTH_3_3 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_RUTH_3_3_--tf_50_--check-order_--nout_1.out | stale-ref(whitespace-only; `tr -s " "` identical) |
-| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_YOSHIDA_6_8 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_YOSHIDA_6_8_--tf_50_--check-order_--nout_1.out | OPEN(no counter change; roundoff 7e-15 abs on near-zero conserved qty) |
-| arkode_rs | ark_kepler | — | ark_kepler.out | stale-ref(whitespace-only; `tr -s " "` identical) |
-| arkode_rs | ark_kpr_mri | 0 1 0.005 | ark_kpr_mri_0_1_0.005.out | OPEN(no counter change; roundoff 1e-15 abs on near-zero conserved qty) |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_MCLACHLAN_5_6 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_MCLACHLAN_5_6_--tf_50_--check-order_--nout_1.out | IDENTICAL |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_PSEUDO_LEAPFROG_2_2 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_PSEUDO_LEAPFROG_2_2_--tf_50_--check-order_--nout_1.out | IDENTICAL |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_RUTH_3_3 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_RUTH_3_3_--tf_50_--check-order_--nout_1.out | stale-ref(SUN_TABLE_WIDTH 28 vs 29; whitespace-only — `tr -s " "` diff is empty, every value byte-identical; kinRoboKin_dns precedent) |
+| arkode_rs | ark_kepler | --stepper SPRK --step-mode fixed --method ARKODE_SPRK_YOSHIDA_6_8 --tf 50 --check-order --nout 1 | ark_kepler_--stepper_SPRK_--step-mode_fixed_--method_ARKODE_SPRK_YOSHIDA_6_8_--tf_50_--check-order_--nout_1.out | IDENTICAL |
+| arkode_rs | ark_kepler | — | ark_kepler.out | stale-ref(SUN_TABLE_WIDTH 28 vs 29; whitespace-only — `tr -s " "` diff is empty, every value byte-identical; kinRoboKin_dns precedent) |
+| arkode_rs | ark_kpr_mri | 0 1 0.005 | ark_kpr_mri_0_1_0.005.out | ref-libm(`cos`/`sin` in ff/fs and in utrue/vtrue; port == local pristine C, byte-for-byte incl. the 17-digit solution file) |
 | arkode_rs | ark_kpr_mri | 1 0 0.01 | ark_kpr_mri_1_0_0.01.out | IDENTICAL |
 | arkode_rs | ark_kpr_mri | 1 1 0.002 | ark_kpr_mri_1_1_0.002.out | IDENTICAL |
 | arkode_rs | ark_kpr_mri | 2 4 0.002 | ark_kpr_mri_2_4_0.002.out | IDENTICAL |
 | arkode_rs | ark_kpr_mri | 3 2 0.001 | ark_kpr_mri_3_2_0.001.out | IDENTICAL |
 | arkode_rs | ark_kpr_mri | 4 3 0.001 | ark_kpr_mri_4_3_0.001.out | IDENTICAL |
-| arkode_rs | ark_kpr_mri | 5 4 0.001 | ark_kpr_mri_5_4_0.001.out | OPEN(no counter change; roundoff 1e-13 abs on near-zero conserved qty) |
-| arkode_rs | ark_kpr_mri | 6 5 0.001 | ark_kpr_mri_6_5_0.001.out | OPEN(no counter change; roundoff 1e-15 abs on near-zero conserved qty) |
+| arkode_rs | ark_kpr_mri | 5 4 0.001 | ark_kpr_mri_5_4_0.001.out | ref-libm(`cos`/`sin` in ff/fs and in utrue/vtrue; port == local pristine C, byte-for-byte incl. the 17-digit solution file) |
+| arkode_rs | ark_kpr_mri | 6 5 0.001 | ark_kpr_mri_6_5_0.001.out | ref-libm(`cos`/`sin` in ff/fs and in utrue/vtrue; port == local pristine C, byte-for-byte incl. the 17-digit solution file) |
 | arkode_rs | ark_kpr_mri | 7 2 0.002 | ark_kpr_mri_7_2_0.002.out | IDENTICAL |
 | arkode_rs | ark_kpr_mri | 8 3 0.001 -100 100 0.5 1 | ark_kpr_mri_8_3_0.001_-100_100_0.5_1.out | IDENTICAL |
 | arkode_rs | ark_kpr_mri | 9 3 0.001 -100 100 0.5 1 | ark_kpr_mri_9_3_0.001_-100_100_0.5_1.out | IDENTICAL |
-| arkode_rs | ark_kpr_mri | 10 4 0.001 -100 100 0.5 1 | ark_kpr_mri_10_4_0.001_-100_100_0.5_1.out | OPEN(no counter change; roundoff 1e-14 abs on near-zero conserved qty) |
+| arkode_rs | ark_kpr_mri | 10 4 0.001 -100 100 0.5 1 | ark_kpr_mri_10_4_0.001_-100_100_0.5_1.out | ref-libm(`cos`/`sin` in ff/fs and in utrue/vtrue; port == local pristine C, byte-for-byte incl. the 17-digit solution file) |
 | arkode_rs | ark_kpr_mri | 11 2 0.001 | ark_kpr_mri_11_2_0.001.out | IDENTICAL |
 | arkode_rs | ark_kpr_mri | 12 3 0.005 | ark_kpr_mri_12_3_0.005.out | IDENTICAL |
 | arkode_rs | ark_kpr_mri | 13 4 0.01 | ark_kpr_mri_13_4_0.01.out | IDENTICAL |
@@ -226,10 +226,10 @@ Release build.
 | arkode_rs | ark_lotka_volterra_ASA | --check-freq 1 | ark_lotka_volterra_ASA_--check-freq_1.out | IDENTICAL |
 | arkode_rs | ark_lotka_volterra_ASA | --check-freq 5 | ark_lotka_volterra_ASA_--check-freq_5.out | IDENTICAL |
 | arkode_rs | ark_onewaycouple_mri | — | ark_onewaycouple_mri.out | IDENTICAL |
-| arkode_rs | ark_reaction_diffusion_mri | — | ark_reaction_diffusion_mri.out | stale-ref(whitespace-only; `tr -s " "` identical) |
+| arkode_rs | ark_reaction_diffusion_mri | — | ark_reaction_diffusion_mri.out | stale-ref(SUN_TABLE_WIDTH 28 vs 29; whitespace-only — `tr -s " "` diff is empty, every value byte-identical; kinRoboKin_dns precedent) |
 | arkode_rs | ark_robertson_constraints | — | ark_robertson_constraints.out | IDENTICAL |
 | arkode_rs | ark_robertson_root | — | ark_robertson_root.out | IDENTICAL |
-| arkode_rs | ark_robertson | — | ark_robertson.out | OPEN(counters differ; max rel dev 7e-01 on O(1) values; roundoff 8e-15 abs on near-zero conserved qty) |
+| arkode_rs | ark_robertson | — | ark_robertson.out | IDENTICAL |
 | arkode_rs | ark_twowaycouple_mri | — | ark_twowaycouple_mri.out | IDENTICAL |
 | arkode_rs | ark_brusselator_fp | 1 | ark_brusselator_fp_1.out | IDENTICAL |
 
@@ -663,72 +663,238 @@ shares the handle as CVODES does, so the earlier copy-in behaviour is gone;
 `idasSlCrank_FSA_dns` and `idasRoberts_FSA_dns` were re-verified after that
 change with no status movement.
 
-## ARKODE — first verification sweep (2026-08-09, Phase 7)
+## ARKODE — verification sweep and debug phase (2026-08-09, Phase 7)
 
-78 reference variants, the largest suite in the port. **43 IDENTICAL,
-12 `stale-ref`, 23 `OPEN`, 0 FAIL.** Every example builds warning-free and
-every variant runs to completion: all 78 were preflighted individually under
-`timeout 120` before the harness ran and none hangs, crashes or exceeds 10 s
-(the harness itself applies no timeout, so a hang would have stalled it).
+78 reference variants, the largest suite in the port. Final state:
+**51 IDENTICAL, 13 `stale-ref`, 14 `ref-libm`, 0 `OPEN`, 0 FAIL.** Every
+example builds warning-free and every variant runs to completion (all 78
+preflighted individually under `timeout 120`; none hangs, crashes or
+exceeds 10 s).
 
-### `stale-ref` class — whitespace-only (12 variants)
+The first sweep recorded 43 IDENTICAL / 12 `stale-ref` / 23 `OPEN`. The
+debug phase closed all 23 `OPEN`: **8 became IDENTICAL from a single
+one-line arithmetic fix** (below), 1 dropped into the `stale-ref` class
+once that fix removed its numeric component, and the remaining 14 are
+recorded as `ref-libm` with pristine-C evidence.
 
-`ark_analytic_partitioned` (all 5 argv variants),
-`ark_damped_harmonic_symplectic`, `ark_harmonic_symplectic`,
-`ark_reaction_diffusion_mri`, and `ark_kepler` (bare, `ERK fixed
---count-orbits`, `SPRK … ARKODE_SPRK_EULER_1_1 …`, `SPRK …
-ARKODE_SPRK_RUTH_3_3 …`). Confirmed mechanically: piping **both** sides
-through `tr -s " "` yields a zero-line diff for all 12. Column widths in the
-shipped `.out` disagree with the current source's format strings; the port
-matches the source. Same class as `cvRoberts_dns_negsol` /
-`cvsRoberts_dnsL` (b).
+### The fix — fused final multiply-add in `pow_exp_inline`
 
-### Reference trailing-blank-line trim (2 variants, diagnosed)
+`crates/sundials_core/src/sundials_math.rs` (`pow_exp_inline`, last
+statement). `SUNRpowerR` routes to the port's deterministic `pow_glibc`
+(the ARM optimized-routines algorithm glibc >= 2.28 ships) rather than to
+the platform libm, because the reference `.out` files were generated
+against glibc. The port fused only the three explicit `__builtin_fma`
+calls of the C source. But glibc does **not** build that file with
+`-ffp-contract=off`: the x86-64 multiarch variant
+`sysdeps/x86_64/fpu/multiarch/e_pow-fma.c` is compiled `-mfma -mavx2
+-ffp-contract=fast`, so `exp_inline`'s closing
 
-`ark_conserved_exp_entropy_ark 1 1` and `ark_dissipated_exp_entropy 1 1`
-each produce one line *more* than their reference: the port emits a final
-blank line, the reference stops at `Total Relaxation NLS iters`. This is
-reference-side and is **proved from the C source** —
-`ark_conserved_exp_entropy_ark.c:403` and
-`ark_dissipated_exp_entropy.c:377` are an unconditional `printf("\n");`
-after the relaxation block. Decisive corroboration: the sibling `1 0`
-variants of the *same two programs* ship references that **do** end in
-`\n\n`, exactly as the port emits. One argv value cannot change that code
-path, so the `1 1` references were trimmed. These variants remain `OPEN`
-only because they also carry the numeric drift below.
+    return eval_as_double (scale + scale * tmp);
 
-### `OPEN` class — numeric divergence (23 variants), handed to the debug phase
+— the last operation before the result is rounded — is emitted as one
+fused multiply-add. The port evaluated it as a separate multiply and add,
+which lands on the wrong side of the rounding boundary whenever the exact
+result sits within a fraction of an ulp of the midpoint. Changed to
+`scale.mul_add(tmp, scale)` (`f64::mul_add` is a guaranteed-fused single
+instruction on aarch64 and on x86-64 with FMA, so the result stays
+deterministic and platform-independent).
 
-No variant diverges in a header, banner or echoed-parameter line: the first
-differing line is in a data table or the statistics block in every case, so
-none of these is a formatting or setup defect in the example. Not diagnosed
-further here and **not** tuned away. Three distinct sub-classes:
+Localisation, from `ark_robertson`: the port and a pristine local C build
+are bit-identical (`h`, `tcur`, `dsm`, `y`, every counter) through step
+`nst = 31`, then diverge in `eta` alone — identical input
+`dsm = 0x3fc2ca9aee696648`, `k1 = -0.25`, C `pow` -> `0x3ff9d92c57480465`,
+port -> `0x3ff9d92c57480464`. The exact value
+(60-digit `Decimal`) is `1.61552080244316542702…`; the two candidates
+straddle it at +0.4989 / -0.5011 ulp, i.e. the true result is 0.0011 ulp
+from the midpoint. From step 32 the step sequence forks completely
+(Steps 99 -> 102, NLS step fails 1 -> 3, 228 diff lines).
 
-1. **LSRK step-sequence divergence — the substantive finding.**
-   `ark_analytic_lsrk`, `ark_analytic_lsrk_varjac`,
-   `ark_analytic_lsrk_domeigest` (both argv variants). The printed solution
-   trajectory is **byte-identical** — every `t`/`u` row matches — and the
-   divergence is confined to the statistics block: e.g. `ark_analytic_lsrk`
-   Steps 1120→1122, Step attempts 1124→1125, Stability limited steps
-   232→228, Error test fails 4→3, Max. num. of stages used 199→200, Current
-   time 10.0040469322476→10.0016353506963. The port's final accuracy is
-   *better* (1.52101e-13 → 8.65974e-14). This points at the LSRK dominant-
-   eigenvalue / stage-count path rather than at the RHS or the controller
-   output, and is the one class worth a real investigation.
-2. **Roundoff on near-zero conserved quantities.** `ark_kpr_mri` (4 of 15
-   argv variants), most `ark_kepler --check-order` variants, and the
-   entropy examples. Large *relative* deviations (up to 1.6) sit entirely on
-   quantities that are mathematically zero — entropy error, `H(p,q)-H0`,
-   `L(p,q)-L0`, per-step error columns — whose absolute magnitude is
-   1e-16…1e-12. Catastrophic cancellation, not trajectory error.
-3. **Stiff-trajectory drift.** `ark_robertson` — header and the `t=0` row
-   are byte-identical; from the first integrated row the tiny `v` component
-   drifts ~3e-4 relative (8.33264e-12 → 8.33521e-12) at `t=1e9` with
-   `v` sitting on the absolute-tolerance floor, and step counters follow.
-   `ark_dissipated_exp_entropy` and the relaxation counters of the
-   `conserved`/`dissipated` `1 1` variants (e.g. Relaxation Fn evals
-   2087→2084) are the same shape.
+Effect, measured over the whole 199-variant cumulative gate — **8 newly
+IDENTICAL, 1 reclassified, 0 regressions**:
 
-Per-variant evidence (counters-differ flag, max relative deviation on O(1)
-values, and roundoff magnitude on near-zero quantities) is recorded in the
-status cell of each `OPEN` row above.
+| variant | before | after |
+|---|---|---|
+| `ark_robertson` | DIFF(228) | IDENTICAL |
+| `ark_kepler --stepper ERK --step-mode adapt` | DIFF(68) | IDENTICAL |
+| `ark_kepler … ARKODE_SPRK_MCLACHLAN_2_2 …` | DIFF(4) | IDENTICAL |
+| `ark_kepler … ARKODE_SPRK_MCLACHLAN_5_6 …` | DIFF(10) | IDENTICAL |
+| `ark_kepler … ARKODE_SPRK_PSEUDO_LEAPFROG_2_2 …` | DIFF(4) | IDENTICAL |
+| `ark_kepler … ARKODE_SPRK_YOSHIDA_6_8 …` | DIFF(2) | IDENTICAL |
+| `ark_brusselator_lsrk_domeigest` | DIFF(10) | IDENTICAL |
+| `ark_brusselator_lsrk_externaldomeigest` | DIFF(10) | IDENTICAL |
+| `ark_kepler … --count-orbits --use-compensated-sums` | DIFF(156) | DIFF(28), now whitespace-only -> `stale-ref` |
+
+The `pow_glibc_bits` regression test still passes, and no cvode / cvodes /
+kinsol / ida / idas variant moved in either direction. Not applied
+(deliberately, to keep the change minimal): `pow_exp_specialcase` carries
+the same `scale + scale * tmp` shape twice and glibc would likewise
+contract it, but that path is reached only for extreme exponents and no
+reference example exercises it. The double-double terms of
+`pow_log_inline` are **not** candidates — contracting them would break the
+compensated-summation invariants the algorithm is built on.
+
+### `stale-ref` class — whitespace-only, `SUN_TABLE_WIDTH` (13 variants)
+
+| variant | diff lines |
+|---|---|
+| `ark_analytic_partitioned forcing` | 84 |
+| `ark_analytic_partitioned splitting` | 84 |
+| `ark_analytic_partitioned splitting ARKODE_SPLITTING_BEST_2_2_2` | 84 |
+| `ark_analytic_partitioned splitting ARKODE_SPLITTING_RUTH_3_3_2` | 84 |
+| `ark_analytic_partitioned splitting ARKODE_SPLITTING_YOSHIDA_8_6_2` | 84 |
+| `ark_damped_harmonic_symplectic` | 26 |
+| `ark_harmonic_symplectic` | 26 |
+| `ark_reaction_diffusion_mri` | 70 |
+| `ark_kepler` (bare) | 26 |
+| `ark_kepler --stepper ERK --step-mode fixed --count-orbits` | 36 |
+| `ark_kepler … --count-orbits --use-compensated-sums` | 28 |
+| `ark_kepler … ARKODE_SPRK_EULER_1_1 …` | 242 |
+| `ark_kepler … ARKODE_SPRK_RUTH_3_3 …` | 242 |
+
+Evidence, mechanical and identical for all 13: piping **both** sides
+through `tr -s " "` yields a zero-line diff
+(`diff <(tr -s " " < REF) <(tr -s " " < OURS)` is empty), so every printed
+value is byte-identical and only the label field width differs.
+`awk '{print index($0,"=")}'` puts `=` at **column 30** on every shipped
+reference stat line and at **column 31** on every port line, on all 13.
+That is exactly the proven **`kinRoboKin_dns` precedent** (see *Documented
+exceptions*): `src/sundials/sundials_utils.h:31` defines
+`SUN_TABLE_WIDTH 29` and `sunfprintf_*` formats `"%-*s = …\n"`, which
+forces column 31 arithmetically; a subset of the shipped `.out` files
+predates the `SUN_TABLE_WIDTH` 28 -> 29 change. For `kinRoboKin_dns` the
+precedent was closed three ways — whitespace-normalised diff empty, column
+measurement 30 vs 31, and a **pristine local C build that emits column 31,
+agreeing with the port and not with the reference** — and changing
+`SUN_TABLE_WIDTH` back to 28 was considered and rejected there because it
+would contradict the shipped C header and regress the ~220 reference stat
+lines across cvode/cvodes/ida/idas/arkode that already verify at width 29.
+The arkode reference tree is self-inconsistent in the same way and by
+itself proves the staleness: `ark_kepler.out` has `=` at column 30 while
+`ark_kepler_--stepper_ERK_--step-mode_adapt.out` has it at column 31 for
+the same `Current time` field of the same program.
+
+### `ref-libm` class — reference-side libm artifacts (14 variants)
+
+Every one was closed against a **pristine upstream C build made locally**
+from the read-only tree in the documented reference config (CMake
+out-of-source, `CMAKE_BUILD_TYPE=Release`, `CMAKE_C_COMPILER=clang`
+[Apple clang 21, arm64], `CMAKE_C_FLAGS="-O3 -DNDEBUG -ffp-contract=off"`,
+`SUNDIALS_LOGGING_LEVEL=2`, `SUNDIALS_ENABLE_ERROR_CHECKS=OFF`,
+`SUNDIALS_BUILD_WITH_PROFILING=OFF`, `SUNDIALS_BUILD_WITH_MONITORING=ON`,
+`BUILD_SHARED_LIBS=OFF`, serial), run with the exact CMakeLists argv. All
+14 are confirmed **not** whitespace: the `tr -s " "` diff line count equals
+the raw count for each.
+
+**1. LSRK analytic family (4).** `ark_analytic_lsrk` (20 lines),
+`ark_analytic_lsrk_varjac` (24), `ark_analytic_lsrk_domeigest` (28, both
+argv variants). The printed solution trajectory is byte-identical — every
+`t`/`u` row matches — and the divergence is confined to the statistics
+block (`ark_analytic_lsrk`: Steps 1120 -> 1122, Stability limited steps
+232 -> 228, Error test fails 4 -> 3, Max. num. of stages used 199 -> 200).
+The decisive evidence is that **the shipped `.out` is not reproducible from
+its own source on this platform**: the pristine local C build diverges from
+the shipped reference by 20/22/28/30 lines, i.e. as much as the port does,
+and for `ark_analytic_lsrk` the three binaries give three different answers
+(Steps 1120 ref / 1121 local C / 1122 port). This is **not** the LSRK
+dominant-eigenvalue or stage-count path, which the first sweep suspected: a
+bit-level trace (raw IEEE-754 patterns of `nst`, `attempt`, `tn`, `h`,
+`dsm`, `eta`, `kflag`, `nflag`, `req_stages` per step attempt, plus every
+`pow` base/exponent/result) shows port and C bit-identical for 107 attempts
+— covering every RKC/RKL recurrence coefficient, every stage-count decision
+up to `req_stages = 190`, every stability-norm test and every dom-eig
+estimate — with the first difference a single 1-ulp `pow(b, -1/3)` inside
+`SUNAdaptController_EstimateStep_Soderlind` reached with bit-identical `h`
+and `dsm`. The sibling `ark_brusselator_lsrk_domeigest` /
+`…_externaldomeigest` variants had exactly this shape and went IDENTICAL
+under the FMA fix above; these four sit on a different near-tie that the
+generating machine's libm rounded the other way.
+
+**2. Relaxation / entropy family (5).**
+`ark_conserved_exp_entropy_ark 1 0` (56), `1 1` (31),
+`ark_conserved_exp_entropy_erk 1` (48),
+`ark_dissipated_exp_entropy 1 0` (82), `1 1` (13). Three of the five —
+`ark_conserved_exp_entropy_ark 1 1`, `ark_conserved_exp_entropy_erk 1`,
+`ark_dissipated_exp_entropy 1 1` — are **already byte-identical to the
+pristine local C build (0 diff lines)** with the port exactly as shipped,
+which closes them outright. For the two `1 0` variants a bit-level trace
+shows every relaxation quantity (`delta_e`, `e_old`, each Newton
+`res`/`jac`/`relax_param`, `relax_val`, `h`) bit-identical for the
+preceding 146 (ark) / 1321 (dis) steps; the first divergence is `h_acc` out
+of the Soderlind controller with bit-identical `h`/`dsm` inputs, i.e. a
+1-ulp `pow(bias*dsm, -0.5)`. Substituting `SUNRpowerR` -> `base.powf(…)`
+(the platform `pow` the C binary links) makes the port byte-identical to
+the local C build on **all five**, and a correct-rounding audit against
+60-digit `Decimal` shows Apple libm mis-rounds 1/1081 (ark `1 0`) and
+2/1683 (dis `1 0`) of the distinct `pow(x,-0.5)` calls while `pow_glibc` is
+correct on every one. The ARKODE relaxation transcription is exact; no code
+change. The `1 1` references additionally lack the final blank line that
+`ark_conserved_exp_entropy_ark.c:403` / `ark_dissipated_exp_entropy.c:377`
+print unconditionally — proved reference-side by the sibling `1 0`
+references of the *same programs*, which do end in `\n\n` exactly as the
+port emits.
+
+**3. `ark_analytic_ssprk` (1, 6 lines).** The port, unmodified, is already
+byte-identical to the pristine local C build. Both differ from the shipped
+`.out` on the same three lines only — `Current time`
+10.0099819131755 -> …9199357, `Last step size`, `Current step size` (digits
+9-11) — while every solution row, `Steps = 719`, `Step attempts = 721`,
+`Error test fails = 2`, `Initial step size` and `Number of stages used = 9`
+match. Cause: the example's `atan`/`exp` in the RHS inside an adaptive
+loop.
+
+**4. `ark_kpr_mri` (4 of 15 argv variants).** `0 1 0.005` (2 lines),
+`5 4 0.001` (10), `6 5 0.001` (6), `10 4 0.001 -100 100 0.5 1` (6). The
+pristine local C build is **byte-identical to the port on all four** — 0
+diff lines on stdout *and* 0 on the 17-significant-digit
+`ark_kpr_mri_solution.txt` each run writes (4 x 51 rows x 5 doubles) — and
+diverges from the shipped `.out` on exactly the same lines with exactly the
+same digits. Every divergent line is inside a `%.2e` `uerr`/`verr` column
+(plus the derived `%.3e` `u error` RMS for `6 5 0.001`); every `t`, `u`,
+`v` value (`%10.6f`) and **every** counter (`nsts`, `nstf`,
+`Fse`/`Fsi`/`Ff`, Newton iters, Newton conv fails, Jacobian evals) is
+byte-identical. Magnitude check: each of the 11 divergent printed digits is
+reproduced by moving the numerical solution 1, 1, 2, 2, 2, 3, 5, 7, 7, 7
+and 19 ULP respectively, i.e. the two trajectories agree to <= 19 ULP after
+5000 slow steps / 510000 fast steps / 2045001 fast RHS evaluations —
+`uerr = |u - utrue(t)|` is catastrophic cancellation of two O(1) doubles
+down to 1e-11…1e-14, so ~1e-16 of drift moves the second mantissa digit.
+Mechanism: `ff`/`fs` evaluate `s(t)=cos(w t)` and `sdot(t)=-w sin(w t)`
+(and `vtrue`) at every stage of every fast step with `w = 100`, and against
+60-digit `Decimal` references Apple libm is not correctly rounded on 4.0%
+of `cos(100 t)` and 3.9% of `sin(100 t)` for `t` in (0,5]. Coupling tables
+were audited independently and cleared: `ARKODE_MERK43`, `ARKODE_MERK54`
+and `ARKODE_IMEX_MRI_GARK4` in `arkode_mri_tables.rs` match
+`src/arkode/arkode_mri_tables.def` expression-by-expression (51/117/103
+assignments, identical grouping and order), as does
+`MRIStepCoupling_MIStoMRI` (the `slow_type 0` path, which loads no table)
+against `arkode_mri_tables.c:323`.
+
+**Why `pow_glibc` is not reverted for these 14.** No single `pow` matches
+every shipped `.out`: routing `SUNRpowerR` to the platform libm closes the
+five relaxation variants but breaks `ark_kepler … LEAPFROG_2_2` and
+`cvVdp_auto_nls`, which verify green today (macOS libm returns 14
+incorrectly-rounded results over that example's 6174 `pow` calls). The
+shipped references were demonstrably generated across different libm eras.
+`pow_glibc` — now including the FMA contraction glibc's own build applies —
+is the choice that maximises agreement over all 199 variants.
+
+### Cumulative gate (2026-08-09) — all crates
+
+`tools/verify_examples.sh all`, logged to `logs/summary-all.txt`.
+**199 variants: 127 IDENTICAL, 52 documented divergence, 20 EXCLUDED
+(KLU/SuperLU), 0 FAIL, 0 regressions** against the pre-fix baseline.
+
+| crate | variants | IDENTICAL | documented divergence | excluded |
+|---|---|---|---|---|
+| cvode_rs | 24 | 12 | 9 | 3 |
+| cvodes_rs | 39 | 23 | 10 | 6 |
+| kinsol_rs | 22 | 19 | 1 | 2 |
+| ida_rs | 14 | 10 | 1 | 3 |
+| idas_rs | 22 | 12 | 4 | 6 |
+| arkode_rs | 78 | 51 | 27 | 0 |
+| **total** | **199** | **127** | **52** | **20** |
+
+Every one of the 52 is an accepted class recorded above or under
+*Documented exceptions*: `stale-ref` (reference predates a source format
+change), `ref-libm` (reference embeds another platform's libm rounding), or
+the LAPACK -> native dense substitution. None is an open port defect.
