@@ -17,9 +17,9 @@ reference examples, not "close enough".
 | Rust edition | 2021, `std` only |
 | Version | tracks upstream 7.8.0 (`SUNDIALS_VERSION` = `"7.8.0"`) |
 
-Roughly 192k lines of Rust across 141 modules, plus 74 translated example
-programs (~48k lines) for CVODE(S), KINSOL and IDA(S); ARKODE's example set is
-still landing.
+Roughly 192k lines of Rust across 141 modules, plus 108 translated example
+programs covering every serial upstream example for CVODE(S), KINSOL, IDA(S)
+and ARKODE.
 
 **Not included.** The port is **serial only**. There are no MPI, GPU
 (CUDA/HIP/SYCL/RAJA/Kokkos), KLU, SuperLU_MT/DIST, LAPACK, Fortran-interface
@@ -243,24 +243,32 @@ cross-checks that no shipped `.out` file is unclaimed.
 | `kinsol_rs` |  22 | 19 |  1 | 2 | yes |
 | `ida_rs`    |  14 | 10 |  1 | 3 | yes |
 | `idas_rs`   |  22 | 12 |  4 | 6 | yes |
-| `arkode_rs` |  78 |  — |  — | — | **no** |
-| **total**   | **199** | **76** | **25** | **20** | |
+| `arkode_rs` |  78 | 51 | 27 | 0 | yes |
+| **total**   | **199** | **127** | **52** | **20** | |
 
-Of the 101 variants actually run in the five swept crates (121 minus the 20
-KLU/SuperLU exclusions), **76 are byte-identical to the shipped reference
-output and the remaining 25 are the documented reference-side exceptions of §6
-— zero are unexplained**, and zero are port defects. Every one of the 25 was root-caused against a locally built pristine
-upstream C binary; see `VERIFICATION.md` for the per-variant evidence.
+All six crates are swept. Of the 179 variants actually run (199 minus the 20
+KLU/SuperLU exclusions), **127 are byte-identical to the shipped reference
+output and the remaining 52 are the documented reference-side exceptions of §6
+— zero are unexplained, and zero are port defects.** Every one of the 52 was
+root-caused against a locally built pristine upstream C binary; see
+`VERIFICATION.md` for the per-variant evidence.
 
-**arkode_rs is the honest gap.** The library is fully ported (34 modules) and
-builds warning-free, but its example programs are still landing in a parallel
-workstream: they are not yet registered as `[[example]]` targets in
-`crates/arkode_rs/Cargo.toml`, at least one does not compile at the time of
-writing (`ark_KrylovDemo_prec.rs`, `E0384`), and `verify_examples.sh`
-consequently skips the crate entirely — it only visits crates whose
-`Cargo.toml` declares `[[example]]`. **All 78 ARKODE variants are
-unverified.** Treat `arkode_rs` as unproven against reference output until
-that sweep runs; check `VERIFICATION.md` for the current state.
+Read those 52 honestly: they are not "close enough" passes. Each is a case
+where the shipped `.out` cannot be reproduced by its own C source on this
+machine — most often because the file was generated on a glibc host whose
+`sin`/`exp`/`pow` differ from Apple libm by one ulp somewhere inside the
+integration feedback loop, or because the reference predates a formatting
+change in SUNDIALS itself. The bar for accepting one is byte-identity against
+a pristine local upstream C build, i.e. the same standard a C user on this
+machine would be held to.
+
+The ARKODE sweep turned up the last real port defect, and it was in this
+port's own deterministic `pow`: `pow_exp_inline` closed with an unfused
+`scale + scale * tmp`, where the glibc build the references came from
+contracts that into a single FMA. On near-midpoint results the unfused form
+rounds the other way, which forked `ark_robertson` into a 228-line diff.
+Fusing it (`scale.mul_add(tmp, scale)`) turned eight ARKODE variants
+byte-identical, with zero regressions across all 199.
 
 **Build and test state, verified first-hand for this document** (macOS arm64,
 Apple clang toolchain):
@@ -390,7 +398,7 @@ sundials_7_8_0__rs/
 │   ├── kinsol_rs/          src/  (8) + examples/  (9)
 │   ├── ida_rs/             src/  (8) + examples/  (8)
 │   ├── idas_rs/            src/ (12) + examples/ (13)
-│   └── arkode_rs/          src/ (34) + examples/ (in flight)
+│   └── arkode_rs/          src/ (34) + examples/ (34)
 ├── tools/verify_examples.sh   the acceptance harness
 ├── logs/                      harness output (git-ignored)
 ├── ARCHITECTURE.md            handle model, locked patterns, deviation classes
