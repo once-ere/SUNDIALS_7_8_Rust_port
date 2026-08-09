@@ -247,19 +247,41 @@ be applied CONSISTENTLY in later phases:
    every reference example frees the linear solver after the integrator.
    Do NOT "fix" it by detaching the token inside `*LsFree`: that would add
    a call C never makes.
-12. **Deferred discrete-adjoint cluster in ERKStep (Phase 7).**
-   `erkStep_TakeStep_Adjoint`, `erkStep_fe_Adj`, `erkStep_SUNStepperReInit`
-   and the public `ERKStepCreateAdjointStepper`
-   (`src/arkode/arkode_erkstep.c:1043-1943`) are NOT translated, so
-   `erkStep_Init` installs `erkStep_TakeStep` unconditionally where C reads
-   `ark_mem->do_adjoint ? erkStep_TakeStep_Adjoint : erkStep_TakeStep`
-   (`:518`). The flag is only ever set by `ERKStepCreateAdjointStepper`
-   (`:1827`), so on an ERKStep memory the branch is unreachable and no
-   reference example exercises it. This is a tracked public-API gap, not a
-   behavioral divergence: the ARKStep adjoint cluster IS ported, and
-   `sundials_core::nvector_manyvector` (the original blocker) now exists,
-   so the remaining work is translation only. Adding it must restore the
-   `do_adjoint` branch in `erkStep_Init` in the same change.
+12. **ERKStep discrete-adjoint cluster — CLOSED (Phase 7).** Originally
+   recorded as a deferred public-API gap: `erkStep_TakeStep_Adjoint`,
+   `erkStep_fe_Adj`, `erkStep_SUNStepperReInit` and the public
+   `ERKStepCreateAdjointStepper` (`src/arkode/arkode_erkstep.c:1043-1943`)
+   were not translated, so `erkStep_Init` installed `erkStep_TakeStep`
+   unconditionally. **All four are now ported** into
+   `crates/arkode_rs/src/arkode_erkstep.rs`, and the `do_adjoint` branch of
+   `erkStep_Init` is restored verbatim —
+   `if m.do_adjoint { m.step = Some(erkStep_TakeStep_Adjoint) } else { … }`,
+   upstream `:518`'s ternary. The gap is closed; what remains are the two
+   binding notes below, both instances of already-numbered classes.
+   * **Deviation class 6 (`user_data` cannot alias).** C
+     `ERKStepCreateAdjointStepper` ends with
+     `SUNAdjointStepper_SetUserData(*adj_stepper_ptr, ark_mem->user_data)`,
+     aliasing the FORWARD integrator's `user_data` into the adjoint stepper
+     — the forward RHS still dereferences it during
+     `SUNAdjointStepper_RecomputeFwd`. A `Box` cannot alias, so the port
+     passes `None` and leaves the token with the forward memory, exactly as
+     `ARKStepCreateAdjointStepper` does; a caller that needs `adj_f` to see
+     user data must hand the adjoint stepper its own copy with
+     `SUNAdjointStepper_SetUserData`. `erkStep_fe_Adj` takes
+     `adj_stepper.user_data` for the duration of the `adj_f` call and
+     restores it on every path.
+   * **Deviation class 5 (C UB → deterministic panic), one narrow spot.**
+     `erkStep_SUNStepperReInit` forwards `step_mem->f` to `ERKStepReInit`,
+     whose Rust signature takes a non-nullable `ARKRhsFn` (the C NULL check
+     is handled by the type system), so a missing `f` panics there instead
+     of returning `ARK_ILL_INPUT` from the callee. Unreachable: the field is
+     set by `ERKStepCreate`/`ERKStepReInit` and never cleared.
+   The `nvec` operand lists use `step_mem.cvals`/`step_mem.Xvecs` through the
+   module's `erkStep_LinearCombination` helper (matching ERKStep's own C,
+   which does the same), not the local operand lists ARKStep's port uses.
+   Still true, and the reason this stays a tracked item: **no serial
+   reference example exercises the ERKStep adjoint path**, so the compiler
+   and a line-by-line reading of the C are the only checks it has had.
 13. **Rootfinding state moved into locals for the Illinois search
    (Phase 7).** `arkRootfind` (`crates/arkode_rs/src/arkode_root.rs`)
    `mem::take`s all six rootfinding arrays (`glo`, `ghi`, `grout`,

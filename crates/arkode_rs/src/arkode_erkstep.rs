@@ -28,31 +28,35 @@
 //!   `SUNLogExtraDebug*` call compiles away and is omitted here.
 //!   `arkProcessError(..., ARK_WARNING, ...)` still reaches the logger.
 //!
-//! DEFERRED (ARCHITECTURE.md accepted deviation class 12): the
-//! discrete-adjoint cluster `erkStep_TakeStep_Adjoint`, `erkStep_fe_Adj`,
-//! `erkStep_SUNStepperReInit` and `ERKStepCreateAdjointStepper` (upstream
-//! lines 1043-1943) is not translated here. Nothing else in this module
-//! depends on it: `ark_mem.do_adjoint` can only ever be set by
-//! `ERKStepCreateAdjointStepper`, so the `do_adjoint` branch of
-//! `erkStep_Init` is unreachable for an ERKStep memory (see the comment
-//! there), and no reference example exercises the ERKStep adjoint path.
-//! The original blocker (`N_VGetSubvector_ManyVector`) is gone —
-//! `sundials_core::nvector_manyvector` now exists and the ARKStep adjoint
-//! cluster uses it — so completing this is translation work only, and must
-//! restore the `do_adjoint` branch in `erkStep_Init` in the same change.
+//! * The discrete-adjoint cluster (`erkStep_TakeStep_Adjoint`,
+//!   `erkStep_fe_Adj`, `erkStep_SUNStepperReInit`,
+//!   `ERKStepCreateAdjointStepper`; upstream lines 1043-1943) IS translated
+//!   here, and `erkStep_Init` selects `erkStep_TakeStep_Adjoint` when
+//!   `ark_mem.do_adjoint` is set exactly as upstream `:518` does. The flag is
+//!   only ever set by `ERKStepCreateAdjointStepper`. No reference example
+//!   exercises the path (see ARCHITECTURE.md item 12).
 
 use std::any::Any;
 use std::cell::RefMut;
 
+use sundials_core::nvector_manyvector::N_VGetSubvector_ManyVector;
 use sundials_core::sundials_adjointcheckpointscheme::{
-    SUNAdjointCheckpointScheme_InsertVector, SUNAdjointCheckpointScheme_NeedsSaving,
+    SUNAdjointCheckpointScheme_InsertVector, SUNAdjointCheckpointScheme_LoadVector,
+    SUNAdjointCheckpointScheme_NeedsSaving,
 };
-use sundials_core::sundials_adjointstepper::SUNAdjRhsFn;
+use sundials_core::sundials_adjointstepper::{
+    SUNAdjRhsFn, SUNAdjointStepper, SUNAdjointStepper_Create, SUNAdjointStepper_RecomputeFwd,
+    SUNAdjointStepper_SetUserData,
+};
 use sundials_core::sundials_context::SUNContext;
+use sundials_core::sundials_errors::{SUN_ERR_CHECKPOINT_NOT_FOUND, SUN_ERR_OP_FAIL, SUN_SUCCESS};
 use sundials_core::sundials_math::SUNRabs;
 use sundials_core::sundials_nvector::{
-    N_VDotProd, N_VDotProdLocal, N_VDotProdMultiAllReduce, N_VLinearCombination, N_VScale, N_VSpace,
-    N_VWrmsNorm, N_Vector,
+    N_VConst, N_VDotProd, N_VDotProdLocal, N_VDotProdMultiAllReduce, N_VGetVectorID,
+    N_VLinearCombination, N_VScale, N_VSpace, N_VWrmsNorm, N_Vector, SUNDIALS_NVEC_MANYVECTOR,
+};
+use sundials_core::sundials_stepper::{
+    SUNStepper, SUNStepper_GetContentAs, SUNStepper_SetDestroyFn, SUNStepper_SetReInitFn,
 };
 use sundials_core::sundials_types::*;
 use sundials_core::sundials_utils::SUNFile;
@@ -71,6 +75,11 @@ use crate::arkode_butcher_erk::{
     ARKODE_VERNER_10_6_7, ARKODE_VERNER_13_7_8, ARKODE_VERNER_16_8_9, ARKODE_VERNER_9_5_6,
 };
 use crate::arkode_impl::*;
+use crate::arkode_io::{
+    ARKodeGetNumSteps, ARKodeSetAdjointCheckpointScheme, ARKodeSetFixedStep, ARKodeSetMaxNumSteps,
+    ARKodeSetUserData,
+};
+use crate::arkode_sunstepper::{arkSUNStepperSelfDestruct, ARKodeCreateSUNStepper};
 
 /*===============================================================
   ERKStep Constants (include/arkode/arkode_erkstep.h)
@@ -844,12 +853,14 @@ pub fn erkStep_Init(ark_mem: &ARKodeMem, init_type: i32) -> i32 {
     }
 
     /* set appropriate TakeStep routine based on problem configuration */
-    /* NOTE: upstream selects erkStep_TakeStep_Adjoint when
-       `ark_mem->do_adjoint` is set; that routine (and
-       ERKStepCreateAdjointStepper, the only thing that can set the flag on an
-       ERKStep memory) is deferred pending `nvector_manyvector`, so the flag is
-       always SUNFALSE here. */
-    ark_mem.borrow_mut().step = Some(erkStep_TakeStep);
+    {
+        let mut m = ark_mem.borrow_mut();
+        if m.do_adjoint {
+            m.step = Some(erkStep_TakeStep_Adjoint);
+        } else {
+            m.step = Some(erkStep_TakeStep);
+        }
+    }
 
     /* Signal to shared arkode module that full RHS evaluations are required */
     ark_mem.borrow_mut().call_fullrhs = SUNTRUE;
@@ -1470,6 +1481,289 @@ pub fn erkStep_TakeStep(ark_mem: &ARKodeMem, dsmPtr: &mut sunrealtype, nflagPtr:
     ARK_SUCCESS
 }
 
+/*---------------------------------------------------------------
+  erkStep_TakeStep_Adjoint:
+
+  This routine performs a single backwards step of the discrete
+  adjoint of the ERK method.
+
+  Since we are not doing error control during the adjoint integration,
+  the output variable dsmPtr should should be 0.
+
+  The input/output variable nflagPtr is used to gauge convergence
+  of any algebraic solvers within the step. In this case, it should
+  always be 0 since we do not do any algebraic solves.
+
+  The return value from this routine is:
+            0 => step completed successfully
+           >0 => step encountered recoverable failure;
+                 reduce step and retry (if possible)
+           <0 => step encountered unrecoverable failure
+  ---------------------------------------------------------------*/
+pub fn erkStep_TakeStep_Adjoint(
+    ark_mem: &ARKodeMem,
+    dsmPtr: &mut sunrealtype,
+    nflagPtr: &mut i32,
+) -> i32 {
+    let mut retval: i32;
+
+    /* access ARKodeERKStepMem structure */
+    if ark_mem.borrow().step_mem.is_none() {
+        arkProcessError(
+            Some(ark_mem),
+            ARK_MEM_NULL,
+            line!() as i32,
+            "erkStep_TakeStep_Adjoint",
+            file!(),
+            MSG_ERKSTEP_NO_MEM,
+        );
+        return ARK_MEM_NULL;
+    }
+
+    /* local shortcuts for readability (`cvals`/`Xvecs` stay in step_mem and
+       are reached through erkStep_mem_mut, as everywhere else here) */
+    let adj_stepper: SUNAdjointStepper = ark_mem
+        .borrow()
+        .user_data
+        .as_ref()
+        .and_then(|b| b.downcast_ref::<SUNAdjointStepper>())
+        .cloned()
+        .expect("SUNAdjointStepper user_data");
+    let (sens_np1, sens_n, sens_tmp, nst) = {
+        let m = ark_mem.borrow();
+        (
+            m.yn.clone().expect("yn set"),
+            m.ycur.clone().expect("ycur set"),
+            m.tempv2.clone().expect("tempv2 set"),
+            m.nst,
+        )
+    };
+    let sens_tmp_Lambda = N_VGetSubvector_ManyVector(&sens_tmp, 0);
+    let sens_np1_lambda = N_VGetSubvector_ManyVector(&sens_np1, 0);
+    let (stage_values, stages, B) = {
+        let step_mem = erkStep_mem_mut(ark_mem);
+        (
+            step_mem.F.clone(),
+            step_mem.stages,
+            step_mem.B.clone().expect("Butcher table set"),
+        )
+    };
+
+    /* which adjoint step is being processed */
+    ark_mem.borrow_mut().adj_step_idx = adj_stepper.final_step_idx.get() - nst;
+
+    /* determine if method has fsal property */
+    let fsal: sunbooleantype =
+        (SUNRabs(B.borrow().A[0][0]) <= TINY) && ARKodeButcherTable_IsStifflyAccurate(Some(&B));
+
+    /* For FSAL ERK methods, A[s-1][s-1] == b[s-1] = 0 so F[s-1] is always zero */
+    if fsal {
+        N_VConst(0.0, &stage_values[(stages - 1) as usize]);
+    }
+
+    /* Loop over stages */
+    let mut is: i32 = stages - if fsal { 2 } else { 1 };
+    while is >= 0 {
+        /* Consider solving a forward IVP from t0 to tf, tf > t0.
+           The adjoint ODE is solved backwards in time with step size h' = -h
+           where h is the forward time step used. So at this point in the
+           code ark_mem->h is h', however, the adjoint formulae need h. */
+        let h = ark_mem.borrow().h;
+        let adj_h: sunrealtype = -h;
+
+        /* which stage is being processed -- needed for loading checkpoints */
+        ark_mem.borrow_mut().adj_stage_idx = is as suncountertype;
+
+        /* Set current stage time(s) and index */
+        {
+            let c_is = B.borrow().c[is as usize];
+            let mut m = ark_mem.borrow_mut();
+            let tn = m.tn;
+            let h = m.h;
+            m.tcur = tn + h * (1.0 - c_is);
+        }
+
+        /*
+         * Compute partial current stage value \Lambda
+         */
+        /* the ManyVector subvector handles are read before the step_mem guard
+           is taken, so no mem borrow is held across a vector op */
+        let Lambda_js: Vec<N_Vector> = ((is + 1)..stages)
+            .map(|js| N_VGetSubvector_ManyVector(&stage_values[js as usize], 0))
+            .collect();
+        let mut nvec: i32 = 0;
+        {
+            let mut step_mem = erkStep_mem_mut(ark_mem);
+            let Bref = B.borrow();
+            for js in (is + 1)..stages {
+                /* h sum_{j=i}^{s} A_{ji} \Lambda_{j} */
+                step_mem.cvals[nvec as usize] = adj_h * Bref.A[js as usize][is as usize];
+                step_mem.Xvecs[nvec as usize] = Some(Lambda_js[(js - is - 1) as usize].clone());
+                nvec += 1;
+            }
+            step_mem.cvals[nvec as usize] = adj_h * Bref.b[is as usize];
+            step_mem.Xvecs[nvec as usize] = Some(sens_np1_lambda.clone());
+            nvec += 1;
+        }
+
+        /* h b_i \lambda_{n+1} + h sum_{j=i}^{s} A_{ji} \Lambda_{j} */
+        retval = erkStep_LinearCombination(ark_mem, nvec, &sens_tmp_Lambda);
+        if retval != 0 {
+            return ARK_VECTOROP_ERR;
+        }
+
+        /* Compute the stages \Lambda_i and \nu_i by evaluating f_{y}^*(t_i, z_i, p) and
+           f_{p}^*(t_i, z_i, p) and applying them to sens_tmp_Lambda (in sens_tmp). This is
+           done in fe which retrieves z_i from the checkpoint data */
+        let tcur = ark_mem.borrow().tcur;
+        retval = erkStep_call_f(ark_mem, tcur, &sens_tmp, &stage_values[is as usize]);
+        erkStep_mem_mut(ark_mem).nfe += 1;
+
+        /* The checkpoint was not found, so we need to recompute at least
+           this step forward in time. We first seek the last checkpointed step
+           solution, then recompute from there. */
+        if ark_mem.borrow().load_checkpoint_fail {
+            let tempv3 = ark_mem.borrow().tempv3.clone().expect("tempv3 set");
+            let mut checkpoint = N_VGetSubvector_ManyVector(&tempv3, 0);
+            let curr_step: suncountertype = ark_mem.borrow().adj_step_idx;
+            let mut start_step: suncountertype = curr_step;
+
+            let checkpoint_scheme = ark_mem
+                .borrow()
+                .checkpoint_scheme
+                .clone()
+                .expect("checkpoint_scheme set");
+            let mut errcode: SUNErrCode = SUN_ERR_CHECKPOINT_NOT_FOUND;
+            let mut i: suncountertype = 0;
+            while i <= curr_step {
+                let mut checkpoint_t: sunrealtype = 0.0;
+                errcode = SUNAdjointCheckpointScheme_LoadVector(
+                    &checkpoint_scheme,
+                    start_step,
+                    stages as suncountertype,
+                    /*peek=*/ SUNTRUE,
+                    &mut checkpoint,
+                    &mut checkpoint_t,
+                );
+                if errcode == SUN_SUCCESS {
+                    /* OK, now we have the last checkpoint that stored as (start_step, stages).
+                       This represents the last step solution that was checkpointed. As such, we
+                       want to recompute from start_step+1 to stop_step. */
+                    start_step += 1;
+                    let t0 = checkpoint_t;
+                    let tf = ark_mem.borrow().tn;
+                    errcode = SUNAdjointStepper_RecomputeFwd(
+                        &adj_stepper,
+                        start_step,
+                        t0,
+                        &checkpoint,
+                        tf,
+                    );
+                    if errcode != SUN_SUCCESS {
+                        arkProcessError(
+                            Some(ark_mem),
+                            ARK_ADJ_RECOMPUTE_FAIL,
+                            line!() as i32,
+                            "erkStep_TakeStep_Adjoint",
+                            file!(),
+                            &format!("SUNAdjointStepper_RecomputeFwd returned {errcode}"),
+                        );
+                        return ARK_ADJ_RECOMPUTE_FAIL;
+                    }
+                    return erkStep_TakeStep_Adjoint(ark_mem, dsmPtr, nflagPtr);
+                }
+                i += 1;
+                start_step -= 1;
+            }
+            if errcode != SUN_SUCCESS {
+                arkProcessError(
+                    Some(ark_mem),
+                    ARK_ADJ_RECOMPUTE_FAIL,
+                    line!() as i32,
+                    "erkStep_TakeStep_Adjoint",
+                    file!(),
+                    "Could not load or recompute missing step",
+                );
+                return ARK_ADJ_RECOMPUTE_FAIL;
+            }
+        } else if retval > 0 {
+            return ARK_UNREC_RHSFUNC_ERR;
+        } else if retval < 0 {
+            arkProcessError(
+                Some(ark_mem),
+                ARK_RHSFUNC_FAIL,
+                line!() as i32,
+                "erkStep_TakeStep_Adjoint",
+                file!(),
+                &format!("The right hand side function failed returned {retval}"),
+            );
+            return ARK_RHSFUNC_FAIL;
+        }
+
+        is -= 1;
+    }
+
+    /* Throw away the step solution */
+    let mut checkpoint_t: sunrealtype = ZERO;
+    let tempv2 = ark_mem.borrow().tempv2.clone().expect("tempv2 set");
+    let mut checkpoint = N_VGetSubvector_ManyVector(&tempv2, 0);
+    let (checkpoint_scheme, adj_step_idx) = {
+        let m = ark_mem.borrow();
+        (
+            m.checkpoint_scheme.clone().expect("checkpoint_scheme set"),
+            m.adj_step_idx,
+        )
+    };
+    let errcode = SUNAdjointCheckpointScheme_LoadVector(
+        &checkpoint_scheme,
+        adj_step_idx,
+        0,
+        /*peek=*/ SUNFALSE,
+        &mut checkpoint,
+        &mut checkpoint_t,
+    );
+    if errcode != SUN_SUCCESS {
+        arkProcessError(
+            Some(ark_mem),
+            ARK_ADJ_CHECKPOINT_FAIL,
+            line!() as i32,
+            "erkStep_TakeStep_Adjoint",
+            file!(),
+            &format!("SUNAdjointCheckpointScheme_LoadVector returned {errcode}"),
+        );
+        return ARK_ADJ_CHECKPOINT_FAIL;
+    }
+
+    /* Now compute the time step solution. We cannot use erkStep_ComputeSolutions because the
+       adjoint calculation for the time step solution is different than the forward case. */
+
+    let mut nvec: i32 = 0;
+    {
+        let mut step_mem = erkStep_mem_mut(ark_mem);
+        for j in 0..stages {
+            step_mem.cvals[nvec as usize] = ONE;
+            /* this needs to be the stage values [Lambda_i, nu_i] */
+            step_mem.Xvecs[nvec as usize] = Some(stage_values[j as usize].clone());
+            nvec += 1;
+        }
+        step_mem.cvals[nvec as usize] = ONE;
+        step_mem.Xvecs[nvec as usize] = Some(sens_np1.clone());
+        nvec += 1;
+    }
+
+    /* \lambda_n = \lambda_{n+1} + \sum_{j=1}^{s} \Lambda_j
+       \mu_n     = \mu_{n+1} + \sum_{j=1}^{s} \nu_j */
+    retval = erkStep_LinearCombination(ark_mem, nvec, &sens_n);
+    if retval != 0 {
+        return ARK_VECTOROP_ERR;
+    }
+
+    *dsmPtr = ZERO;
+    *nflagPtr = 0;
+
+    ARK_SUCCESS
+}
+
 /*===============================================================
   Internal utility routines
   ===============================================================*/
@@ -2008,6 +2302,91 @@ pub fn erkStep_GetOrder(ark_mem: &ARKodeMem) -> i32 {
   Utility routines for interfacing with SUNAdjointStepper
   ---------------------------------------------------------------*/
 
+/// C `erkStep_fe_Adj(sunrealtype t, N_Vector sens_partial_stage,
+/// N_Vector sens_complete_stage, void* content)` — installed as ERKStep's
+/// `f` for the adjoint memory, hence the [`ARKRhsFn`] shape.
+///
+/// `void* content` is the `SUNAdjointStepper` token stored in the adjoint
+/// ARKODE memory's `user_data`.
+pub fn erkStep_fe_Adj(
+    t: sunrealtype,
+    sens_partial_stage: &N_Vector,
+    sens_complete_stage: &N_Vector,
+    content: &mut Option<Box<dyn Any>>,
+) -> i32 {
+    let errcode: SUNErrCode;
+
+    let adj_stepper: SUNAdjointStepper = content
+        .as_ref()
+        .and_then(|b| b.downcast_ref::<SUNAdjointStepper>())
+        .cloned()
+        .expect("SUNAdjointStepper content");
+    let check_scheme = adj_stepper.checkpoint_scheme.borrow().clone();
+    let adj_sunstepper = adj_stepper.adj_sunstepper.borrow().clone();
+    let mut ark_mem_out: Option<ARKodeMem> = None;
+    let _ = SUNStepper_GetContentAs::<ARKodeMem>(&adj_sunstepper, &mut ark_mem_out);
+    let ark_mem = ark_mem_out.expect("ARKodeMem stepper content");
+
+    /* access ARKodeERKStepMem structure */
+    if ark_mem.borrow().step_mem.is_none() {
+        arkProcessError(
+            None,
+            ARK_MEM_NULL,
+            line!() as i32,
+            "erkStep_fe_Adj",
+            file!(),
+            MSG_ERKSTEP_NO_MEM,
+        );
+        return ARK_MEM_NULL;
+    }
+
+    let adj_f = erkStep_mem_mut(&ark_mem).adj_f.expect("adj_f set");
+
+    let tempv3 = ark_mem.borrow().tempv3.clone().expect("tempv3 set");
+    let mut checkpoint = N_VGetSubvector_ManyVector(&tempv3, 0);
+    let mut checkpoint_t: sunrealtype = 0.0;
+
+    ark_mem.borrow_mut().load_checkpoint_fail = SUNFALSE;
+
+    let (adj_step_idx, adj_stage_idx) = {
+        let m = ark_mem.borrow();
+        (m.adj_step_idx, m.adj_stage_idx)
+    };
+    errcode = SUNAdjointCheckpointScheme_LoadVector(
+        &check_scheme,
+        adj_step_idx,
+        adj_stage_idx,
+        SUNFALSE,
+        &mut checkpoint,
+        &mut checkpoint_t,
+    );
+
+    /* Checkpoint was not found, recompute the missing step */
+    if errcode == SUN_ERR_CHECKPOINT_NOT_FOUND {
+        ark_mem.borrow_mut().load_checkpoint_fail = SUNTRUE;
+        return 1;
+    }
+
+    /* C: `void* user_data = adj_stepper->user_data;` aliases the FORWARD
+       integrator's `user_data`, which the forward RHS also dereferences during
+       `SUNAdjointStepper_RecomputeFwd`. A `Box` cannot alias and moving it
+       would strand the forward RHS, so (accepted deviation class 6, the shape
+       used by `arkStep_fe_Adj`) the token is taken from the adjoint stepper
+       for the duration of the call and restored on every path. */
+    let mut user_data = adj_stepper.user_data.borrow_mut().take();
+
+    /* Evaluate f_{y}^*(t_i, z_i, p) \Lambda_i and f_{p}^*(t_i, z_i, p) \nu_i */
+    let retval = adj_f(
+        t,
+        &checkpoint,
+        sens_partial_stage,
+        sens_complete_stage,
+        &mut user_data,
+    );
+    *adj_stepper.user_data.borrow_mut() = user_data;
+    retval
+}
+
 /// C `erkStepCompatibleWithAdjointSolver(ark_mem, step_mem, lineno, fname,
 /// filename)`; the `SUNDIALS_MAYBE_UNUSED` `step_mem` argument has no Rust
 /// counterpart (the record is reached through `ark_mem`).
@@ -2051,6 +2430,388 @@ pub fn erkStepCompatibleWithAdjointSolver(
             "SUNAdjointStepper is not compatible with constraints",
         );
         return ARK_ILL_INPUT;
+    }
+
+    ARK_SUCCESS
+}
+
+/// C `static SUNErrCode erkStep_SUNStepperReInit(SUNStepper stepper,
+/// sunrealtype t0, N_Vector y0)`.
+fn erkStep_SUNStepperReInit(stepper: &SUNStepper, t0: sunrealtype, y0: &N_Vector) -> SUNErrCode {
+    let mut arkode_mem: Option<ARKodeMem> = None;
+    let _ = SUNStepper_GetContentAs::<ARKodeMem>(stepper, &mut arkode_mem);
+    let arkode_mem = match arkode_mem {
+        Some(arkode_mem) => arkode_mem,
+        None => {
+            arkProcessError(
+                None,
+                ARK_ILL_INPUT,
+                line!() as i32,
+                "erkStep_SUNStepperReInit",
+                file!(),
+                "The ARKStep memory pointer is NULL",
+            );
+            return ARK_ILL_INPUT;
+        }
+    };
+    let ark_mem = &arkode_mem;
+
+    /* access ARKodeMem and ARKodeERKStepMem structures (C:
+       erkStep_AccessARKODEStepMem(arkode_mem, "erkStepSUNStepperReInit", ...)) */
+    if ark_mem.borrow().step_mem.is_none() {
+        arkProcessError(
+            Some(ark_mem),
+            ARK_MEM_NULL,
+            line!() as i32,
+            "erkStepSUNStepperReInit",
+            file!(),
+            MSG_ERKSTEP_NO_MEM,
+        );
+        arkProcessError(
+            None,
+            ARK_ILL_INPUT,
+            line!() as i32,
+            "erkStep_SUNStepperReInit",
+            file!(),
+            "The ARKStep memory pointer is NULL",
+        );
+        return ARK_ILL_INPUT;
+    }
+
+    /* C passes `step_mem->f` straight through; `ERKStepReInit` takes a
+       non-nullable `ARKRhsFn` (its C NULL check is handled by the type
+       system), so a missing `f` panics here instead of returning
+       ARK_ILL_INPUT from the callee */
+    let f = erkStep_mem_mut(ark_mem).f.expect("step_mem->f set");
+
+    let last_flag = ERKStepReInit(&arkode_mem, f, t0, y0);
+    *stepper.last_flag.borrow_mut() = last_flag;
+    if last_flag != ARK_SUCCESS {
+        arkProcessError(
+            Some(ark_mem),
+            last_flag,
+            line!() as i32,
+            "erkStep_SUNStepperReInit",
+            file!(),
+            "ERKStepReInit return an error\n",
+        );
+        return SUN_ERR_OP_FAIL;
+    }
+
+    SUN_SUCCESS
+}
+
+/// C `ERKStepCreateAdjointStepper(void* arkode_mem, SUNAdjRhsFn adj_f,
+/// sunrealtype tf, N_Vector sf, SUNContext sunctx,
+/// SUNAdjointStepper* adj_stepper_ptr)`.
+pub fn ERKStepCreateAdjointStepper(
+    arkode_mem: &ARKodeMem,
+    adj_f: Option<SUNAdjRhsFn>,
+    tf: sunrealtype,
+    sf: &N_Vector,
+    sunctx: &SUNContext,
+    adj_stepper_ptr: &mut Option<SUNAdjointStepper>,
+) -> i32 {
+    /* access ARKodeMem and ARKodeERKStepMem structures (C:
+       erkStep_AccessARKODEStepMem(arkode_mem, "ERKStepCreateAdjointStepper",
+       ...)) */
+    if arkode_mem.borrow().step_mem.is_none() {
+        arkProcessError(
+            Some(arkode_mem),
+            ARK_MEM_NULL,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            MSG_ERKSTEP_NO_MEM,
+        );
+        arkProcessError(
+            None,
+            ARK_ILL_INPUT,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "The ERKStep memory pointer is NULL",
+        );
+        return ARK_ILL_INPUT;
+    }
+    let ark_mem = arkode_mem;
+
+    if erkStepCompatibleWithAdjointSolver(
+        ark_mem,
+        line!() as i32,
+        "ERKStepCreateAdjointStepper",
+        file!(),
+    ) != 0
+    {
+        arkProcessError(
+            Some(ark_mem),
+            ARK_ILL_INPUT,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "ark_mem provided is not compatible with adjoint calculation",
+        );
+        return ARK_ILL_INPUT;
+    }
+
+    if adj_f.is_none() {
+        arkProcessError(
+            Some(ark_mem),
+            ARK_ILL_INPUT,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "adj_fe cannot be NULL.",
+        );
+        return ARK_ILL_INPUT;
+    }
+
+    if N_VGetVectorID(sf) != SUNDIALS_NVEC_MANYVECTOR {
+        arkProcessError(
+            Some(ark_mem),
+            ARK_ILL_INPUT,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "Incompatible vector type provided for adjoint calculation",
+        );
+        return ARK_ILL_INPUT;
+    }
+
+    /*
+      Create and configure the ERKStep stepper for the adjoint system
+    */
+    let mut nst: i64 = 0;
+    let mut retval = ARKodeGetNumSteps(arkode_mem, &mut nst);
+    if retval != 0 {
+        arkProcessError(
+            Some(ark_mem),
+            retval,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "ARKodeGetNumSteps failed",
+        );
+        return retval;
+    }
+
+    let sunctx_fwd = ark_mem.borrow().sunctx.clone();
+    let arkode_mem_adj = match ERKStepCreate(erkStep_fe_Adj, tf, sf, &sunctx_fwd) {
+        Some(arkode_mem_adj) => arkode_mem_adj,
+        None => {
+            arkProcessError(
+                Some(ark_mem),
+                ARK_MEM_NULL,
+                line!() as i32,
+                "ERKStepCreateAdjointStepper",
+                file!(),
+                "ERKStepCreate returned NULL\n",
+            );
+            return ARK_MEM_NULL;
+        }
+    };
+    let ark_mem_adj = &arkode_mem_adj;
+
+    erkStep_mem_mut(ark_mem_adj).adj_f = adj_f;
+    ark_mem_adj.borrow_mut().do_adjoint = SUNTRUE;
+
+    let h = ark_mem.borrow().h;
+    retval = ARKodeSetFixedStep(&arkode_mem_adj, -h);
+    if retval != 0 {
+        arkProcessError(
+            Some(ark_mem),
+            retval,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "ARKodeSetFixedStep failed",
+        );
+        return retval;
+    }
+
+    let B = erkStep_mem_mut(ark_mem).B.clone().expect("Butcher table set");
+    retval = crate::arkode_erkstep_io::ERKStepSetTable(&arkode_mem_adj, &B);
+    if retval != 0 {
+        arkProcessError(
+            Some(ark_mem),
+            retval,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "ERKStepSetTables failed",
+        );
+        return retval;
+    }
+
+    retval = ARKodeSetMaxNumSteps(&arkode_mem_adj, nst);
+    if retval != 0 {
+        arkProcessError(
+            Some(ark_mem),
+            retval,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "ARKodeSetMaxNumSteps failed",
+        );
+        return retval;
+    }
+
+    let checkpoint_scheme = ark_mem.borrow().checkpoint_scheme.clone();
+    retval = ARKodeSetAdjointCheckpointScheme(&arkode_mem_adj, checkpoint_scheme.as_ref());
+    if retval != 0 {
+        arkProcessError(
+            Some(ark_mem),
+            retval,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "ARKodeSetAdjointCheckpointScheme failed",
+        );
+        return retval;
+    }
+
+    let mut errcode: SUNErrCode;
+
+    let mut fwd_stepper: Option<SUNStepper> = None;
+    retval = ARKodeCreateSUNStepper(arkode_mem, &mut fwd_stepper);
+    if retval != 0 {
+        arkProcessError(
+            Some(ark_mem),
+            retval,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "ARKodeCreateSUNStepper failed",
+        );
+        return retval;
+    }
+    let fwd_stepper = fwd_stepper.expect("fwd_stepper");
+
+    errcode = SUNStepper_SetReInitFn(&fwd_stepper, Some(erkStep_SUNStepperReInit));
+    if errcode != SUN_SUCCESS {
+        retval = ARK_SUNSTEPPER_ERR;
+        arkProcessError(
+            Some(ark_mem),
+            retval,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "SUNStepper_SetReInitFn failed",
+        );
+        return retval;
+    }
+
+    let mut adj_stepper: Option<SUNStepper> = None;
+    retval = ARKodeCreateSUNStepper(&arkode_mem_adj, &mut adj_stepper);
+    if retval != 0 {
+        arkProcessError(
+            Some(ark_mem),
+            retval,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "ARKodeCreateSUNStepper failed",
+        );
+        return retval;
+    }
+    let adj_stepper = adj_stepper.expect("adj_stepper");
+
+    errcode = SUNStepper_SetReInitFn(&adj_stepper, Some(erkStep_SUNStepperReInit));
+    if errcode != SUN_SUCCESS {
+        retval = ARK_SUNSTEPPER_ERR;
+        arkProcessError(
+            Some(ark_mem),
+            retval,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "SUNStepper_SetReInitFn failed",
+        );
+        return retval;
+    }
+
+    /* Setting this ensures that the ARKodeMem underneath the adj_stepper
+       is destroyed with the SUNStepper_Destroy call. */
+    errcode = SUNStepper_SetDestroyFn(&adj_stepper, Some(arkSUNStepperSelfDestruct));
+    if errcode != SUN_SUCCESS {
+        retval = ARK_SUNSTEPPER_ERR;
+        arkProcessError(
+            Some(ark_mem),
+            retval,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "SUNStepper_SetDestroyFn failed",
+        );
+        return retval;
+    }
+
+    /* SUNAdjointStepper will own the SUNSteppers and destroy them */
+    errcode = SUNAdjointStepper_Create(
+        fwd_stepper,
+        SUNTRUE,
+        adj_stepper,
+        SUNTRUE,
+        nst - 1,
+        tf,
+        sf,
+        checkpoint_scheme.expect("checkpoint_scheme set"),
+        sunctx,
+        adj_stepper_ptr,
+    );
+    if errcode != SUN_SUCCESS {
+        retval = ARK_SUNADJSTEPPER_ERR;
+        arkProcessError(
+            Some(ark_mem),
+            retval,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "SUNAdjointStepper_Create failed",
+        );
+        return retval;
+    }
+
+    /* C: SUNAdjointStepper_SetUserData(*adj_stepper_ptr, ark_mem->user_data)
+       ALIASES the forward integrator's `user_data` into the adjoint stepper --
+       both `adj_f` (through `erkStep_fe_Adj`) and the forward RHS (during
+       SUNAdjointStepper_RecomputeFwd) dereference it. A `Box` cannot alias and
+       moving it would strand the forward RHS, so (deviation class 6) the token
+       is left with the forward memory; the example/integration layer must hand
+       the adjoint stepper its own copy with SUNAdjointStepper_SetUserData. */
+    errcode =
+        SUNAdjointStepper_SetUserData(adj_stepper_ptr.as_ref().expect("adj_stepper_ptr"), None);
+    if errcode != SUN_SUCCESS {
+        retval = ARK_SUNADJSTEPPER_ERR;
+        arkProcessError(
+            Some(ark_mem),
+            retval,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "SUNAdjointStepper_SetUserData failed",
+        );
+        return retval;
+    }
+
+    /* We need access to the adjoint solver to access the parameter Jacobian inside of ERKStep's
+       backwards integration of the the adjoint problem. */
+    retval = ARKodeSetUserData(
+        &arkode_mem_adj,
+        Some(Box::new(
+            adj_stepper_ptr.as_ref().expect("adj_stepper_ptr").clone(),
+        )),
+    );
+    if retval != 0 {
+        arkProcessError(
+            Some(ark_mem),
+            retval,
+            line!() as i32,
+            "ERKStepCreateAdjointStepper",
+            file!(),
+            "ARKodeSetUserData failed",
+        );
+        return retval;
     }
 
     ARK_SUCCESS
