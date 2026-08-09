@@ -18,15 +18,20 @@ For the public guide read `sundials.md`; for per-variant evidence
 | `arkode_rs` | 34 | 34 | 51 | 27 | 0 |
 | **total** | **141** | **108** | **127** | **52** | **20** |
 
-Verified first-hand on 2026-08-09, on the final tree:
+Verified first-hand on 2026-08-09 from a **cold tree** (`cargo clean` first,
+so nothing below is a cached result):
 
-* `cargo build --workspace` → all seven crates, **zero warnings**.
+* `cargo build --workspace` → all seven crates recompiled, **zero warnings**.
 * `cargo test --workspace --lib` → **25 passed, 0 failed**.
 * `tools/verify_examples.sh all` → **127 IDENTICAL / 52 documented /
   20 excluded** over all **199** variants. Zero FAIL, zero NO-REF, zero
-  NO-BINARY, zero regressions.
-* Zero `unsafe`, zero FFI, zero external crates (`Cargo.lock` holds exactly
-  the seven workspace packages).
+  NO-BINARY, and byte-for-byte identical to the previous gate run — no
+  variant changed status.
+* Invariants re-checked by grep over `crates/*/src` and `crates/*/examples`:
+  **0** `unsafe`, **0** `f64::powf`/`powi` (every power routes through the
+  deterministic `SUNRpowerR`), **0** `todo!`/`unimplemented!`, **0** uses of
+  Rust `{:e}`, and `Cargo.lock` holding exactly the 7 workspace packages —
+  no external crates. `PROGRESS.md` has **0** remaining `todo` entries.
 
 ## What the 52 documented divergences are
 
@@ -95,6 +100,12 @@ review:
 * Once a crate's examples verify green they stay green; the cumulative gate is
   `tools/verify_examples.sh all`.
 
-* `POW_FMA_EXACTNESS.md` — whether the deterministic `pow` is bit-exact with
-  the reference libm: the FMA-contraction investigation, the 20M-input
-  differential measurements, and the bounded limits of the claim.
+## Documents
+
+| file | what it holds |
+|---|---|
+| `sundials.md` | public guide: crate map, worked example, API conventions |
+| `VERIFICATION.md` | per-variant results and the evidence for every exception |
+| `PROGRESS.md` | per-file port status |
+| `ARCHITECTURE.md` | cross-module contracts and the 13 accepted deviation classes |
+| `POW_FMA_EXACTNESS.md` | whether the deterministic `pow` is bit-exact with the reference libm — the FMA-contraction investigation, the 20M-input differential measurements, and the bounded limits of that claim |
