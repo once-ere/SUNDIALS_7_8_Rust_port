@@ -503,7 +503,9 @@ fn pow_exp_specialcase(tmp: f64, sbits: u64, ki: u64) -> f64 {
         /* k > 0, the exponent of scale might have overflowed by <= 460. */
         let sbits = sbits.wrapping_sub(1009u64 << 52);
         let scale = f64::from_bits(sbits);
-        return f64::from_bits(0x7f00000000000000) * (scale + scale * tmp); /* 0x1p1009 */
+        /* Contracted in the reference build, exactly as in the non-special
+        path below. Unfused, this branch is 1 ulp low on ~1 input in 200k. */
+        return f64::from_bits(0x7f00000000000000) * scale.mul_add(tmp, scale); /* 0x1p1009 */
     }
     /* k < 0, need special care in the subnormal range. */
     let sbits = sbits.wrapping_add(1022u64 << 52);
@@ -573,7 +575,11 @@ fn pow_exp_inline(x: f64, xtail: f64, sign_bias: u32) -> f64 {
     let c3 = f64::from_bits(EXP_POLY[1]);
     let c4 = f64::from_bits(EXP_POLY[2]);
     let c5 = f64::from_bits(EXP_POLY[3]);
-    let tmp = tail + r + r2 * (c2 + r * c3) + r2 * r2 * (c4 + r * c5);
+    /* glibc builds this translation unit with -ffp-contract=fast, so the
+    compiler contracts this polynomial into fused multiply-adds. Measured
+    against a gcc -ffp-contract=fast build of the same C: this association
+    is the one the compiler emits (see POW_FMA_EXACTNESS.md). */
+    let tmp = (r2 * r2).mul_add(r.mul_add(c5, c4), r2.mul_add(r.mul_add(c3, c2), tail + r));
     if abstop == 0 {
         return pow_exp_specialcase(tmp, sbits, ki);
     }

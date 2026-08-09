@@ -94,3 +94,7 @@ review:
 * Zero `unsafe`, zero FFI, zero external crates, zero build warnings.
 * Once a crate's examples verify green they stay green; the cumulative gate is
   `tools/verify_examples.sh all`.
+
+* `POW_FMA_EXACTNESS.md` — whether the deterministic `pow` is bit-exact with
+  the reference libm: the FMA-contraction investigation, the 20M-input
+  differential measurements, and the bounded limits of the claim.
